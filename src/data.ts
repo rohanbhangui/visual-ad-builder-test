@@ -46,11 +46,19 @@ export interface RichtextLayer extends BaseLayer {
 export interface ImageLayer extends BaseLayer {
   type: 'image';
   url: string;
+  styles?: {
+    color?: string;
+    fontSize?: string;
+  };
 }
 
 export interface VideoLayer extends BaseLayer {
   type: 'video';
   url: string;
+  styles?: {
+    color?: string;
+    fontSize?: string;
+  };
 }
 
 export interface ButtonLayer extends BaseLayer {

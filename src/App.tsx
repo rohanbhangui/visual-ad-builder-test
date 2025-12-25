@@ -22,6 +22,14 @@ function App() {
 
   const dimensions = HTML5_AD_SIZES[selectedSize];
 
+  const handleDeleteLayer = (layerId: string) => {
+    const layer = layers.find(l => l.id === layerId);
+    if (layer && window.confirm(`Are you sure you want to delete "${layer.label}"?`)) {
+      setLayers(prev => prev.filter(l => l.id !== layerId));
+      setSelectedLayerId(null);
+    }
+  };
+
   // Use the canvas interactions hook
   const {
     snapLines,
@@ -70,7 +78,7 @@ function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedLayerId]);
+  }, [selectedLayerId, layers]);
 
   // Extended handleMouseUp for layers panel dragging
   const handleExtendedMouseUp = () => {
@@ -206,14 +214,6 @@ function App() {
       }
       return l;
     }));
-  };
-
-  const handleDeleteLayer = (layerId: string) => {
-    const layer = layers.find(l => l.id === layerId);
-    if (layer && window.confirm(`Are you sure you want to delete "${layer.label}"?`)) {
-      setLayers(prev => prev.filter(l => l.id !== layerId));
-      setSelectedLayerId(null);
-    }
   };
 
   const handleLabelChange = (layerId: string, newLabel: string) => {
