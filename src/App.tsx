@@ -45,6 +45,10 @@ function App() {
       if (e.key === 'Shift') {
         setIsShiftPressed(true);
       }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerId) {
+        e.preventDefault();
+        handleDeleteLayer(selectedLayerId);
+      }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
@@ -57,7 +61,7 @@ function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [selectedLayerId]);
 
   // Extended handleMouseUp for layers panel dragging
   const handleExtendedMouseUp = () => {
@@ -89,10 +93,22 @@ function App() {
   const handleLayersPanelMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsLayersPanelDragging(true);
+    
+    // If panel hasn't been positioned yet (x === -1), calculate its actual position
+    let actualX = layersPanelPos.x;
+    if (actualX === -1) {
+      const windowWidth = window.innerWidth;
+      const sidebarWidth = 320;
+      const panelWidth = 300;
+      actualX = layersPanelSide === 'right' 
+        ? windowWidth - sidebarWidth - panelWidth - 10 
+        : 10;
+    }
+    
     layersPanelDragRef.current = {
       x: e.clientX,
       y: e.clientY,
-      panelX: layersPanelPos.x,
+      panelX: actualX,
       panelY: layersPanelPos.y
     };
   };
@@ -183,6 +199,58 @@ function App() {
     }));
   };
 
+  const handleDeleteLayer = (layerId: string) => {
+    const layer = layers.find(l => l.id === layerId);
+    if (layer && window.confirm(`Are you sure you want to delete "${layer.label}"?`)) {
+      setLayers(prev => prev.filter(l => l.id !== layerId));
+      setSelectedLayerId(null);
+    }
+  };
+
+  const handleLabelChange = (layerId: string, newLabel: string) => {
+    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, label: newLabel } : l));
+  };
+
+  const handleAddLayer = (type: 'text' | 'richtext' | 'image' | 'video') => {
+    const newLayer: LayerContent = {
+      id: crypto.randomUUID(),
+      label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+      type,
+      positionX: {
+        '300x250': { value: 10, unit: 'px' },
+        '336x280': { value: 10, unit: 'px' },
+        '728x90': { value: 10, unit: 'px' },
+      },
+      positionY: {
+        '300x250': { value: 10, unit: 'px' },
+        '336x280': { value: 10, unit: 'px' },
+        '728x90': { value: 10, unit: 'px' },
+      },
+      width: {
+        '300x250': { value: type === 'image' ? 300 : 200, unit: 'px' },
+        '336x280': { value: type === 'image' ? 300 : 200, unit: 'px' },
+        '728x90': { value: type === 'image' ? 300 : 200, unit: 'px' },
+      },
+      height: {
+        '300x250': { value: type === 'image' ? 200 : 100, unit: 'px' },
+        '336x280': { value: type === 'image' ? 200 : 100, unit: 'px' },
+        '728x90': { value: type === 'image' ? 200 : 100, unit: 'px' },
+      },
+      ...(type === 'text' || type === 'richtext'
+        ? { content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' }
+        : {}),
+      ...(type === 'image'
+        ? { url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg' }
+        : {}),
+      ...(type === 'video'
+        ? { url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4' }
+        : {}),
+    } as LayerContent;
+
+    setLayers(prev => [newLayer, ...prev]);
+    setSelectedLayerId(newLayer.id);
+  };
+
   return (
     <div className="w-screen h-screen flex flex-col bg-white">
       <TopBar mode={mode} onModeChange={setMode} />
@@ -205,6 +273,7 @@ function App() {
               onLayerDragOver={handleLayerDragOver}
               onLayerDrop={handleLayerDrop}
               onLayerDragEnd={handleLayerDragEnd}
+              onAddLayer={handleAddLayer}
             />
           )}
           
@@ -241,6 +310,8 @@ function App() {
             layers={layers}
             selectedSize={selectedSize}
             onPropertyChange={handlePropertyChange}
+            onDelete={handleDeleteLayer}
+            onLabelChange={handleLabelChange}
           />
         )}
       </div>

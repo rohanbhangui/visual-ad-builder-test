@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { type LayerContent } from '../data';
 
 interface LayersPanelProps {
@@ -14,6 +15,7 @@ interface LayersPanelProps {
   onLayerDragOver: (e: React.DragEvent, index: number) => void;
   onLayerDrop: (e: React.DragEvent, index: number) => void;
   onLayerDragEnd: () => void;
+  onAddLayer: (type: 'text' | 'richtext' | 'image' | 'video') => void;
 }
 
 export function LayersPanel({
@@ -30,7 +32,9 @@ export function LayersPanel({
   onLayerDragOver,
   onLayerDrop,
   onLayerDragEnd,
+  onAddLayer,
 }: LayersPanelProps) {
+  const [showDropdown, setShowDropdown] = useState(false);
   return (
     <div
       style={{
@@ -53,10 +57,68 @@ export function LayersPanel({
       }}
     >
       <div
-        className="px-4 py-3 border-b border-gray-200 font-semibold text-gray-900"
-        onMouseDown={onMouseDown}
+        className="px-4 py-3 border-b border-gray-200 font-semibold text-gray-900 flex items-center justify-between"
       >
-        Layers
+        <div onMouseDown={onMouseDown} className="flex-1 cursor-grab">
+          Layers
+        </div>
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDropdown(!showDropdown);
+            }}
+            className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          {showDropdown && (
+            <div
+              className="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded shadow-lg z-50"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  onAddLayer('text');
+                  setShowDropdown(false);
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
+              >
+                Text
+              </button>
+              <button
+                onClick={() => {
+                  onAddLayer('richtext');
+                  setShowDropdown(false);
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
+              >
+                Rich Text
+              </button>
+              <button
+                onClick={() => {
+                  onAddLayer('image');
+                  setShowDropdown(false);
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
+              >
+                Image
+              </button>
+              <button
+                onClick={() => {
+                  onAddLayer('video');
+                  setShowDropdown(false);
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+              >
+                Video
+              </button>
+            </div>
+          )}
+        </div>
       </div>
       <div className="overflow-y-auto" style={{ maxHeight: '440px' }}>
         {layers.map((layer, index) => (
