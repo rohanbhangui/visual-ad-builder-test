@@ -14,7 +14,7 @@ export interface Size {
 }
 
 // Union type for layer content based on type
-export type LayerContent = TextLayer | RichtextLayer | ImageLayer | VideoLayer;
+export type LayerContent = TextLayer | RichtextLayer | ImageLayer | VideoLayer | ButtonLayer;
 
 export interface BaseLayer {
   id: string;
@@ -41,6 +41,12 @@ export interface ImageLayer extends BaseLayer {
 
 export interface VideoLayer extends BaseLayer {
   type: 'video';
+  url: string;
+}
+
+export interface ButtonLayer extends BaseLayer {
+  type: 'button';
+  text: string;
   url: string;
 }
 
@@ -112,7 +118,8 @@ export const sampleCanvas: Canvas = {
         '336x280': { value: 60, unit: 'px' },
         '728x90': { value: 30, unit: 'px' },
       },
-      content: '<h2 style="color: white; font-size: 20px; font-weight: bold; margin: 0;">Amazing Product</h2>',
+      content:
+        '<h2 style="color: white; font-size: 20px; font-weight: bold; margin: 0;">Amazing Product</h2>',
     },
     {
       id: uuidv4(),
@@ -159,23 +166,24 @@ export const sampleCanvas: Canvas = {
     {
       id: uuidv4(),
       label: 'CTA Button',
-      type: 'richtext',
+      type: 'button',
       position: {
-        '300x250': { x: 50, y: 225, unit: 'px' },
-        '336x280': { x: 50, y: 240, unit: 'px' },
-        '728x90': { x: 250, y: 30, unit: 'px' },
+        '300x250': { x: 100, y: 215, unit: 'px' },
+        '336x280': { x: 120, y: 230, unit: 'px' },
+        '728x90': { x: 300, y: 30, unit: 'px' },
       },
       width: {
-        '300x250': { value: 200, unit: 'px' },
-        '336x280': { value: 236, unit: 'px' },
-        '728x90': { value: 228, unit: 'px' },
+        '300x250': { value: 100, unit: 'px' },
+        '336x280': { value: 100, unit: 'px' },
+        '728x90': { value: 100, unit: 'px' },
       },
       height: {
-        '300x250': { value: 20, unit: 'px' },
-        '336x280': { value: 20, unit: 'px' },
-        '728x90': { value: 20, unit: 'px' },
+        '300x250': { value: 32, unit: 'px' },
+        '336x280': { value: 32, unit: 'px' },
+        '728x90': { value: 32, unit: 'px' },
       },
-      content: '<button style="background-color: #333; color: white; border: none; padding: 4px 8px; cursor: pointer;">Shop Now</button>',
+      text: 'Shop Now',
+      url: 'https://www.google.com',
     },
   ],
   createdAt: new Date(),
