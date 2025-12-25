@@ -76,7 +76,6 @@ export const PositionSizeInput = ({ label, value, unit, onChange }: PositionSize
           <option value="%">%</option>
         </select>
       </div>
-      <div className="h-4 mt-1">{error && <p className="text-xs text-red-500">{error}</p>}</div>
     </div>
   );
 }

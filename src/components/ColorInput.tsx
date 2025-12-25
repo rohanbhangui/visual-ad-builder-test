@@ -39,7 +39,9 @@ export const ColorInput = ({ label, value, onChange }: ColorInputProps) => {
   return (
     <div>
       <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      <div className="flex gap-2 items-start">
+      <div className={`flex items-stretch border rounded overflow-hidden ${
+        error ? 'border-red-500' : 'border-gray-300'
+      }`}>
         <input
           type="color"
           value={value || '#000000'}
@@ -48,20 +50,15 @@ export const ColorInput = ({ label, value, onChange }: ColorInputProps) => {
             setInputValue(e.target.value);
             onChange(e.target.value);
           }}
-          className="w-12 h-8 border border-gray-300 rounded cursor-pointer flex-shrink-0"
+          className="w-8 h-8 border-none cursor-pointer flex-shrink-0 ml-0.5"
         />
-        <div className="flex-1">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={handleTextChange}
-            className={`w-full h-8 px-2 text-sm border rounded ${
-              error ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="#000000"
-          />
-          <div className="h-4 mt-1">{error && <p className="text-xs text-red-500">{error}</p>}</div>
-        </div>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleTextChange}
+          className="flex-1 h-8 px-2 text-sm border-none border-l border-gray-300 focus:outline-none"
+          placeholder="#000000"
+        />
       </div>
     </div>
   );
