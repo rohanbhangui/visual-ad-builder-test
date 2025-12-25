@@ -19,7 +19,8 @@ export type LayerContent = TextLayer | RichtextLayer | ImageLayer | VideoLayer |
 export interface BaseLayer {
   id: string;
   label: string;
-  position: Record<string, Position>; // Keyed by ad size
+  positionX: Record<string, Size>; // Keyed by ad size
+  positionY: Record<string, Size>; // Keyed by ad size
   width: Record<string, Size>; // Keyed by ad size
   height: Record<string, Size>; // Keyed by ad size
 }
@@ -82,10 +83,15 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'Main Headline',
       type: 'richtext',
-      position: {
-        '300x250': { x: 10, y: 20, unit: 'px' },
-        '336x280': { x: 10, y: 20, unit: 'px' },
-        '728x90': { x: 10, y: 5, unit: 'px' },
+      positionX: {
+        '300x250': { value: 10, unit: 'px' },
+        '336x280': { value: 10, unit: 'px' },
+        '728x90': { value: 10, unit: 'px' },
+      },
+      positionY: {
+        '300x250': { value: 20, unit: 'px' },
+        '336x280': { value: 20, unit: 'px' },
+        '728x90': { value: 5, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
@@ -104,10 +110,15 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'Description Text',
       type: 'text',
-      position: {
-        '300x250': { x: 10, y: 85, unit: 'px' },
-        '336x280': { x: 10, y: 85, unit: 'px' },
-        '728x90': { x: 10, y: 45, unit: 'px' },
+      positionX: {
+        '300x250': { value: 10, unit: 'px' },
+        '336x280': { value: 10, unit: 'px' },
+        '728x90': { value: 10, unit: 'px' },
+      },
+      positionY: {
+        '300x250': { value: 85, unit: 'px' },
+        '336x280': { value: 85, unit: 'px' },
+        '728x90': { value: 45, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
@@ -125,10 +136,15 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'Demo Video',
       type: 'video',
-      position: {
-        '300x250': { x: 10, y: 170, unit: 'px' },
-        '336x280': { x: 10, y: 170, unit: 'px' },
-        '728x90': { x: 0, y: 0, unit: 'px' },
+      positionX: {
+        '300x250': { value: 10, unit: 'px' },
+        '336x280': { value: 10, unit: 'px' },
+        '728x90': { value: 0, unit: 'px' },
+      },
+      positionY: {
+        '300x250': { value: 170, unit: 'px' },
+        '336x280': { value: 170, unit: 'px' },
+        '728x90': { value: 0, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
@@ -146,10 +162,15 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'CTA Button',
       type: 'button',
-      position: {
-        '300x250': { x: 100, y: 215, unit: 'px' },
-        '336x280': { x: 120, y: 230, unit: 'px' },
-        '728x90': { x: 300, y: 30, unit: 'px' },
+      positionX: {
+        '300x250': { value: 100, unit: 'px' },
+        '336x280': { value: 120, unit: 'px' },
+        '728x90': { value: 300, unit: 'px' },
+      },
+      positionY: {
+        '300x250': { value: 215, unit: 'px' },
+        '336x280': { value: 230, unit: 'px' },
+        '728x90': { value: 30, unit: 'px' },
       },
       width: {
         '300x250': { value: 100, unit: 'px' },
@@ -168,10 +189,15 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'Background Image',
       type: 'image',
-      position: {
-        '300x250': { x: 0, y: 0, unit: 'px' },
-        '336x280': { x: 0, y: 0, unit: 'px' },
-        '728x90': { x: 0, y: 0, unit: 'px' },
+      positionX: {
+        '300x250': { value: 0, unit: 'px' },
+        '336x280': { value: 0, unit: 'px' },
+        '728x90': { value: 0, unit: 'px' },
+      },
+      positionY: {
+        '300x250': { value: 0, unit: 'px' },
+        '336x280': { value: 0, unit: 'px' },
+        '728x90': { value: 0, unit: 'px' },
       },
       width: {
         '300x250': { value: 300, unit: 'px' },
