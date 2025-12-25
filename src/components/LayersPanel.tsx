@@ -141,14 +141,21 @@ export function LayersPanel({
                 const layerItem = (e.target as HTMLElement).closest('.layer-item') as HTMLElement;
                 if (layerItem) {
                   const clone = layerItem.cloneNode(true) as HTMLElement;
-                  clone.className = 'absolute -top-[9999px] -left-[9999px] bg-white border-2 border-blue-500 rounded shadow-lg';
+                  clone.style.position = 'absolute';
+                  clone.style.top = '-9999px';
+                  clone.style.left = '-9999px';
                   clone.style.width = `${layerItem.offsetWidth}px`;
                   clone.style.height = `${layerItem.offsetHeight}px`;
+                  clone.style.backgroundColor = 'white';
+                  clone.style.border = '2px solid #3b82f6';
+                  clone.style.borderRadius = '4px';
                   clone.style.opacity = '0.95';
+                  clone.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                   document.body.appendChild(clone);
                   
                   const rect = layerItem.getBoundingClientRect();
-                  e.dataTransfer.setDragImage(clone, rect.width / 2, rect.height / 2);
+                  // Set drag image offset to grab from left edge (where handle is)
+                  e.dataTransfer.setDragImage(clone, 25, rect.height / 2);
                   
                   setTimeout(() => {
                     if (document.body.contains(clone)) {
