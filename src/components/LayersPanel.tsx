@@ -35,25 +35,18 @@ export function LayersPanel({
   onAddLayer,
 }: LayersPanelProps) {
   const [showDropdown, setShowDropdown] = useState(false);
+
   return (
     <div
+      className={`absolute w-[300px] max-h-[500px] bg-white rounded-lg shadow-xl z-[1000] overflow-hidden select-none ${
+        isDragging ? 'cursor-grabbing' : 'cursor-grab'
+      }`}
       style={{
-        position: 'absolute',
         top: `${panelPos.y}px`,
         left: panelPos.x === -1 
           ? (panelSide === 'right' ? 'auto' : '10px')
           : `${panelPos.x}px`,
         right: panelPos.x === -1 && panelSide === 'right' ? '10px' : 'auto',
-        width: '300px',
-        maxHeight: '500px',
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        zIndex: 1000,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        overflow: 'hidden'
       }}
     >
       <div
@@ -120,63 +113,77 @@ export function LayersPanel({
           )}
         </div>
       </div>
-      <div className="overflow-y-auto" style={{ maxHeight: '440px' }}>
+      <div className="overflow-y-auto max-h-[440px]">
         {layers.map((layer, index) => (
           <div
             key={layer.id}
             onDragOver={(e) => onLayerDragOver(e, index)}
             onDrop={(e) => onLayerDrop(e, index)}
-            className={`flex items-center gap-2 px-4 py-2 border-b border-gray-100 hover:bg-gray-50 ${
+            className={`layer-item flex items-center gap-2 px-4 py-2 border-b border-gray-100 hover:bg-gray-50 ${
               selectedLayerId === layer.id ? 'bg-blue-50' : ''
             }`}
             style={{ 
-              opacity: draggedLayerIndex === index ? 0.5 : 1,
+              opacity: draggedLayerIndex === index ? 0.4 : 1,
               ...(dragOverLayerIndex === index && draggedLayerIndex !== index ? {
-                borderTop: '2px solid #3b82f6'
+                borderTop: '1px solid #3b82f6'
               } : {}),
               ...(dragOverLayerIndex === index + 1 && draggedLayerIndex !== index ? {
-                borderBottom: '2px solid #3b82f6'
+                borderBottom: '1px solid #3b82f6'
               } : {})
             }}
           >
             <div 
               draggable
-              onDragStart={(e) => onLayerDragStart(e, index)}
-              onDragEnd={onLayerDragEnd}
-              className="cursor-grab text-gray-400 hover:text-gray-600 flex items-center justify-center" 
-              style={{ fontSize: '18px', width: '20px', height: '100%' }}
-            >
-              <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor">
-                <circle cx="3" cy="3" r="1.5" />
-                <circle cx="9" cy="3" r="1.5" />
-                <circle cx="3" cy="8" r="1.5" />
-                <circle cx="9" cy="8" r="1.5" />
-                <circle cx="3" cy="13" r="1.5" />
-                <circle cx="9" cy="13" r="1.5" />
-              </svg>
-            </div>
-            <div 
-              className="flex-1 cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectLayer(layer.id);
+              onDragStart={(e) => {
+                onLayerDragStart(e, index);
+                
+                // Create a custom drag image
+                const layerItem = (e.target as HTMLElement).closest('.layer-item') as HTMLElement;
+                if (layerItem) {
+                  const clone = layerItem.cloneNode(true) as HTMLElement;
+                  clone.className = 'absolute -top-[9999px] -left-[9999px] bg-white border-2 border-blue-500 rounded shadow-lg';
+                  clone.style.width = `${layerItem.offsetWidth}px`;
+                  clone.style.height = `${layerItem.offsetHeight}px`;
+                  clone.style.opacity = '0.95';
+                  document.body.appendChild(clone);
+                  
+                  const rect = layerItem.getBoundingClientRect();
+                  e.dataTransfer.setDragImage(clone, rect.width / 2, rect.height / 2);
+                  
+                  setTimeout(() => {
+                    if (document.body.contains(clone)) {
+                      document.body.removeChild(clone);
+                    }
+                  }, 0);
+                }
               }}
-            >
-              <div className="text-sm font-medium text-gray-900">{layer.label}</div>
-              <div className="text-xs text-gray-500">{layer.type}</div>
-            </div>
-            {selectedLayerId === layer.id && (
+              onDragEnd={onLayerDragEnd}
+              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 flex items-center justify-center text-lg w-5 h-full"
+              >
+                <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor">
+                  <circle cx="3" cy="3" r="1.5" />
+                  <circle cx="9" cy="3" r="1.5" />
+                  <circle cx="3" cy="8" r="1.5" />
+                  <circle cx="9" cy="8" r="1.5" />
+                  <circle cx="3" cy="13" r="1.5" />
+                  <circle cx="9" cy="13" r="1.5" />
+                </svg>
+              </div>
               <div 
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: '#2563eb'
+                className="flex-1 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectLayer(layer.id);
                 }}
-              />
-            )}
-          </div>
-        ))}
+              >
+                <div className="text-sm font-medium text-gray-900">{layer.label}</div>
+                <div className="text-xs text-gray-500">{layer.type}</div>
+              </div>
+              {selectedLayerId === layer.id && (
+                <div className="w-2 h-2 rounded-full bg-blue-600" />
+              )}
+            </div>
+          ))}
         {/* Drop zone for end of list */}
         <div
           onDragOver={(e) => onLayerDragOver(e, layers.length)}
@@ -184,7 +191,7 @@ export function LayersPanel({
           className="h-2"
           style={{
             ...(dragOverLayerIndex === layers.length && draggedLayerIndex !== null ? {
-              borderTop: '2px solid #3b82f6'
+              borderTop: '1px solid #2563eb'
             } : {})
           }}
         />
