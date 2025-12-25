@@ -176,6 +176,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         </div>
         {mode === 'edit' && isSelected && (
           <>
+            {/* Corner handles */}
             <div
               style={{
                 position: 'absolute',
@@ -235,6 +236,55 @@ export const Canvas: React.FC<CanvasProps> = ({
                 zIndex: 10
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'se')}
+            />
+            {/* Edge resize areas (invisible) */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '-4px',
+                left: '12px',
+                right: '12px',
+                height: '8px',
+                cursor: 'n-resize',
+                zIndex: 9
+              }}
+              onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'n')}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                right: '-4px',
+                top: '12px',
+                bottom: '12px',
+                width: '8px',
+                cursor: 'e-resize',
+                zIndex: 9
+              }}
+              onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'e')}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-4px',
+                left: '12px',
+                right: '12px',
+                height: '8px',
+                cursor: 's-resize',
+                zIndex: 9
+              }}
+              onMouseDown={(e) => onResizeMouseDown(e, layer.id, 's')}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                left: '-4px',
+                top: '12px',
+                bottom: '12px',
+                width: '8px',
+                cursor: 'w-resize',
+                zIndex: 9
+              }}
+              onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'w')}
             />
           </>
         )}
