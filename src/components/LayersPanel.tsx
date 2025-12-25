@@ -124,20 +124,36 @@ export function LayersPanel({
         {layers.map((layer, index) => (
           <div
             key={layer.id}
-            draggable
-            onDragStart={(e) => onLayerDragStart(e, index)}
             onDragOver={(e) => onLayerDragOver(e, index)}
             onDrop={(e) => onLayerDrop(e, index)}
-            onDragEnd={onLayerDragEnd}
             className={`flex items-center gap-2 px-4 py-2 border-b border-gray-100 hover:bg-gray-50 ${
               selectedLayerId === layer.id ? 'bg-blue-50' : ''
-            } ${
-              dragOverLayerIndex === index && draggedLayerIndex !== index ? 'border-t-2 border-t-blue-500' : ''
             }`}
-            style={{ opacity: draggedLayerIndex === index ? 0.5 : 1 }}
+            style={{ 
+              opacity: draggedLayerIndex === index ? 0.5 : 1,
+              ...(dragOverLayerIndex === index && draggedLayerIndex !== index ? {
+                borderTop: '2px solid #3b82f6'
+              } : {}),
+              ...(dragOverLayerIndex === index + 1 && draggedLayerIndex !== index ? {
+                borderBottom: '2px solid #3b82f6'
+              } : {})
+            }}
           >
-            <div className="cursor-grab text-gray-400 hover:text-gray-600" style={{ fontSize: '14px' }}>
-              =
+            <div 
+              draggable
+              onDragStart={(e) => onLayerDragStart(e, index)}
+              onDragEnd={onLayerDragEnd}
+              className="cursor-grab text-gray-400 hover:text-gray-600 flex items-center justify-center" 
+              style={{ fontSize: '18px', width: '20px', height: '100%' }}
+            >
+              <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor">
+                <circle cx="3" cy="3" r="1.5" />
+                <circle cx="9" cy="3" r="1.5" />
+                <circle cx="3" cy="8" r="1.5" />
+                <circle cx="9" cy="8" r="1.5" />
+                <circle cx="3" cy="13" r="1.5" />
+                <circle cx="9" cy="13" r="1.5" />
+              </svg>
             </div>
             <div 
               className="flex-1 cursor-pointer"
@@ -161,6 +177,17 @@ export function LayersPanel({
             )}
           </div>
         ))}
+        {/* Drop zone for end of list */}
+        <div
+          onDragOver={(e) => onLayerDragOver(e, layers.length)}
+          onDrop={(e) => onLayerDrop(e, layers.length)}
+          className="h-2"
+          style={{
+            ...(dragOverLayerIndex === layers.length && draggedLayerIndex !== null ? {
+              borderTop: '2px solid #3b82f6'
+            } : {})
+          }}
+        />
       </div>
     </div>
   );

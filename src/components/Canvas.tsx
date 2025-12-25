@@ -48,10 +48,10 @@ export const Canvas: React.FC<CanvasProps> = ({
             content = `<img src="${layer.url}" style="${style} object-fit: cover;" alt="${layer.label}">`;
             break;
           case 'text':
-            content = `<div style="${style}">${layer.content}</div>`;
+            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'};">${layer.content}</div>`;
             break;
           case 'richtext':
-            content = `<div style="${style}">${layer.content}</div>`;
+            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'};">${layer.content}</div>`;
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
@@ -59,7 +59,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             }
             break;
           case 'button':
-            content = `<a href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: #333; color: white; text-decoration: none; font-size: 14px; cursor: pointer;">${layer.text}</a>`;
+            content = `<a href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; cursor: pointer;">${layer.text}</a>`;
             break;
         }
 
@@ -138,7 +138,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         break;
       case 'text':
       case 'richtext':
-        content = <div style={{ pointerEvents: 'none' }} dangerouslySetInnerHTML={{ __html: layer.content }} />;
+        content = <div style={{ pointerEvents: 'none', color: layer.styles?.color || '#000000', fontSize: layer.styles?.fontSize || '14px' }} dangerouslySetInnerHTML={{ __html: layer.content }} />;
         break;
       case 'video':
         if (width.value > 0 && height.value > 0) {
@@ -153,9 +153,9 @@ export const Canvas: React.FC<CanvasProps> = ({
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
-            backgroundColor: '#333',
-            color: 'white',
-            fontSize: '14px',
+            backgroundColor: layer.styles?.backgroundColor || '#333333',
+            color: layer.styles?.color || '#ffffff',
+            fontSize: layer.styles?.fontSize || '14px',
             pointerEvents: 'none'
           }}>
             {layer.text}

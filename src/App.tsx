@@ -46,6 +46,15 @@ function App() {
         setIsShiftPressed(true);
       }
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerId) {
+        // Don't delete if user is typing in an input/textarea/contentEditable
+        const activeElement = document.activeElement;
+        if (activeElement && (
+          activeElement.tagName === 'INPUT' || 
+          activeElement.tagName === 'TEXTAREA' ||
+          (activeElement as HTMLElement).isContentEditable
+        )) {
+          return;
+        }
         e.preventDefault();
         handleDeleteLayer(selectedLayerId);
       }
@@ -211,6 +220,115 @@ function App() {
     setLayers(prev => prev.map(l => l.id === layerId ? { ...l, label: newLabel } : l));
   };
 
+  const handleContentChange = (layerId: string, content: string) => {
+    setLayers(prev => prev.map(l => l.id === layerId ? { ...l, content } : l));
+  };
+
+  const handleColorChange = (layerId: string, color: string) => {
+    setLayers(prev => prev.map(l => {
+      if (l.id === layerId) {
+        return {
+          ...l,
+          styles: {
+            ...l.styles,
+            color
+          }
+        };
+      }
+      return l;
+    }));
+  };
+
+  const handleFontSizeChange = (layerId: string, fontSize: string) => {
+    setLayers(prev => prev.map(l => {
+      if (l.id === layerId) {
+        return {
+          ...l,
+          styles: {
+            ...l.styles,
+            fontSize
+          }
+        };
+      }
+      return l;
+    }));
+  };
+
+  const handleTextChange = (layerId: string, text: string) => {
+    setLayers(prev => prev.map(l => {
+      if (l.id === layerId && l.type === 'button') {
+        return { ...l, text };
+      }
+      return l;
+    }));
+  };
+
+  const handleBackgroundColorChange = (layerId: string, color: string) => {
+    setLayers(prev => prev.map(l => {
+      if (l.id === layerId && l.type === 'button') {
+        return {
+          ...l,
+          styles: {
+            ...l.styles,
+            backgroundColor: color
+          }
+        };
+      }
+      return l;
+    }));
+  };
+
+  const handleAlignLayer = (layerId: string, alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v') => {
+    setLayers(prev => prev.map(layer => {
+      if (layer.id !== layerId) return layer;
+
+      const canvasWidth = dimensions.width;
+      const canvasHeight = dimensions.height;
+      const layerWidth = layer.width[selectedSize].unit === 'px' 
+        ? layer.width[selectedSize].value 
+        : (canvasWidth * layer.width[selectedSize].value) / 100;
+      const layerHeight = layer.height[selectedSize].unit === 'px'
+        ? layer.height[selectedSize].value
+        : (canvasHeight * layer.height[selectedSize].value) / 100;
+
+      let newPosX = layer.positionX[selectedSize].value;
+      let newPosY = layer.positionY[selectedSize].value;
+
+      switch (alignment) {
+        case 'left':
+          newPosX = 0;
+          break;
+        case 'right':
+          newPosX = canvasWidth - layerWidth;
+          break;
+        case 'center-h':
+          newPosX = (canvasWidth - layerWidth) / 2;
+          break;
+        case 'top':
+          newPosY = 0;
+          break;
+        case 'bottom':
+          newPosY = canvasHeight - layerHeight;
+          break;
+        case 'center-v':
+          newPosY = (canvasHeight - layerHeight) / 2;
+          break;
+      }
+
+      return {
+        ...layer,
+        positionX: {
+          ...layer.positionX,
+          [selectedSize]: { value: Math.round(newPosX), unit: 'px' }
+        },
+        positionY: {
+          ...layer.positionY,
+          [selectedSize]: { value: Math.round(newPosY), unit: 'px' }
+        }
+      };
+    }));
+  };
+
   const handleAddLayer = (type: 'text' | 'richtext' | 'image' | 'video') => {
     const newLayer: LayerContent = {
       id: crypto.randomUUID(),
@@ -237,7 +355,7 @@ function App() {
         '728x90': { value: type === 'image' ? 200 : 100, unit: 'px' },
       },
       ...(type === 'text' || type === 'richtext'
-        ? { content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' }
+        ? { content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', styles: { color: '#000000', fontSize: '14px' } }
         : {}),
       ...(type === 'image'
         ? { url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg' }
@@ -312,6 +430,12 @@ function App() {
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}
             onLabelChange={handleLabelChange}
+            onContentChange={handleContentChange}
+            onColorChange={handleColorChange}
+            onFontSizeChange={handleFontSizeChange}
+            onTextChange={handleTextChange}
+            onBackgroundColorChange={handleBackgroundColorChange}
+            onAlignLayer={handleAlignLayer}
           />
         )}
       </div>

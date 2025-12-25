@@ -28,11 +28,19 @@ export interface BaseLayer {
 export interface TextLayer extends BaseLayer {
   type: 'text';
   content: string;
+  styles?: {
+    color?: string;
+    fontSize?: string;
+  };
 }
 
 export interface RichtextLayer extends BaseLayer {
   type: 'richtext';
   content: string; // HTML content
+  styles?: {
+    color?: string;
+    fontSize?: string;
+  };
 }
 
 export interface ImageLayer extends BaseLayer {
@@ -49,6 +57,11 @@ export interface ButtonLayer extends BaseLayer {
   type: 'button';
   text: string;
   url: string;
+  styles?: {
+    backgroundColor?: string;
+    color?: string;
+    fontSize?: string;
+  };
 }
 
 // Canvas/Document structure
@@ -104,7 +117,11 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 30, unit: 'px' },
       },
       content:
-        '<h2 style="color: white; font-size: 20px; font-weight: bold; margin: 0;">Amazing Product</h2>',
+        '<strong>Amazing Product</strong>',
+      styles: {
+        color: '#ff0000',
+        fontSize: '20px',
+      },
     },
     {
       id: uuidv4(),
@@ -131,6 +148,10 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 40, unit: 'px' },
       },
       content: 'Get 50% off on your first purchase. Limited time offer!',
+      styles: {
+        color: '#000000',
+        fontSize: '14px',
+      },
     },
     {
       id: uuidv4(),
@@ -184,6 +205,11 @@ export const sampleCanvas: Canvas = {
       },
       text: 'Shop Now',
       url: 'https://www.google.com',
+      styles: {
+        backgroundColor: '#333333',
+        color: '#ffffff',
+        fontSize: '14px',
+      },
     },
     {
       id: uuidv4(),
