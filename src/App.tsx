@@ -117,6 +117,8 @@ const App = () => {
       const sidebarWidth = 320;
       const panelWidth = 300;
       actualX = layersPanelSide === 'right' ? windowWidth - sidebarWidth - panelWidth - 10 : 10;
+      // Update the position state to reflect the calculated position
+      setLayersPanelPos({ x: actualX, y: layersPanelPos.y });
     }
 
     layersPanelDragRef.current = {
