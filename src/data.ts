@@ -80,27 +80,6 @@ export const sampleCanvas: Canvas = {
   layers: [
     {
       id: uuidv4(),
-      label: 'Background Image',
-      type: 'image',
-      position: {
-        '300x250': { x: 0, y: 0, unit: 'px' },
-        '336x280': { x: 0, y: 0, unit: 'px' },
-        '728x90': { x: 0, y: 0, unit: 'px' },
-      },
-      width: {
-        '300x250': { value: 300, unit: 'px' },
-        '336x280': { value: 336, unit: 'px' },
-        '728x90': { value: 728, unit: 'px' },
-      },
-      height: {
-        '300x250': { value: 250, unit: 'px' },
-        '336x280': { value: 280, unit: 'px' },
-        '728x90': { value: 90, unit: 'px' },
-      },
-      url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg',
-    },
-    {
-      id: uuidv4(),
       label: 'Main Headline',
       type: 'richtext',
       position: {
@@ -184,6 +163,27 @@ export const sampleCanvas: Canvas = {
       },
       text: 'Shop Now',
       url: 'https://www.google.com',
+    },
+    {
+      id: uuidv4(),
+      label: 'Background Image',
+      type: 'image',
+      position: {
+        '300x250': { x: 0, y: 0, unit: 'px' },
+        '336x280': { x: 0, y: 0, unit: 'px' },
+        '728x90': { x: 0, y: 0, unit: 'px' },
+      },
+      width: {
+        '300x250': { value: 300, unit: 'px' },
+        '336x280': { value: 336, unit: 'px' },
+        '728x90': { value: 728, unit: 'px' },
+      },
+      height: {
+        '300x250': { value: 250, unit: 'px' },
+        '336x280': { value: 280, unit: 'px' },
+        '728x90': { value: 90, unit: 'px' },
+      },
+      url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg',
     },
   ],
   createdAt: new Date(),

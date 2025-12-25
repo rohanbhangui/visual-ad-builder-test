@@ -477,6 +477,8 @@ function App() {
       background: white;
       margin: 0;
       padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
     }
     * {
       box-sizing: border-box;
@@ -489,7 +491,7 @@ function App() {
 </html>`;
   };
 
-  const renderLayer = (layer: LayerContent) => {
+  const renderLayer = (layer: LayerContent, index: number) => {
     const pos = layer.position[selectedSize];
     const width = layer.width[selectedSize];
     const height = layer.height[selectedSize];
@@ -503,7 +505,8 @@ function App() {
       height: `${height.value}${height.unit}`,
       cursor: mode === 'edit' ? 'move' : 'default',
       outline: isSelected ? '2px solid #2563eb' : undefined,
-      outlineOffset: '-2px'
+      outlineOffset: '-2px',
+      zIndex: index
     };
 
     const contentWrapperStyle: React.CSSProperties = {
@@ -683,7 +686,7 @@ function App() {
                   }}
                 />
               ))}
-              {layers.map(renderLayer)}
+              {layers.map((layer, index) => renderLayer(layer, index))}
             </div>
           ) : (
             <iframe
