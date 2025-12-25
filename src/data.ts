@@ -124,8 +124,7 @@ export const sampleCanvas: Canvas = {
         '336x280': { value: 60, unit: 'px' },
         '728x90': { value: 30, unit: 'px' },
       },
-      content:
-        '<strong>Amazing Product</strong>',
+      content: '<strong>Amazing Product</strong>',
       styles: {
         color: '#ff0000',
         fontSize: '20px',

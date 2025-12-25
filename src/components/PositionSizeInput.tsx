@@ -7,7 +7,7 @@ interface PositionSizeInputProps {
   onChange: (value: number, unit?: 'px' | '%') => void;
 }
 
-export function PositionSizeInput({ label, value, unit, onChange }: PositionSizeInputProps) {
+export const PositionSizeInput = ({ label, value, unit, onChange }: PositionSizeInputProps) => {
   const [error, setError] = useState<string>('');
 
   const validateValue = (val: number, currentUnit: 'px' | '%'): boolean => {
@@ -22,7 +22,7 @@ export function PositionSizeInput({ label, value, unit, onChange }: PositionSize
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseFloat(e.target.value);
-    
+
     if (e.target.value === '' || e.target.value === '-') {
       setError('');
       onChange(0);
@@ -76,9 +76,7 @@ export function PositionSizeInput({ label, value, unit, onChange }: PositionSize
           <option value="%">%</option>
         </select>
       </div>
-      <div className="h-4 mt-1">
-        {error && <p className="text-xs text-red-500">{error}</p>}
-      </div>
+      <div className="h-4 mt-1">{error && <p className="text-xs text-red-500">{error}</p>}</div>
     </div>
   );
 }

@@ -6,7 +6,7 @@ interface ColorInputProps {
   onChange: (color: string) => void;
 }
 
-export function ColorInput({ label, value, onChange }: ColorInputProps) {
+export const ColorInput = ({ label, value, onChange }: ColorInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState(value || '');
 
@@ -24,7 +24,7 @@ export function ColorInput({ label, value, onChange }: ColorInputProps) {
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newColor = e.target.value;
     setInputValue(newColor);
-    
+
     if (newColor === '') {
       setError('');
       onChange('');
@@ -60,9 +60,7 @@ export function ColorInput({ label, value, onChange }: ColorInputProps) {
             }`}
             placeholder="#000000"
           />
-          <div className="h-4 mt-1">
-            {error && <p className="text-xs text-red-500">{error}</p>}
-          </div>
+          <div className="h-4 mt-1">{error && <p className="text-xs text-red-500">{error}</p>}</div>
         </div>
       </div>
     </div>

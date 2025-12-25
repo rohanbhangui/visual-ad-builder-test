@@ -28,7 +28,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   onMouseMove,
   onMouseUp,
   onMouseLeave,
-  onCanvasClick
+  onCanvasClick,
 }) => {
   const generatePreviewHTML = (): string => {
     const layerElements = layers
@@ -110,7 +110,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     const width = layer.width[selectedSize];
     const height = layer.height[selectedSize];
     const isSelected = selectedLayerId === layer.id;
-    
+
     const style: React.CSSProperties = {
       position: 'absolute',
       left: `${posX.value}${posX.unit || 'px'}`,
@@ -120,44 +120,67 @@ export const Canvas: React.FC<CanvasProps> = ({
       cursor: mode === 'edit' ? 'move' : 'default',
       outline: isSelected ? '2px solid #2563eb' : undefined,
       outlineOffset: '-2px',
-      zIndex: layers.length - index
+      zIndex: layers.length - index,
     };
 
     const contentWrapperStyle: React.CSSProperties = {
       width: '100%',
       height: '100%',
-      overflow: (layer.type === 'text' || layer.type === 'richtext') ? 'hidden' : undefined,
-      position: 'relative'
+      overflow: layer.type === 'text' || layer.type === 'richtext' ? 'hidden' : undefined,
+      position: 'relative',
     };
 
     let content = null;
-    
+
     switch (layer.type) {
       case 'image':
-        content = <img src={layer.url} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} alt={layer.label} />;
+        content = (
+          <img
+            src={layer.url}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+            alt={layer.label}
+          />
+        );
         break;
       case 'text':
       case 'richtext':
-        content = <div style={{ pointerEvents: 'none', color: layer.styles?.color || '#000000', fontSize: layer.styles?.fontSize || '14px' }} dangerouslySetInnerHTML={{ __html: layer.content }} />;
+        content = (
+          <div
+            style={{
+              pointerEvents: 'none',
+              color: layer.styles?.color || '#000000',
+              fontSize: layer.styles?.fontSize || '14px',
+            }}
+            dangerouslySetInnerHTML={{ __html: layer.content }}
+          />
+        );
         break;
       case 'video':
         if (width.value > 0 && height.value > 0) {
-          content = <video src={layer.url} controls style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />;
+          content = (
+            <video
+              src={layer.url}
+              controls
+              style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+            />
+          );
         }
         break;
       case 'button':
         content = (
-          <div style={{ 
-            width: '100%', 
-            height: '100%', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            backgroundColor: layer.styles?.backgroundColor || '#333333',
-            color: layer.styles?.color || '#ffffff',
-            fontSize: layer.styles?.fontSize || '14px',
-            pointerEvents: 'none'
-          }}>
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: layer.styles?.backgroundColor || '#333333',
+              color: layer.styles?.color || '#ffffff',
+              fontSize: layer.styles?.fontSize || '14px',
+              pointerEvents: 'none',
+            }}
+          >
             {layer.text}
           </div>
         );
@@ -171,9 +194,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         onMouseDown={(e) => onLayerMouseDown(e, layer.id)}
         className="group hover:outline hover:outline-2 hover:outline-blue-400"
       >
-        <div style={contentWrapperStyle}>
-          {content}
-        </div>
+        <div style={contentWrapperStyle}>{content}</div>
         {mode === 'edit' && isSelected && (
           <>
             {/* Corner handles */}
@@ -188,7 +209,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 border: '2px solid #2563eb',
                 borderRadius: '50%',
                 cursor: 'nw-resize',
-                zIndex: 10
+                zIndex: 10,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'nw')}
             />
@@ -203,7 +224,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 border: '2px solid #2563eb',
                 borderRadius: '50%',
                 cursor: 'ne-resize',
-                zIndex: 10
+                zIndex: 10,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'ne')}
             />
@@ -218,7 +239,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 border: '2px solid #2563eb',
                 borderRadius: '50%',
                 cursor: 'sw-resize',
-                zIndex: 10
+                zIndex: 10,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'sw')}
             />
@@ -233,7 +254,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 border: '2px solid #2563eb',
                 borderRadius: '50%',
                 cursor: 'se-resize',
-                zIndex: 10
+                zIndex: 10,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'se')}
             />
@@ -246,7 +267,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 right: '12px',
                 height: '8px',
                 cursor: 'n-resize',
-                zIndex: 9
+                zIndex: 9,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'n')}
             />
@@ -258,7 +279,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 bottom: '12px',
                 width: '8px',
                 cursor: 'e-resize',
-                zIndex: 9
+                zIndex: 9,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'e')}
             />
@@ -270,7 +291,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 right: '12px',
                 height: '8px',
                 cursor: 's-resize',
-                zIndex: 9
+                zIndex: 9,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 's')}
             />
@@ -282,7 +303,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 bottom: '12px',
                 width: '8px',
                 cursor: 'w-resize',
-                zIndex: 9
+                zIndex: 9,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'w')}
             />
@@ -304,7 +325,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             background: 'white',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
             userSelect: 'none',
-            WebkitUserSelect: 'none'
+            WebkitUserSelect: 'none',
           }}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
@@ -319,10 +340,9 @@ export const Canvas: React.FC<CanvasProps> = ({
                 backgroundColor: '#ef4444',
                 pointerEvents: 'none',
                 zIndex: 9999,
-                ...(line.type === 'vertical' 
+                ...(line.type === 'vertical'
                   ? { left: `${line.position}px`, top: 0, width: '1px', height: '100%' }
-                  : { top: `${line.position}px`, left: 0, height: '1px', width: '100%' }
-                )
+                  : { top: `${line.position}px`, left: 0, height: '1px', width: '100%' }),
               }}
             />
           ))}
@@ -335,7 +355,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             width: `${dimensions.width}px`,
             height: `${dimensions.height}px`,
             border: 0,
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
           }}
           title="Preview"
         />

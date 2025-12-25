@@ -3,7 +3,7 @@ interface TopBarProps {
   onModeChange: (mode: 'edit' | 'preview') => void;
 }
 
-export function TopBar({ mode, onModeChange }: TopBarProps) {
+export const TopBar = ({ mode, onModeChange }: TopBarProps) => {
   return (
     <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4 bg-white">
       <h1 className="text-lg font-semibold text-gray-900">Visual Builder</h1>

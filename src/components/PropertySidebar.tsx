@@ -3,6 +3,8 @@ import { HTML5_AD_SIZES, type LayerContent } from '../data';
 import { ColorInput } from './ColorInput';
 import { PositionSizeInput } from './PositionSizeInput';
 
+const FONT_SIZE_OPTIONS = ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '64px', '72px'];
+
 interface PropertySidebarProps {
   selectedLayerId: string | null;
   layers: LayerContent[];
@@ -20,10 +22,26 @@ interface PropertySidebarProps {
   onFontSizeChange: (layerId: string, fontSize: string) => void;
   onTextChange: (layerId: string, text: string) => void;
   onBackgroundColorChange: (layerId: string, color: string) => void;
-  onAlignLayer: (layerId: string, alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v') => void;
+  onAlignLayer: (
+    layerId: string,
+    alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
+  ) => void;
 }
 
-export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPropertyChange, onDelete, onLabelChange, onContentChange, onColorChange, onFontSizeChange, onTextChange, onBackgroundColorChange, onAlignLayer }: PropertySidebarProps) {
+export const PropertySidebar = ({
+  selectedLayerId,
+  layers,
+  selectedSize,
+  onPropertyChange,
+  onDelete,
+  onLabelChange,
+  onContentChange,
+  onColorChange,
+  onFontSizeChange,
+  onTextChange,
+  onBackgroundColorChange,
+  onAlignLayer,
+}: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
   const contentEditableRef = useRef<HTMLDivElement>(null);
@@ -33,10 +51,10 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
   useEffect(() => {
     const el = contentEditableRef.current;
     if (!el || !selectedLayerId) return;
-    
+
     // Only update if we switched to a different layer
     if (lastLayerIdRef.current !== selectedLayerId) {
-      const layer = layers.find(l => l.id === selectedLayerId);
+      const layer = layers.find((l) => l.id === selectedLayerId);
       if (layer && layer.type === 'richtext') {
         el.innerHTML = layer.content;
       }
@@ -54,7 +72,7 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
     );
   }
 
-  const layer = layers.find(l => l.id === selectedLayerId);
+  const layer = layers.find((l) => l.id === selectedLayerId);
   if (!layer) return null;
 
   const posX = layer.positionX[selectedSize];
@@ -66,7 +84,7 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
     <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
       <div className="p-4">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Options</h2>
-        
+
         {/* Editable Label */}
         <div className="mb-3 group/label">
           {isEditingLabel ? (
@@ -104,7 +122,17 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                 }}
                 className="opacity-0 group-hover/label:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 p-1"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                 </svg>
@@ -112,7 +140,7 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
             </div>
           )}
         </div>
-        
+
         <div className="space-y-3">
           {/* Alignment Buttons */}
           <div>
@@ -123,7 +151,14 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                 className="p-2 border border-gray-300 rounded hover:bg-gray-50"
                 title="Align Left"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="3" y1="6" x2="3" y2="18"></line>
                   <rect x="7" y="8" width="10" height="8" rx="1"></rect>
                 </svg>
@@ -133,7 +168,14 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                 className="p-2 border border-gray-300 rounded hover:bg-gray-50"
                 title="Center Horizontally"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="12" y1="2" x2="12" y2="22"></line>
                   <rect x="7" y="8" width="10" height="8" rx="1"></rect>
                 </svg>
@@ -143,7 +185,14 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                 className="p-2 border border-gray-300 rounded hover:bg-gray-50"
                 title="Align Right"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="21" y1="6" x2="21" y2="18"></line>
                   <rect x="7" y="8" width="10" height="8" rx="1"></rect>
                 </svg>
@@ -153,7 +202,14 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                 className="p-2 border border-gray-300 rounded hover:bg-gray-50"
                 title="Align Top"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="6" y1="3" x2="18" y2="3"></line>
                   <rect x="8" y="7" width="8" height="10" rx="1"></rect>
                 </svg>
@@ -163,7 +219,14 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                 className="p-2 border border-gray-300 rounded hover:bg-gray-50"
                 title="Center Vertically"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="2" y1="12" x2="22" y2="12"></line>
                   <rect x="8" y="7" width="8" height="10" rx="1"></rect>
                 </svg>
@@ -173,7 +236,14 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                 className="p-2 border border-gray-300 rounded hover:bg-gray-50"
                 title="Align Bottom"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="6" y1="21" x2="18" y2="21"></line>
                   <rect x="8" y="7" width="8" height="10" rx="1"></rect>
                 </svg>
@@ -196,7 +266,7 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
               onChange={(value, unit) => onPropertyChange(layer.id, 'positionY', value, unit)}
             />
           </div>
-          
+
           {/* Width and Height */}
           <div className="grid grid-cols-2 gap-2">
             <PositionSizeInput
@@ -245,17 +315,11 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                   onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="8px">8px</option>
-                  <option value="10px">10px</option>
-                  <option value="12px">12px</option>
-                  <option value="14px">14px</option>
-                  <option value="16px">16px</option>
-                  <option value="18px">18px</option>
-                  <option value="20px">20px</option>
-                  <option value="24px">24px</option>
-                  <option value="32px">32px</option>
-                  <option value="64px">64px</option>
-                  <option value="72px">72px</option>
+                  {FONT_SIZE_OPTIONS.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
                 </select>
               </div>
             </>
@@ -313,17 +377,11 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                         className="ml-auto px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="8px">8px</option>
-                        <option value="10px">10px</option>
-                        <option value="12px">12px</option>
-                        <option value="14px">14px</option>
-                        <option value="16px">16px</option>
-                        <option value="18px">18px</option>
-                        <option value="20px">20px</option>
-                        <option value="24px">24px</option>
-                        <option value="32px">32px</option>
-                        <option value="64px">64px</option>
-                        <option value="72px">72px</option>
+                        {FONT_SIZE_OPTIONS.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div
@@ -332,7 +390,10 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                       onInput={(e) => onContentChange(layer.id, e.currentTarget.innerHTML)}
                       suppressContentEditableWarning
                       className="w-full px-2 py-2 text-sm border border-gray-300 rounded min-h-[80px] max-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto"
-                      style={{ color: layer.styles?.color || '#000000', fontSize: layer.styles?.fontSize || '14px' }}
+                      style={{
+                        color: layer.styles?.color || '#000000',
+                        fontSize: layer.styles?.fontSize || '14px',
+                      }}
                     />
                   </>
                 )}
@@ -354,17 +415,11 @@ export function PropertySidebar({ selectedLayerId, layers, selectedSize, onPrope
                     onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                     className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="8px">8px</option>
-                    <option value="10px">10px</option>
-                    <option value="12px">12px</option>
-                    <option value="14px">14px</option>
-                    <option value="16px">16px</option>
-                    <option value="18px">18px</option>
-                    <option value="20px">20px</option>
-                    <option value="24px">24px</option>
-                    <option value="32px">32px</option>
-                    <option value="64px">64px</option>
-                    <option value="72px">72px</option>
+                    {FONT_SIZE_OPTIONS.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
