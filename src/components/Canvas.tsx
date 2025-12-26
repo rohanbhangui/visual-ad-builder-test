@@ -1,5 +1,6 @@
 import React from 'react';
 import { type LayerContent, type AdSize } from '../data';
+import { COLORS } from '../consts';
 import { getGoogleFontsLink } from '../utils/googleFonts';
 
 interface CanvasProps {
@@ -148,10 +149,11 @@ export const Canvas: React.FC<CanvasProps> = ({
       top: `${posY.value}${posY.unit || 'px'}`,
       width: `${width.value}${width.unit}`,
       height: `${height.value}${height.unit}`,
-      cursor: mode === 'edit' ? 'move' : 'default',
-      outline: isSelected ? '2px solid #2563eb' : undefined,
+      cursor: mode === 'edit' && !layer.locked ? 'move' : 'default',
+      outline: isSelected ? `2px solid ${COLORS.BLUE_SELECTED}` : undefined,
       outlineOffset: '-2px',
       zIndex: layers.length - index,
+      pointerEvents: layer.locked ? 'none' : 'auto',
     };
 
     const contentWrapperStyle: React.CSSProperties = {
@@ -232,11 +234,15 @@ export const Canvas: React.FC<CanvasProps> = ({
       <div
         key={layer.id}
         style={style}
-        onMouseDown={(e) => onLayerMouseDown(e, layer.id)}
-        className="group hover:outline hover:outline-2 hover:outline-blue-400"
+        onMouseDown={(e) => {
+          if (!layer.locked) {
+            onLayerMouseDown(e, layer.id);
+          }
+        }}
+        className={layer.locked ? '' : 'group hover:outline hover:outline-2 hover:outline-blue-400'}
       >
         <div style={contentWrapperStyle}>{content}</div>
-        {mode === 'edit' && isSelected && (
+        {mode === 'edit' && isSelected && !layer.locked && (
           <>
             {/* Corner handles */}
             <div
@@ -247,7 +253,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 width: '12px',
                 height: '12px',
                 background: 'white',
-                border: '2px solid #2563eb',
+                border: `2px solid ${COLORS.BLUE_SELECTED}`,
                 borderRadius: '50%',
                 cursor: 'nw-resize',
                 zIndex: 10,
@@ -262,7 +268,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 width: '12px',
                 height: '12px',
                 background: 'white',
-                border: '2px solid #2563eb',
+                border: `2px solid ${COLORS.BLUE_SELECTED}`,
                 borderRadius: '50%',
                 cursor: 'ne-resize',
                 zIndex: 10,
@@ -277,7 +283,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 width: '12px',
                 height: '12px',
                 background: 'white',
-                border: '2px solid #2563eb',
+                border: `2px solid ${COLORS.BLUE_SELECTED}`,
                 borderRadius: '50%',
                 cursor: 'sw-resize',
                 zIndex: 10,
@@ -292,7 +298,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 width: '12px',
                 height: '12px',
                 background: 'white',
-                border: '2px solid #2563eb',
+                border: `2px solid ${COLORS.BLUE_SELECTED}`,
                 borderRadius: '50%',
                 cursor: 'se-resize',
                 zIndex: 10,
@@ -378,7 +384,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               key={idx}
               style={{
                 position: 'absolute',
-                backgroundColor: '#ef4444',
+                backgroundColor: COLORS.RED_GUIDELINE,
                 pointerEvents: 'none',
                 zIndex: 9999,
                 ...(line.type === 'vertical'

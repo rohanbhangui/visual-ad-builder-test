@@ -1,5 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { type LayerContent } from '../data';
+import { COLORS, UI_COLORS } from '../consts';
+import PlusIcon from '../assets/icons/plus.svg?react';
+import DragHandleIcon from '../assets/icons/drag-handle.svg?react';
+import LockIcon from '../assets/icons/lock.svg?react';
+import UnlockIcon from '../assets/icons/unlock.svg?react';
+import LayerTextIcon from '../assets/icons/layer-text.svg?react';
+import LayerButtonIcon from '../assets/icons/layer-button.svg?react';
+import LayerImageIcon from '../assets/icons/layer-image.svg?react';
+import LayerVideoIcon from '../assets/icons/layer-video.svg?react';
+import LayerRichtextIcon from '../assets/icons/layer-richtext.svg?react';
 
 interface LayersPanelProps {
   layers: LayerContent[];
@@ -80,20 +90,7 @@ export const LayersPanel = ({
               showDropdown ? 'bg-gray-200' : ''
             }`}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
+            <PlusIcon />
           </button>
           {showDropdown && (
             <div
@@ -107,9 +104,7 @@ export const LayersPanel = ({
                 }}
                 className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
               >
-                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
-                </svg>
+                <LayerTextIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900">Text</div>
                   <div className="text-xs font-normal text-gray-500">Simple text content</div>
@@ -122,9 +117,7 @@ export const LayersPanel = ({
                 }}
                 className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
               >
-                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <rect x="3" y="8" width="18" height="8" rx="2" strokeWidth="2" />
-                </svg>
+                <LayerButtonIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900">Button</div>
                   <div className="text-xs font-normal text-gray-500">Clickable button link</div>
@@ -137,11 +130,7 @@ export const LayersPanel = ({
                 }}
                 className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
               >
-                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 15l-5-5L5 21" />
-                </svg>
+                <LayerImageIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900">Image</div>
                   <div className="text-xs font-normal text-gray-500">Static image element</div>
@@ -154,10 +143,7 @@ export const LayersPanel = ({
                 }}
                 className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
               >
-                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <rect x="2" y="6" width="20" height="12" rx="2" strokeWidth="2" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 9l5 3-5 3z" fill="currentColor" />
-                </svg>
+                <LayerVideoIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900">Video</div>
                   <div className="text-xs font-normal text-gray-500">Embedded video player</div>
@@ -170,10 +156,7 @@ export const LayersPanel = ({
                 }}
                 className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-start gap-2 cursor-pointer"
               >
-                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 6h12M6 10h12M6 14h12M6 18h7" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 17h2" />
-                </svg>
+                <LayerRichtextIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900">Rich Text</div>
                   <div className="text-xs font-normal text-gray-500">Formatted text with styling</div>
@@ -183,25 +166,25 @@ export const LayersPanel = ({
           )}
         </div>
       </div>
-      <div className="overflow-y-auto max-h-[440px]">
+      <div className="overflow-y-auto max-h-[440px]" onClick={() => setShowDropdown(false)}>
         {layers.map((layer, index) => (
           <div
             key={layer.id}
             onDragOver={(e) => onLayerDragOver(e, index)}
             onDrop={(e) => onLayerDrop(e, index)}
             className={`layer-item group/layer flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
-              selectedLayerId === layer.id ? 'bg-blue-50' : ''
+              selectedLayerId === layer.id ? UI_COLORS.SELECTED_LAYER_BG : ''
             }`}
             style={{
               opacity: draggedLayerIndex === index ? 0.4 : 1,
               ...(dragOverLayerIndex === index && draggedLayerIndex !== index
                 ? {
-                    borderTop: '1px solid #3b82f6',
+                    borderTop: `1px solid ${COLORS.BLUE_PRIMARY}`,
                   }
                 : {}),
               ...(dragOverLayerIndex === index + 1 && draggedLayerIndex !== index
                 ? {
-                    borderBottom: '1px solid #3b82f6',
+                    borderBottom: `1px solid ${COLORS.BLUE_PRIMARY}`,
                   }
                 : {}),
             }}
@@ -221,7 +204,7 @@ export const LayersPanel = ({
                   clone.style.width = `${layerItem.offsetWidth}px`;
                   clone.style.height = `${layerItem.offsetHeight}px`;
                   clone.style.backgroundColor = 'white';
-                  clone.style.border = '2px solid #3b82f6';
+                  clone.style.border = `2px solid ${COLORS.BLUE_PRIMARY}`;
                   clone.style.borderRadius = '4px';
                   clone.style.opacity = '0.95';
                   clone.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
@@ -241,14 +224,7 @@ export const LayersPanel = ({
               onDragEnd={onLayerDragEnd}
               className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 flex items-center justify-center text-lg w-5 h-full"
             >
-              <svg width="12" height="16" viewBox="0 0 12 16" fill="currentColor">
-                <circle cx="3" cy="3" r="1.5" />
-                <circle cx="9" cy="3" r="1.5" />
-                <circle cx="3" cy="8" r="1.5" />
-                <circle cx="9" cy="8" r="1.5" />
-                <circle cx="3" cy="13" r="1.5" />
-                <circle cx="9" cy="13" r="1.5" />
-              </svg>
+              <DragHandleIcon />
             </div>
             <div
               className="flex-1 cursor-pointer hover:bg-gray-50 -my-2 py-2 pr-2 -mr-[72px] rounded-r"
@@ -272,19 +248,9 @@ export const LayersPanel = ({
               }`}
               title={layer.locked ? 'Unlock layer' : 'Lock layer'}
             >
-              {layer.locked ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                </svg>
-              )}
+              {layer.locked ? <LockIcon /> : <UnlockIcon />}
             </button>
-            {selectedLayerId === layer.id && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+            {selectedLayerId === layer.id && <div className={`w-2 h-2 rounded-full ${UI_COLORS.SELECTED_INDICATOR}`} />}
           </div>
         ))}
         {/* Drop zone for end of list */}
@@ -295,7 +261,7 @@ export const LayersPanel = ({
           style={{
             ...(dragOverLayerIndex === layers.length && draggedLayerIndex !== null
               ? {
-                  borderTop: '1px solid #2563eb',
+                  borderTop: `1px solid ${COLORS.BLUE_SELECTED}`,
                 }
               : {}),
           }}

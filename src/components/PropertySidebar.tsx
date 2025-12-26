@@ -8,7 +8,18 @@ import {
   MAX_TEXT_CONTENT_LENGTH,
   MAX_BUTTON_TEXT_LENGTH,
   GOOGLE_FONTS,
+  UI_COLORS,
 } from '../consts';
+import EditIcon from '../assets/icons/edit.svg?react';
+import AlignLeftIcon from '../assets/icons/align-left.svg?react';
+import AlignCenterHIcon from '../assets/icons/align-center-h.svg?react';
+import AlignRightIcon from '../assets/icons/align-right.svg?react';
+import AlignTopIcon from '../assets/icons/align-top.svg?react';
+import AlignCenterVIcon from '../assets/icons/align-center-v.svg?react';
+import AlignBottomIcon from '../assets/icons/align-bottom.svg?react';
+import TextAlignLeftIcon from '../assets/icons/text-align-left.svg?react';
+import TextAlignCenterIcon from '../assets/icons/text-align-center.svg?react';
+import TextAlignRightIcon from '../assets/icons/text-align-right.svg?react';
 
 interface PropertySidebarProps {
   selectedLayerId: string | null;
@@ -127,30 +138,17 @@ export const PropertySidebar = ({
           ) : (
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-medium text-gray-700 flex-1">{layer.label}</h3>
-              {!layer.locked && (
-                <button
-                  onClick={() => {
-                    setEditedLabel(layer.label);
-                    setIsEditingLabel(true);
-                  }}
-                  className="text-gray-400 hover:text-gray-600 p-1 transition-colors"
-                >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
+              <button
+                onClick={() => {
+                  setEditedLabel(layer.label);
+                  setIsEditingLabel(true);
+                }}
+                className={`text-gray-400 hover:text-gray-600 p-1 transition-colors ${
+                  layer.locked ? 'opacity-0 pointer-events-none' : ''
+                }`}
+              >
+                <EditIcon />
               </button>
-              )}
             </div>
           )}
         </div>
@@ -166,17 +164,7 @@ export const PropertySidebar = ({
                 className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Align Left"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="3" y1="6" x2="3" y2="18"></line>
-                  <rect x="7" y="8" width="10" height="8" rx="1"></rect>
-                </svg>
+                <AlignLeftIcon />
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'center-h')}
@@ -184,17 +172,7 @@ export const PropertySidebar = ({
                 className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Center Horizontally"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="12" y1="2" x2="12" y2="22"></line>
-                  <rect x="7" y="8" width="10" height="8" rx="1"></rect>
-                </svg>
+                <AlignCenterHIcon />
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'right')}
@@ -202,17 +180,7 @@ export const PropertySidebar = ({
                 className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Align Right"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="21" y1="6" x2="21" y2="18"></line>
-                  <rect x="7" y="8" width="10" height="8" rx="1"></rect>
-                </svg>
+                <AlignRightIcon />
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'top')}
@@ -220,17 +188,7 @@ export const PropertySidebar = ({
                 className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Align Top"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="6" y1="3" x2="18" y2="3"></line>
-                  <rect x="8" y="7" width="8" height="10" rx="1"></rect>
-                </svg>
+                <AlignTopIcon />
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'center-v')}
@@ -238,17 +196,7 @@ export const PropertySidebar = ({
                 className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Center Vertically"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <rect x="8" y="7" width="8" height="10" rx="1"></rect>
-                </svg>
+                <AlignCenterVIcon />
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'bottom')}
@@ -256,17 +204,7 @@ export const PropertySidebar = ({
                 className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Align Bottom"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="6" y1="21" x2="18" y2="21"></line>
-                  <rect x="8" y="7" width="8" height="10" rx="1"></rect>
-                </svg>
+                <AlignBottomIcon />
               </button>
             </div>
           </div>
@@ -574,43 +512,31 @@ export const PropertySidebar = ({
                           onClick={() => onTextAlignChange(layer.id, 'left')}
                           disabled={layer.locked}
                           className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 ${
-                            (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                            (layer.styles?.textAlign || 'left') === 'left' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Left"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="12" x2="15" y2="12"></line>
-                            <line x1="3" y1="18" x2="18" y2="18"></line>
-                          </svg>
+                          <TextAlignLeftIcon />
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'center')}
                           disabled={layer.locked}
                           className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 ${
-                            layer.styles?.textAlign === 'center' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                            layer.styles?.textAlign === 'center' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Center"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="6" y1="12" x2="18" y2="12"></line>
-                            <line x1="4" y1="18" x2="20" y2="18"></line>
-                          </svg>
+                          <TextAlignCenterIcon />
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'right')}
                           disabled={layer.locked}
                           className={`px-3 py-1 text-sm ${
-                            layer.styles?.textAlign === 'right' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                            layer.styles?.textAlign === 'right' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Right"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="9" y1="12" x2="21" y2="12"></line>
-                            <line x1="6" y1="18" x2="21" y2="18"></line>
-                          </svg>
+                          <TextAlignRightIcon />
                         </button>
                       </div>
                     </div>
@@ -649,43 +575,31 @@ export const PropertySidebar = ({
                           onClick={() => onTextAlignChange(layer.id, 'left')}
                           disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
-                            (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                            (layer.styles?.textAlign || 'left') === 'left' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Left"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="12" x2="15" y2="12"></line>
-                            <line x1="3" y1="18" x2="18" y2="18"></line>
-                          </svg>
+                          <TextAlignLeftIcon />
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'center')}
                           disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
-                            layer.styles?.textAlign === 'center' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                            layer.styles?.textAlign === 'center' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Center"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="6" y1="12" x2="18" y2="12"></line>
-                            <line x1="4" y1="18" x2="20" y2="18"></line>
-                          </svg>
+                          <TextAlignCenterIcon />
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'right')}
                           disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm ${
-                            layer.styles?.textAlign === 'right' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                            layer.styles?.textAlign === 'right' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Right"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="9" y1="12" x2="21" y2="12"></line>
-                            <line x1="6" y1="18" x2="21" y2="18"></line>
-                          </svg>
+                          <TextAlignRightIcon />
                         </button>
                       </div>
                     </div>
