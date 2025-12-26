@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { HTML5_AD_SIZES, type LayerContent } from '../data';
 import { ColorInput } from './ColorInput';
 import { PositionSizeInput } from './PositionSizeInput';
+import { UrlInput } from './UrlInput';
 import { FONT_SIZE_OPTIONS, MAX_TEXT_CONTENT_LENGTH, MAX_BUTTON_TEXT_LENGTH, GOOGLE_FONTS } from '../consts';
 
 interface PropertySidebarProps {
@@ -22,6 +23,9 @@ interface PropertySidebarProps {
   onFontFamilyChange: (layerId: string, fontFamily: string) => void;
   onTextChange: (layerId: string, text: string) => void;
   onBackgroundColorChange: (layerId: string, color: string) => void;
+  onImageUrlChange: (layerId: string, url: string) => void;
+  onObjectFitChange: (layerId: string, objectFit: string) => void;
+  onVideoUrlChange: (layerId: string, url: string) => void;
   onAlignLayer: (
     layerId: string,
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
@@ -41,6 +45,9 @@ export const PropertySidebar = ({
   onFontFamilyChange,
   onTextChange,
   onBackgroundColorChange,
+  onImageUrlChange,
+  onObjectFitChange,
+  onVideoUrlChange,
   onAlignLayer,
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -284,6 +291,42 @@ export const PropertySidebar = ({
             />
           </div>
 
+          {/* Image Controls */}
+          {layer.type === 'image' && (
+            <>
+              <UrlInput
+                label="Image URL"
+                value={layer.url}
+                onChange={(url) => onImageUrlChange(layer.id, url)}
+                placeholder="https://example.com/image.jpg"
+              />
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Image Fit</label>
+                <select
+                  value={layer.styles?.objectFit || 'cover'}
+                  onChange={(e) => onObjectFitChange(layer.id, e.target.value)}
+                  className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="cover">Cover</option>
+                  <option value="contain">Contain</option>
+                  <option value="fill">Fill</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* Video Controls */}
+          {layer.type === 'video' && (
+            <UrlInput
+              label="Video URL"
+              value={layer.url}
+              onChange={(url) => onVideoUrlChange(layer.id, url)}
+              placeholder="https://example.com/video.mp4"
+            />
+          )}
+
           {/* Button Controls */}
           {layer.type === 'button' && (
             <>
@@ -316,7 +359,7 @@ export const PropertySidebar = ({
                   <select
                     value={layer.styles?.fontFamily || 'Arial'}
                     onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {GOOGLE_FONTS.map((font) => (
                       <option key={font} value={font}>
@@ -330,7 +373,7 @@ export const PropertySidebar = ({
                   <select
                     value={layer.styles?.fontSize || '14px'}
                     onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {FONT_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>

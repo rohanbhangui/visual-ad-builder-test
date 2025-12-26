@@ -137,7 +137,12 @@ export const Canvas: React.FC<CanvasProps> = ({
         content = (
           <img
             src={layer.url}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              objectFit: (layer.styles?.objectFit as any) || 'cover', 
+              pointerEvents: 'none' 
+            }}
             alt={layer.label}
           />
         );

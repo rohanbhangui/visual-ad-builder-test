@@ -31,6 +31,7 @@ export interface TextLayer extends BaseLayer {
   styles?: {
     color?: string;
     fontSize?: string;
+    fontFamily?: string;
   };
 }
 
@@ -50,6 +51,7 @@ export interface ImageLayer extends BaseLayer {
   styles?: {
     color?: string;
     fontSize?: string;
+    objectFit?: string;
   };
 }
 

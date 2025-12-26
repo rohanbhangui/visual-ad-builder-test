@@ -316,6 +316,45 @@ const App = () => {
     );
   };
 
+  const handleImageUrlChange = (layerId: string, url: string) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'image') {
+          return { ...l, url };
+        }
+        return l;
+      })
+    );
+  };
+
+  const handleObjectFitChange = (layerId: string, objectFit: string) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'image') {
+          return {
+            ...l,
+            styles: {
+              ...l.styles,
+              objectFit,
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
+
+  const handleVideoUrlChange = (layerId: string, url: string) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'video') {
+          return { ...l, url };
+        }
+        return l;
+      })
+    );
+  };
+
   const handleAlignLayer = (
     layerId: string,
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
@@ -374,7 +413,7 @@ const App = () => {
     );
   };
 
-  const handleAddLayer = (type: 'text' | 'richtext' | 'image' | 'video') => {
+  const handleAddLayer = (type: 'text' | 'richtext' | 'image' | 'video' | 'button') => {
     const newLayer: LayerContent = {
       id: crypto.randomUUID(),
       label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
@@ -395,9 +434,9 @@ const App = () => {
         '728x90': { value: type === 'image' ? 300 : 200, unit: 'px' },
       },
       height: {
-        '300x250': { value: type === 'image' ? 200 : 100, unit: 'px' },
-        '336x280': { value: type === 'image' ? 200 : 100, unit: 'px' },
-        '728x90': { value: type === 'image' ? 200 : 100, unit: 'px' },
+        '300x250': { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+        '336x280': { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+        '728x90': { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
       },
       ...(type === 'text' || type === 'richtext'
         ? {
@@ -411,6 +450,13 @@ const App = () => {
       ...(type === 'video'
         ? {
             url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4',
+          }
+        : {}),
+      ...(type === 'button'
+        ? {
+            text: 'Click Here',
+            url: '#',
+            styles: { backgroundColor: '#333333', color: '#ffffff', fontSize: '14px' },
           }
         : {}),
     } as LayerContent;
@@ -493,6 +539,9 @@ const App = () => {
             onFontFamilyChange={handleFontFamilyChange}
             onTextChange={handleTextChange}
             onBackgroundColorChange={handleBackgroundColorChange}
+            onImageUrlChange={handleImageUrlChange}
+            onObjectFitChange={handleObjectFitChange}
+            onVideoUrlChange={handleVideoUrlChange}
             onAlignLayer={handleAlignLayer}
           />
         )}
