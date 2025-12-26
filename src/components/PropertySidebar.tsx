@@ -544,8 +544,8 @@ export const PropertySidebar = ({
                       <div className="inline-flex border border-gray-300 rounded overflow-hidden">
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'left')}
-                          className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 hover:bg-gray-50 ${
-                            (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100' : ''
+                          className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 ${
+                            (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                           }`}
                           title="Align Left"
                         >
@@ -557,8 +557,8 @@ export const PropertySidebar = ({
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'center')}
-                          className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 hover:bg-gray-50 ${
-                            layer.styles?.textAlign === 'center' ? 'bg-blue-100' : ''
+                          className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 ${
+                            layer.styles?.textAlign === 'center' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                           }`}
                           title="Align Center"
                         >
@@ -570,8 +570,8 @@ export const PropertySidebar = ({
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'right')}
-                          className={`px-3 py-1 text-sm hover:bg-gray-50 ${
-                            layer.styles?.textAlign === 'right' ? 'bg-blue-100' : ''
+                          className={`px-3 py-1 text-sm ${
+                            layer.styles?.textAlign === 'right' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                           }`}
                           title="Align Right"
                         >
@@ -615,8 +615,8 @@ export const PropertySidebar = ({
                       <div className="inline-flex border border-gray-300 rounded overflow-hidden">
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'left')}
-                          className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 hover:bg-gray-50 ${
-                            (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100' : ''
+                          className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
+                            (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                           }`}
                           title="Align Left"
                         >
@@ -628,8 +628,8 @@ export const PropertySidebar = ({
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'center')}
-                          className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 hover:bg-gray-50 ${
-                            layer.styles?.textAlign === 'center' ? 'bg-blue-100' : ''
+                          className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
+                            layer.styles?.textAlign === 'center' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                           }`}
                           title="Align Center"
                         >
@@ -641,8 +641,8 @@ export const PropertySidebar = ({
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'right')}
-                          className={`px-3 h-8 flex items-center text-sm hover:bg-gray-50 ${
-                            layer.styles?.textAlign === 'right' ? 'bg-blue-100' : ''
+                          className={`px-3 h-8 flex items-center text-sm ${
+                            layer.styles?.textAlign === 'right' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                           }`}
                           title="Align Right"
                         >
