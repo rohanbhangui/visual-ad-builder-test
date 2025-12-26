@@ -285,11 +285,18 @@ export const useCanvasInteractions = ({
         const currentCenterX = newX + newWidth / 2;
         const currentCenterY = newY + newHeight / 2;
 
-        // Snap to canvas edges (show guides but don't constrain)
+        // Snap to canvas edges
         if (Math.abs(newX - canvasEdges.left) < SNAP_THRESHOLD) {
+          if (direction.includes('w')) {
+            newWidth = width + (layerX - canvasEdges.left);
+            newX = canvasEdges.left;
+          }
           guides.push({ type: 'vertical', position: canvasEdges.left });
         }
         if (Math.abs(currentRight - canvasEdges.right) < SNAP_THRESHOLD) {
+          if (direction.includes('e')) {
+            newWidth = canvasEdges.right - newX;
+          }
           guides.push({ type: 'vertical', position: canvasEdges.right });
         }
         if (Math.abs(currentCenterX - canvasEdges.centerX) < SNAP_THRESHOLD) {
@@ -297,9 +304,16 @@ export const useCanvasInteractions = ({
         }
 
         if (Math.abs(newY - canvasEdges.top) < SNAP_THRESHOLD) {
+          if (direction.includes('n')) {
+            newHeight = height + (layerY - canvasEdges.top);
+            newY = canvasEdges.top;
+          }
           guides.push({ type: 'horizontal', position: canvasEdges.top });
         }
         if (Math.abs(currentBottom - canvasEdges.bottom) < SNAP_THRESHOLD) {
+          if (direction.includes('s')) {
+            newHeight = canvasEdges.bottom - newY;
+          }
           guides.push({ type: 'horizontal', position: canvasEdges.bottom });
         }
         if (Math.abs(currentCenterY - canvasEdges.centerY) < SNAP_THRESHOLD) {
@@ -327,15 +341,29 @@ export const useCanvasInteractions = ({
 
           // Vertical snapping
           if (Math.abs(newX - otherX) < SNAP_THRESHOLD) {
+            if (direction.includes('w')) {
+              newWidth = width + (layerX - otherX);
+              newX = otherX;
+            }
             guides.push({ type: 'vertical', position: otherX });
           }
           if (Math.abs(currentRight - otherRight) < SNAP_THRESHOLD) {
+            if (direction.includes('e')) {
+              newWidth = otherRight - newX;
+            }
             guides.push({ type: 'vertical', position: otherRight });
           }
           if (Math.abs(newX - otherRight) < SNAP_THRESHOLD) {
+            if (direction.includes('w')) {
+              newWidth = width + (layerX - otherRight);
+              newX = otherRight;
+            }
             guides.push({ type: 'vertical', position: otherRight });
           }
           if (Math.abs(currentRight - otherX) < SNAP_THRESHOLD) {
+            if (direction.includes('e')) {
+              newWidth = otherX - newX;
+            }
             guides.push({ type: 'vertical', position: otherX });
           }
           if (Math.abs(currentCenterX - otherCenterX) < SNAP_THRESHOLD) {
@@ -344,15 +372,29 @@ export const useCanvasInteractions = ({
 
           // Horizontal snapping
           if (Math.abs(newY - otherY) < SNAP_THRESHOLD) {
+            if (direction.includes('n')) {
+              newHeight = height + (layerY - otherY);
+              newY = otherY;
+            }
             guides.push({ type: 'horizontal', position: otherY });
           }
           if (Math.abs(currentBottom - otherBottom) < SNAP_THRESHOLD) {
+            if (direction.includes('s')) {
+              newHeight = otherBottom - newY;
+            }
             guides.push({ type: 'horizontal', position: otherBottom });
           }
           if (Math.abs(newY - otherBottom) < SNAP_THRESHOLD) {
+            if (direction.includes('n')) {
+              newHeight = height + (layerY - otherBottom);
+              newY = otherBottom;
+            }
             guides.push({ type: 'horizontal', position: otherBottom });
           }
           if (Math.abs(currentBottom - otherY) < SNAP_THRESHOLD) {
+            if (direction.includes('s')) {
+              newHeight = otherY - newY;
+            }
             guides.push({ type: 'horizontal', position: otherY });
           }
           if (Math.abs(currentCenterY - otherCenterY) < SNAP_THRESHOLD) {

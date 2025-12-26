@@ -58,22 +58,17 @@ export const PropertySidebar = ({
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
   const contentEditableRef = useRef<HTMLDivElement>(null);
-  const lastLayerIdRef = useRef<string | null>(null);
 
-  // Update contentEditable only when layer selection changes
+  // Update contentEditable when layer selection changes
   useEffect(() => {
     const el = contentEditableRef.current;
     if (!el || !selectedLayerId) return;
 
-    // Only update if we switched to a different layer
-    if (lastLayerIdRef.current !== selectedLayerId) {
-      const layer = layers.find((l) => l.id === selectedLayerId);
-      if (layer && layer.type === 'richtext') {
-        el.innerHTML = layer.content;
-      }
-      lastLayerIdRef.current = selectedLayerId;
+    const layer = layers.find((l) => l.id === selectedLayerId);
+    if (layer && layer.type === 'richtext') {
+      el.innerHTML = layer.content;
     }
-  }, [selectedLayerId, layers]);
+  }, [selectedLayerId]);
   if (!selectedLayerId) {
     return (
       <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
