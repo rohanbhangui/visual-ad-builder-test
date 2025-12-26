@@ -1,7 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import { GOOGLE_FONTS } from './consts';
+import { GOOGLE_FONTS, HTML5_AD_SIZES } from './consts';
 
 export type FontFamily = typeof GOOGLE_FONTS[number];
+export type AdSize = keyof typeof HTML5_AD_SIZES;
 
 // Position type for x, y coordinates
 export interface Position {
@@ -22,10 +23,10 @@ export type LayerContent = TextLayer | RichtextLayer | ImageLayer | VideoLayer |
 export interface BaseLayer {
   id: string;
   label: string;
-  positionX: Record<string, Size>; // Keyed by ad size
-  positionY: Record<string, Size>; // Keyed by ad size
-  width: Record<string, Size>; // Keyed by ad size
-  height: Record<string, Size>; // Keyed by ad size
+  positionX: Partial<Record<AdSize, Size>>; // Keyed by ad size
+  positionY: Partial<Record<AdSize, Size>>; // Keyed by ad size
+  width: Partial<Record<AdSize, Size>>; // Keyed by ad size
+  height: Partial<Record<AdSize, Size>>; // Keyed by ad size
 }
 
 export interface TextLayer extends BaseLayer {
@@ -83,23 +84,11 @@ export interface ButtonLayer extends BaseLayer {
 export interface Canvas {
   id: string;
   name: string;
-  allowedSizes: Array<keyof typeof HTML5_AD_SIZES>;
+  allowedSizes: AdSize[];
   layers: LayerContent[];
   createdAt: Date;
   updatedAt: Date;
 }
-
-// Common HTML5 ad sizes
-export const HTML5_AD_SIZES = {
-  '728x90': { width: 728, height: 90 },
-  '336x280': { width: 336, height: 280 },
-  '300x250': { width: 300, height: 250 },
-  '970x90': { width: 970, height: 90 },
-  '120x600': { width: 120, height: 600 },
-  '300x600': { width: 300, height: 600 },
-  '320x50': { width: 320, height: 50 },
-  '250x250': { width: 250, height: 250 },
-};
 
 // Sample data with 4-5 layers
 export const sampleCanvas: Canvas = {

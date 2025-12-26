@@ -40,3 +40,15 @@ export const GOOGLE_FONTS = [
 // Character limits
 export const MAX_TEXT_CONTENT_LENGTH = 200;
 export const MAX_BUTTON_TEXT_LENGTH = 50;
+
+// Common HTML5 ad sizes
+export const HTML5_AD_SIZES = {
+  '728x90': { width: 728, height: 90 },
+  '336x280': { width: 336, height: 280 },
+  '300x250': { width: 300, height: 250 },
+  '970x90': { width: 970, height: 90 },
+  '120x600': { width: 120, height: 600 },
+  '300x600': { width: 300, height: 600 },
+  '320x50': { width: 320, height: 50 },
+  '250x250': { width: 250, height: 250 },
+} as const;
