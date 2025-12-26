@@ -1,4 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
+import { GOOGLE_FONTS } from './consts';
+
+export type FontFamily = typeof GOOGLE_FONTS[number];
 
 // Position type for x, y coordinates
 export interface Position {
@@ -31,7 +34,7 @@ export interface TextLayer extends BaseLayer {
   styles?: {
     color?: string;
     fontSize?: string;
-    fontFamily?: string;
+    fontFamily?: FontFamily;
   };
 }
 
@@ -41,7 +44,7 @@ export interface RichtextLayer extends BaseLayer {
   styles?: {
     color?: string;
     fontSize?: string;
-    fontFamily?: string;
+    fontFamily?: FontFamily;
   };
 }
 
@@ -72,7 +75,7 @@ export interface ButtonLayer extends BaseLayer {
     backgroundColor?: string;
     color?: string;
     fontSize?: string;
-    fontFamily?: string;
+    fontFamily?: FontFamily;
   };
 }
 
@@ -132,6 +135,7 @@ export const sampleCanvas: Canvas = {
       styles: {
         color: '#ff0000',
         fontSize: '20px',
+        fontFamily: 'Rubik',
       },
     },
     {
@@ -162,6 +166,7 @@ export const sampleCanvas: Canvas = {
       styles: {
         color: '#000000',
         fontSize: '14px',
+        fontFamily: 'Arial',
       },
     },
     {
@@ -220,6 +225,7 @@ export const sampleCanvas: Canvas = {
         backgroundColor: '#333333',
         color: '#ffffff',
         fontSize: '14px',
+        fontFamily: 'Arial',
       },
     },
     {

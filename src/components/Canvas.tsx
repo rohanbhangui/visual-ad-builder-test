@@ -1,5 +1,6 @@
 import React from 'react';
 import { type LayerContent } from '../data';
+import { getGoogleFontsLink } from '../utils/googleFonts';
 
 interface CanvasProps {
   mode: 'edit' | 'preview';
@@ -48,10 +49,10 @@ export const Canvas: React.FC<CanvasProps> = ({
             content = `<img src="${layer.url}" style="${style} object-fit: cover;" alt="${layer.label}">`;
             break;
           case 'text':
-            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'};">${layer.content}</div>`;
+            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'};">${layer.content}</div>`;
             break;
           case 'richtext':
-            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'};">${layer.content}</div>`;
+            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'};">${layer.content}</div>`;
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
@@ -59,7 +60,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             }
             break;
           case 'button':
-            content = `<a href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; cursor: pointer;">${layer.text}</a>`;
+            content = `<a href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;">${layer.text}</a>`;
             break;
         }
 
@@ -67,11 +68,21 @@ export const Canvas: React.FC<CanvasProps> = ({
       })
       .join('\n');
 
+    // Collect all font families used in layers
+    const fontFamilies = layers.flatMap(layer => {
+      if ((layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') && layer.styles?.fontFamily) {
+        return [layer.styles.fontFamily];
+      }
+      return [];
+    });
+    const googleFontsLink = fontFamilies.length > 0 ? getGoogleFontsLink(fontFamilies) : '';
+
     return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
+  ${googleFontsLink ? `<link href="${googleFontsLink}" rel="stylesheet">` : ''}
   <style>
     html, body, div, span, h1, h2, h3, h4, h5, h6, p, img, video, button {
       margin: 0;

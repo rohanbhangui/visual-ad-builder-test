@@ -26,7 +26,7 @@ const App = () => {
   // Load Google Fonts when layers change
   useEffect(() => {
     const fontsInUse = layers
-      .filter((layer) => layer.type === 'richtext' || layer.type === 'button')
+      .filter((layer) => layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button')
       .map((layer) => layer.styles?.fontFamily)
       .filter((font): font is string => !!font);
 
