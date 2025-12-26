@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { type LayerContent, type AdSize } from '../data';
 import { HTML5_AD_SIZES } from '../consts';
 
@@ -39,6 +39,10 @@ export const useCanvasInteractions = ({
 
   const dimensions = HTML5_AD_SIZES[selectedSize];
   const SNAP_THRESHOLD = 8;
+  
+  // Store latest values in refs so event handlers always have current state
+  const handleMouseMoveRef = useRef<((e: MouseEvent | React.MouseEvent) => void) | null>(null);
+  const handleMouseUpRef = useRef<(() => void) | null>(null);
 
   const handleLayerMouseDown = (e: React.MouseEvent, layerId: string) => {
     if (mode !== 'edit') return;
@@ -93,7 +97,7 @@ export const useCanvasInteractions = ({
     };
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent | MouseEvent) => {
     if (isDragging && selectedLayerId) {
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
@@ -281,18 +285,11 @@ export const useCanvasInteractions = ({
         const currentCenterX = newX + newWidth / 2;
         const currentCenterY = newY + newHeight / 2;
 
-        // Snap to canvas edges
+        // Snap to canvas edges (show guides but don't constrain)
         if (Math.abs(newX - canvasEdges.left) < SNAP_THRESHOLD) {
-          if (direction.includes('w')) {
-            newWidth = width + (layerX - canvasEdges.left);
-            newX = canvasEdges.left;
-          }
           guides.push({ type: 'vertical', position: canvasEdges.left });
         }
         if (Math.abs(currentRight - canvasEdges.right) < SNAP_THRESHOLD) {
-          if (direction.includes('e')) {
-            newWidth = canvasEdges.right - newX;
-          }
           guides.push({ type: 'vertical', position: canvasEdges.right });
         }
         if (Math.abs(currentCenterX - canvasEdges.centerX) < SNAP_THRESHOLD) {
@@ -300,16 +297,9 @@ export const useCanvasInteractions = ({
         }
 
         if (Math.abs(newY - canvasEdges.top) < SNAP_THRESHOLD) {
-          if (direction.includes('n')) {
-            newHeight = height + (layerY - canvasEdges.top);
-            newY = canvasEdges.top;
-          }
           guides.push({ type: 'horizontal', position: canvasEdges.top });
         }
         if (Math.abs(currentBottom - canvasEdges.bottom) < SNAP_THRESHOLD) {
-          if (direction.includes('s')) {
-            newHeight = canvasEdges.bottom - newY;
-          }
           guides.push({ type: 'horizontal', position: canvasEdges.bottom });
         }
         if (Math.abs(currentCenterY - canvasEdges.centerY) < SNAP_THRESHOLD) {
@@ -337,29 +327,15 @@ export const useCanvasInteractions = ({
 
           // Vertical snapping
           if (Math.abs(newX - otherX) < SNAP_THRESHOLD) {
-            if (direction.includes('w')) {
-              newWidth = width + (layerX - otherX);
-              newX = otherX;
-            }
             guides.push({ type: 'vertical', position: otherX });
           }
           if (Math.abs(currentRight - otherRight) < SNAP_THRESHOLD) {
-            if (direction.includes('e')) {
-              newWidth = otherRight - newX;
-            }
             guides.push({ type: 'vertical', position: otherRight });
           }
           if (Math.abs(newX - otherRight) < SNAP_THRESHOLD) {
-            if (direction.includes('w')) {
-              newWidth = width + (layerX - otherRight);
-              newX = otherRight;
-            }
             guides.push({ type: 'vertical', position: otherRight });
           }
           if (Math.abs(currentRight - otherX) < SNAP_THRESHOLD) {
-            if (direction.includes('e')) {
-              newWidth = otherX - newX;
-            }
             guides.push({ type: 'vertical', position: otherX });
           }
           if (Math.abs(currentCenterX - otherCenterX) < SNAP_THRESHOLD) {
@@ -368,29 +344,15 @@ export const useCanvasInteractions = ({
 
           // Horizontal snapping
           if (Math.abs(newY - otherY) < SNAP_THRESHOLD) {
-            if (direction.includes('n')) {
-              newHeight = height + (layerY - otherY);
-              newY = otherY;
-            }
             guides.push({ type: 'horizontal', position: otherY });
           }
           if (Math.abs(currentBottom - otherBottom) < SNAP_THRESHOLD) {
-            if (direction.includes('s')) {
-              newHeight = otherBottom - newY;
-            }
             guides.push({ type: 'horizontal', position: otherBottom });
           }
           if (Math.abs(newY - otherBottom) < SNAP_THRESHOLD) {
-            if (direction.includes('n')) {
-              newHeight = height + (layerY - otherBottom);
-              newY = otherBottom;
-            }
             guides.push({ type: 'horizontal', position: otherBottom });
           }
           if (Math.abs(currentBottom - otherY) < SNAP_THRESHOLD) {
-            if (direction.includes('s')) {
-              newHeight = otherY - newY;
-            }
             guides.push({ type: 'horizontal', position: otherY });
           }
           if (Math.abs(currentCenterY - otherCenterY) < SNAP_THRESHOLD) {
@@ -433,20 +395,46 @@ export const useCanvasInteractions = ({
         setSnapLines([]);
       }
     }
-  };
+  }, [isDragging, isResizing, selectedLayerId, layers, selectedSize, isShiftPressed, dimensions, setLayers]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
     setSnapLines([]);
-  };
+  }, []);
 
-  const handleMouseLeave = () => {
-    // Cleanup when mouse leaves the canvas area - always clear everything
-    setIsDragging(false);
-    setIsResizing(false);
-    setSnapLines([]);
-  };
+  const handleMouseLeave = useCallback(() => {
+    // Only cleanup if not actively dragging or resizing
+    // (global listeners will handle those cases)
+    if (!isDragging && !isResizing) {
+      setSnapLines([]);
+    }
+  }, [isDragging, isResizing]);
+  
+  // Update refs with latest handlers
+  handleMouseMoveRef.current = handleMouseMove;
+  handleMouseUpRef.current = handleMouseUp;
+
+  // Add global mouse listeners during drag/resize to handle fast mouse movements
+  useEffect(() => {
+    if (!isDragging && !isResizing) return;
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      handleMouseMoveRef.current?.(e);
+    };
+
+    const handleGlobalMouseUp = () => {
+      handleMouseUpRef.current?.();
+    };
+
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, isResizing]);
 
   return {
     isDragging,
