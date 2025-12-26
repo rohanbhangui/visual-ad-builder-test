@@ -5,9 +5,10 @@ interface PositionSizeInputProps {
   value: number;
   unit: 'px' | '%';
   onChange: (value: number, unit?: 'px' | '%') => void;
+  disabled?: boolean;
 }
 
-export const PositionSizeInput = ({ label, value, unit, onChange }: PositionSizeInputProps) => {
+export const PositionSizeInput = ({ label, value, unit, onChange, disabled }: PositionSizeInputProps) => {
   const [error, setError] = useState<string>('');
 
   const validateValue = (val: number, currentUnit: 'px' | '%'): boolean => {
@@ -63,14 +64,16 @@ export const PositionSizeInput = ({ label, value, unit, onChange }: PositionSize
           type="number"
           value={value}
           onChange={handleValueChange}
+          disabled={disabled}
           className={`w-16 px-2 py-1 text-sm border rounded ${
             error ? 'border-red-500' : 'border-gray-300'
-          }`}
+          } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
         />
         <select
           value={unit}
           onChange={handleUnitChange}
-          className="px-1 py-1 text-sm border border-gray-300 rounded"
+          disabled={disabled}
+          className={`px-1 py-1 text-sm border border-gray-300 rounded ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
         >
           <option value="px">px</option>
           <option value="%">%</option>

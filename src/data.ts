@@ -23,6 +23,7 @@ export type LayerContent = TextLayer | RichtextLayer | ImageLayer | VideoLayer |
 export interface BaseLayer {
   id: string;
   label: string;
+  locked: boolean;
   positionX: Partial<Record<AdSize, Size>>; // Keyed by ad size
   positionY: Partial<Record<AdSize, Size>>; // Keyed by ad size
   width: Partial<Record<AdSize, Size>>; // Keyed by ad size
@@ -106,6 +107,7 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'Main Headline',
       type: 'richtext',
+      locked: false,
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
@@ -119,7 +121,7 @@ export const sampleCanvas: Canvas = {
       width: {
         '300x250': { value: 280, unit: 'px' },
         '336x280': { value: 316, unit: 'px' },
-        '728x90': { value: 708, unit: 'px' },
+        '728x90': { value: 462, unit: 'px' },
       },
       height: {
         '300x250': { value: 60, unit: 'px' },
@@ -137,6 +139,7 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'Description Text',
       type: 'text',
+      locked: false,
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
@@ -150,7 +153,7 @@ export const sampleCanvas: Canvas = {
       width: {
         '300x250': { value: 280, unit: 'px' },
         '336x280': { value: 316, unit: 'px' },
-        '728x90': { value: 708, unit: 'px' },
+        '728x90': { value: 462, unit: 'px' },
       },
       height: {
         '300x250': { value: 50, unit: 'px' },
@@ -168,25 +171,26 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'Demo Video',
       type: 'video',
+      locked: false,
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
-        '728x90': { value: 0, unit: 'px' },
+        '728x90': { value: 498, unit: 'px' },
       },
       positionY: {
         '300x250': { value: 140, unit: 'px' },
         '336x280': { value: 170, unit: 'px' },
-        '728x90': { value: 0, unit: 'px' },
+        '728x90': { value: 17, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
         '336x280': { value: 316, unit: 'px' },
-        '728x90': { value: 0, unit: 'px' },
+        '728x90': { value: 100, unit: 'px' },
       },
       height: {
         '300x250': { value: 50, unit: 'px' },
         '336x280': { value: 50, unit: 'px' },
-        '728x90': { value: 0, unit: 'px' },
+        '728x90': { value: 56, unit: 'px' },
       },
       url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
       properties: {
@@ -198,15 +202,16 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'CTA Button',
       type: 'button',
+      locked: false,
       positionX: {
         '300x250': { value: 100, unit: 'px' },
         '336x280': { value: 120, unit: 'px' },
-        '728x90': { value: 300, unit: 'px' },
+        '728x90': { value: 618, unit: 'px' },
       },
       positionY: {
-        '300x250': { value: 215, unit: 'px' },
+        '300x250': { value: 206, unit: 'px' },
         '336x280': { value: 230, unit: 'px' },
-        '728x90': { value: 30, unit: 'px' },
+        '728x90': { value: 29, unit: 'px' },
       },
       width: {
         '300x250': { value: 100, unit: 'px' },
@@ -231,6 +236,7 @@ export const sampleCanvas: Canvas = {
       id: uuidv4(),
       label: 'Background Image',
       type: 'image',
+      locked: true,
       positionX: {
         '300x250': { value: 0, unit: 'px' },
         '336x280': { value: 0, unit: 'px' },

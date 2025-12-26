@@ -46,6 +46,12 @@ const App = () => {
     }
   };
 
+  const handleToggleLock = (layerId: string) => {
+    setLayers((prev) =>
+      prev.map((l) => (l.id === layerId ? { ...l, locked: !l.locked } : l))
+    );
+  };
+
   // Use the canvas interactions hook
   const {
     snapLines,
@@ -457,6 +463,7 @@ const App = () => {
       id: crypto.randomUUID(),
       label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
       type,
+      locked: false,
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
@@ -534,6 +541,7 @@ const App = () => {
               onLayerDrop={handleLayerDrop}
               onLayerDragEnd={handleLayerDragEnd}
               onAddLayer={handleAddLayer}
+              onToggleLock={handleToggleLock}
             />
           )}
 

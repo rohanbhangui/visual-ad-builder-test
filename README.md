@@ -18,7 +18,9 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Add new elements
 - Reorder elements using drag and drop handles
 - Indicators for active layer
+- Indicators and buttons to lock and unlock layers
 - Layers panel is floating and can be snapped to left or right edge
+
 
 ### Sidebar
 - Color pickers (text and background)
@@ -31,3 +33,4 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Quick alignment buttons
 - Delete layer button (with confirmation)
 - Ability to edit the label of the layer
+- Edit/Update layer label

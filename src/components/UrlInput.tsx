@@ -5,9 +5,10 @@ interface UrlInputProps {
   value: string;
   onChange: (url: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
-export const UrlInput = ({ label, value, onChange, placeholder }: UrlInputProps) => {
+export const UrlInput = ({ label, value, onChange, placeholder, disabled }: UrlInputProps) => {
   const [inputValue, setInputValue] = useState(value);
   const [error, setError] = useState(false);
 
@@ -45,9 +46,10 @@ export const UrlInput = ({ label, value, onChange, placeholder }: UrlInputProps)
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
+        disabled={disabled}
         className={`w-full px-2 py-2 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           error ? 'border-red-500' : 'border-gray-300'
-        }`}
+        } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
         placeholder={placeholder}
       />
     </div>

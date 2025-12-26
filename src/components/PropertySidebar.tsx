@@ -127,13 +127,14 @@ export const PropertySidebar = ({
           ) : (
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-medium text-gray-700 flex-1">{layer.label}</h3>
-              <button
-                onClick={() => {
-                  setEditedLabel(layer.label);
-                  setIsEditingLabel(true);
-                }}
-                className="text-gray-400 hover:text-gray-600 p-1 transition-colors"
-              >
+              {!layer.locked && (
+                <button
+                  onClick={() => {
+                    setEditedLabel(layer.label);
+                    setIsEditingLabel(true);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 p-1 transition-colors"
+                >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="14"
@@ -149,6 +150,7 @@ export const PropertySidebar = ({
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                 </svg>
               </button>
+              )}
             </div>
           )}
         </div>
@@ -160,7 +162,8 @@ export const PropertySidebar = ({
             <div className="flex gap-1">
               <button
                 onClick={() => onAlignLayer(layer.id, 'left')}
-                className="p-2 border border-gray-300 rounded hover:bg-gray-50"
+                disabled={layer.locked}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Align Left"
               >
                 <svg
@@ -177,7 +180,8 @@ export const PropertySidebar = ({
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'center-h')}
-                className="p-2 border border-gray-300 rounded hover:bg-gray-50"
+                disabled={layer.locked}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Center Horizontally"
               >
                 <svg
@@ -194,7 +198,8 @@ export const PropertySidebar = ({
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'right')}
-                className="p-2 border border-gray-300 rounded hover:bg-gray-50"
+                disabled={layer.locked}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Align Right"
               >
                 <svg
@@ -211,7 +216,8 @@ export const PropertySidebar = ({
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'top')}
-                className="p-2 border border-gray-300 rounded hover:bg-gray-50"
+                disabled={layer.locked}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Align Top"
               >
                 <svg
@@ -228,7 +234,8 @@ export const PropertySidebar = ({
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'center-v')}
-                className="p-2 border border-gray-300 rounded hover:bg-gray-50"
+                disabled={layer.locked}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Center Vertically"
               >
                 <svg
@@ -245,7 +252,8 @@ export const PropertySidebar = ({
               </button>
               <button
                 onClick={() => onAlignLayer(layer.id, 'bottom')}
-                className="p-2 border border-gray-300 rounded hover:bg-gray-50"
+                disabled={layer.locked}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Align Bottom"
               >
                 <svg
@@ -270,12 +278,14 @@ export const PropertySidebar = ({
               value={posX.value}
               unit={posX.unit || 'px'}
               onChange={(value, unit) => onPropertyChange(layer.id, 'positionX', value, unit)}
+              disabled={layer.locked}
             />
             <PositionSizeInput
               label="Y"
               value={posY.value}
               unit={posY.unit || 'px'}
               onChange={(value, unit) => onPropertyChange(layer.id, 'positionY', value, unit)}
+              disabled={layer.locked}
             />
           </div>
 
@@ -286,12 +296,14 @@ export const PropertySidebar = ({
               value={width.value}
               unit={width.unit || 'px'}
               onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
+              disabled={layer.locked}
             />
             <PositionSizeInput
               label="Height"
               value={height.value}
               unit={height.unit || 'px'}
               onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
+              disabled={layer.locked}
             />
           </div>
 
@@ -317,6 +329,7 @@ export const PropertySidebar = ({
                   value={layer.url}
                   onChange={(url) => onImageUrlChange(layer.id, url)}
                   placeholder="https://example.com/image.jpg"
+                  disabled={layer.locked}
                 />
               </div>
 
@@ -325,7 +338,8 @@ export const PropertySidebar = ({
                 <select
                   value={layer.styles?.objectFit || 'cover'}
                   onChange={(e) => onObjectFitChange(layer.id, e.target.value)}
-                  className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={layer.locked}
+                  className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 >
                   <option value="cover">Cover</option>
                   <option value="contain">Contain</option>
@@ -358,6 +372,7 @@ export const PropertySidebar = ({
                   value={layer.url}
                   onChange={(url) => onVideoUrlChange(layer.id, url)}
                   placeholder="https://example.com/video.mp4"
+                  disabled={layer.locked}
                 />
               </div>
 
@@ -367,7 +382,8 @@ export const PropertySidebar = ({
                     type="checkbox"
                     checked={layer.properties?.autoplay ?? false}
                     onChange={(e) => onVideoPropertyChange(layer.id, 'autoplay', e.target.checked)}
-                    className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    disabled={layer.locked}
+                    className={`w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'cursor-not-allowed' : ''}`}
                   />
                   <span className="text-gray-700">Autoplay</span>
                 </label>
@@ -377,7 +393,8 @@ export const PropertySidebar = ({
                     type="checkbox"
                     checked={layer.properties?.controls ?? true}
                     onChange={(e) => onVideoPropertyChange(layer.id, 'controls', e.target.checked)}
-                    className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    disabled={layer.locked}
+                    className={`w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'cursor-not-allowed' : ''}`}
                   />
                   <span className="text-gray-700">Show Controls</span>
                 </label>
@@ -403,7 +420,8 @@ export const PropertySidebar = ({
                   type="text"
                   value={layer.text}
                   onChange={(e) => onTextChange(layer.id, e.target.value)}
-                  className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={layer.locked}
+                  className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 />
               </div>
 
@@ -411,6 +429,7 @@ export const PropertySidebar = ({
                 label="Text Color"
                 value={layer.styles?.color || '#ffffff'}
                 onChange={(color) => onColorChange(layer.id, color)}
+                disabled={layer.locked}
               />
 
               <div className="grid grid-cols-2 gap-2">
@@ -421,7 +440,8 @@ export const PropertySidebar = ({
                   <select
                     value={layer.styles?.fontFamily || 'Arial'}
                     onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
-                    className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={layer.locked}
+                    className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   >
                     {GOOGLE_FONTS.map((font) => (
                       <option key={font} value={font}>
@@ -435,7 +455,8 @@ export const PropertySidebar = ({
                   <select
                     value={layer.styles?.fontSize || '14px'}
                     onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                    className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={layer.locked}
+                    className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   >
                     {FONT_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>
@@ -450,6 +471,7 @@ export const PropertySidebar = ({
                 label="Background Color"
                 value={layer.styles?.backgroundColor || '#333333'}
                 onChange={(color) => onBackgroundColorChange(layer.id, color)}
+                disabled={layer.locked}
               />
             </>
           )}
@@ -476,7 +498,8 @@ export const PropertySidebar = ({
                   <textarea
                     value={layer.content}
                     onChange={(e) => onContentChange(layer.id, e.target.value)}
-                    className="w-full px-2 py-2 text-sm border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={layer.locked}
+                    className={`w-full px-2 py-2 text-sm border border-gray-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     rows={4}
                   />
                 ) : (
@@ -486,7 +509,8 @@ export const PropertySidebar = ({
                       <select
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
-                        className="flex-1 px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={layer.locked}
+                        className={`flex-1 px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       >
                         {GOOGLE_FONTS.map((font) => (
                           <option key={font} value={font}>
@@ -497,7 +521,8 @@ export const PropertySidebar = ({
                       <select
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                        className="px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={layer.locked}
+                        className={`px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>
@@ -514,7 +539,8 @@ export const PropertySidebar = ({
                           e.preventDefault();
                           document.execCommand('bold', false);
                         }}
-                        className="px-3 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-50"
+                        disabled={layer.locked}
+                        className={`px-3 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                         title="Bold"
                       >
                         B
@@ -524,7 +550,8 @@ export const PropertySidebar = ({
                           e.preventDefault();
                           document.execCommand('italic', false);
                         }}
-                        className="px-3 py-1 text-sm italic border border-gray-300 rounded hover:bg-gray-50"
+                        disabled={layer.locked}
+                        className={`px-3 py-1 text-sm italic border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                         title="Italic"
                         style={{ fontFamily: 'Georgia, serif' }}
                       >
@@ -535,7 +562,8 @@ export const PropertySidebar = ({
                           e.preventDefault();
                           document.execCommand('underline', false);
                         }}
-                        className="px-3 py-1 text-sm underline border border-gray-300 rounded hover:bg-gray-50"
+                        disabled={layer.locked}
+                        className={`px-3 py-1 text-sm underline border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                         title="Underline"
                       >
                         U
@@ -544,9 +572,10 @@ export const PropertySidebar = ({
                       <div className="inline-flex border border-gray-300 rounded overflow-hidden">
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'left')}
+                          disabled={layer.locked}
                           className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 ${
                             (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
-                          }`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Left"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -557,9 +586,10 @@ export const PropertySidebar = ({
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'center')}
+                          disabled={layer.locked}
                           className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 ${
                             layer.styles?.textAlign === 'center' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
-                          }`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Center"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -570,9 +600,10 @@ export const PropertySidebar = ({
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'right')}
+                          disabled={layer.locked}
                           className={`px-3 py-1 text-sm ${
                             layer.styles?.textAlign === 'right' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
-                          }`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Right"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -585,10 +616,10 @@ export const PropertySidebar = ({
                     </div>
                     <div
                       ref={contentEditableRef}
-                      contentEditable
+                      contentEditable={!layer.locked}
                       onInput={(e) => onContentChange(layer.id, e.currentTarget.innerHTML)}
                       suppressContentEditableWarning
-                      className="w-full px-2 py-2 text-sm border border-gray-300 rounded min-h-[80px] max-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto"
+                      className={`w-full px-2 py-2 text-sm border border-gray-300 rounded min-h-[80px] max-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       style={{
                         color: layer.styles?.color || '#000000',
                         fontSize: layer.styles?.fontSize || '14px',
@@ -608,6 +639,7 @@ export const PropertySidebar = ({
                       label="Text Color"
                       value={layer.styles?.color || '#000000'}
                       onChange={(color) => onColorChange(layer.id, color)}
+                      disabled={layer.locked}
                     />
                     
                     <div>
@@ -615,9 +647,10 @@ export const PropertySidebar = ({
                       <div className="inline-flex border border-gray-300 rounded overflow-hidden">
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'left')}
+                          disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
                             (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
-                          }`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Left"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -628,9 +661,10 @@ export const PropertySidebar = ({
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'center')}
+                          disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
                             layer.styles?.textAlign === 'center' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
-                          }`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Center"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -641,9 +675,10 @@ export const PropertySidebar = ({
                         </button>
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'right')}
+                          disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm ${
                             layer.styles?.textAlign === 'right' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
-                          }`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Right"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -663,7 +698,8 @@ export const PropertySidebar = ({
                       <select
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
-                        className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={layer.locked}
+                        className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       >
                         {GOOGLE_FONTS.map((font) => (
                           <option key={font} value={font}>
@@ -678,7 +714,8 @@ export const PropertySidebar = ({
                       <select
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                        className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={layer.locked}
+                        className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>
@@ -698,7 +735,10 @@ export const PropertySidebar = ({
         <div className="mt-6">
           <button
             onClick={() => onDelete(layer.id)}
-            className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded transition-colors"
+            disabled={layer.locked}
+            className={`w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded transition-colors ${
+              layer.locked ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             Delete Layer
           </button>

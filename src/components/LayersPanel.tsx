@@ -16,6 +16,7 @@ interface LayersPanelProps {
   onLayerDrop: (e: React.DragEvent, index: number) => void;
   onLayerDragEnd: () => void;
   onAddLayer: (type: 'text' | 'richtext' | 'image' | 'video' | 'button') => void;
+  onToggleLock: (layerId: string) => void;
 }
 
 export const LayersPanel = ({
@@ -33,6 +34,7 @@ export const LayersPanel = ({
   onLayerDrop,
   onLayerDragEnd,
   onAddLayer,
+  onToggleLock,
 }: LayersPanelProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -187,7 +189,7 @@ export const LayersPanel = ({
             key={layer.id}
             onDragOver={(e) => onLayerDragOver(e, index)}
             onDrop={(e) => onLayerDrop(e, index)}
-            className={`layer-item flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
+            className={`layer-item group/layer flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
               selectedLayerId === layer.id ? 'bg-blue-50' : ''
             }`}
             style={{
@@ -249,7 +251,7 @@ export const LayersPanel = ({
               </svg>
             </div>
             <div
-              className="flex-1 cursor-pointer hover:bg-gray-50 -my-2 py-2 -mr-4 pr-4 rounded-r"
+              className="flex-1 cursor-pointer hover:bg-gray-50 -my-2 py-2 pr-2 -mr-[72px] rounded-r"
               onClick={(e) => {
                 e.stopPropagation();
                 onSelectLayer(layer.id);
@@ -258,6 +260,30 @@ export const LayersPanel = ({
               <div className="text-sm font-medium text-gray-900">{layer.label}</div>
               <div className="text-xs text-gray-500">{layer.type}</div>
             </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLock(layer.id);
+              }}
+              className={`p-1 transition-colors cursor-pointer ${
+                layer.locked
+                  ? 'text-gray-600 hover:text-gray-800'
+                  : 'text-gray-400 opacity-0 group-hover/layer:opacity-100 hover:text-gray-600'
+              }`}
+              title={layer.locked ? 'Unlock layer' : 'Lock layer'}
+            >
+              {layer.locked ? (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              ) : (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                </svg>
+              )}
+            </button>
             {selectedLayerId === layer.id && <div className="w-2 h-2 rounded-full bg-blue-600" />}
           </div>
         ))}

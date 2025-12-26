@@ -4,9 +4,10 @@ interface ColorInputProps {
   label: string;
   value: string;
   onChange: (color: string) => void;
+  disabled?: boolean;
 }
 
-export const ColorInput = ({ label, value, onChange }: ColorInputProps) => {
+export const ColorInput = ({ label, value, onChange, disabled }: ColorInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState(value || '');
 
@@ -52,13 +53,15 @@ export const ColorInput = ({ label, value, onChange }: ColorInputProps) => {
             setInputValue(e.target.value);
             onChange(e.target.value);
           }}
-          className="w-8 h-8 border-none cursor-pointer flex-shrink-0 ml-0.5"
+          disabled={disabled}
+          className={`w-8 h-8 border-none flex-shrink-0 ml-0.5 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
         />
         <input
           type="text"
           value={inputValue}
           onChange={handleTextChange}
-          className="flex-1 h-8 px-2 text-sm border-none border-l border-gray-300 focus:outline-none"
+          disabled={disabled}
+          className={`flex-1 h-8 px-2 text-sm border-none border-l border-gray-300 focus:outline-none ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           placeholder="#000000"
         />
       </div>
