@@ -40,6 +40,7 @@ export interface RichtextLayer extends BaseLayer {
   styles?: {
     color?: string;
     fontSize?: string;
+    fontFamily?: string;
   };
 }
 
@@ -69,6 +70,7 @@ export interface ButtonLayer extends BaseLayer {
     backgroundColor?: string;
     color?: string;
     fontSize?: string;
+    fontFamily?: string;
   };
 }
 

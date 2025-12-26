@@ -150,6 +150,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               pointerEvents: 'none',
               color: layer.styles?.color || '#000000',
               fontSize: layer.styles?.fontSize || '14px',
+              fontFamily: layer.styles?.fontFamily || 'Arial',
               whiteSpace: 'pre-wrap',
             }}
             dangerouslySetInnerHTML={{ __html: layer.content }}
@@ -179,6 +180,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               backgroundColor: layer.styles?.backgroundColor || '#333333',
               color: layer.styles?.color || '#ffffff',
               fontSize: layer.styles?.fontSize || '14px',
+              fontFamily: layer.styles?.fontFamily || 'Arial',
               pointerEvents: 'none',
             }}
           >

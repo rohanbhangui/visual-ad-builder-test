@@ -6,6 +6,7 @@ import { LayersPanel } from './components/LayersPanel';
 import { PropertySidebar } from './components/PropertySidebar';
 import { Canvas } from './components/Canvas';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
+import { loadGoogleFonts } from './utils/googleFonts';
 
 const App = () => {
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
@@ -21,6 +22,18 @@ const App = () => {
   const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
 
   const dimensions = HTML5_AD_SIZES[selectedSize];
+
+  // Load Google Fonts when layers change
+  useEffect(() => {
+    const fontsInUse = layers
+      .filter((layer) => layer.type === 'richtext' || layer.type === 'button')
+      .map((layer) => layer.styles?.fontFamily)
+      .filter((font): font is string => !!font);
+
+    if (fontsInUse.length > 0) {
+      loadGoogleFonts(fontsInUse);
+    }
+  }, [layers]);
 
   const handleDeleteLayer = (layerId: string) => {
     const layer = layers.find((l) => l.id === layerId);
@@ -258,6 +271,23 @@ const App = () => {
     );
   };
 
+  const handleFontFamilyChange = (layerId: string, fontFamily: string) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && (l.type === 'richtext' || l.type === 'button')) {
+          return {
+            ...l,
+            styles: {
+              ...l.styles,
+              fontFamily,
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
+
   const handleTextChange = (layerId: string, text: string) => {
     setLayers((prev) =>
       prev.map((l) => {
@@ -460,6 +490,7 @@ const App = () => {
             onContentChange={handleContentChange}
             onColorChange={handleColorChange}
             onFontSizeChange={handleFontSizeChange}
+            onFontFamilyChange={handleFontFamilyChange}
             onTextChange={handleTextChange}
             onBackgroundColorChange={handleBackgroundColorChange}
             onAlignLayer={handleAlignLayer}

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { HTML5_AD_SIZES, type LayerContent } from '../data';
 import { ColorInput } from './ColorInput';
 import { PositionSizeInput } from './PositionSizeInput';
-import { FONT_SIZE_OPTIONS, MAX_TEXT_CONTENT_LENGTH, MAX_BUTTON_TEXT_LENGTH } from '../consts';
+import { FONT_SIZE_OPTIONS, MAX_TEXT_CONTENT_LENGTH, MAX_BUTTON_TEXT_LENGTH, GOOGLE_FONTS } from '../consts';
 
 interface PropertySidebarProps {
   selectedLayerId: string | null;
@@ -19,6 +19,7 @@ interface PropertySidebarProps {
   onContentChange: (layerId: string, content: string) => void;
   onColorChange: (layerId: string, color: string) => void;
   onFontSizeChange: (layerId: string, fontSize: string) => void;
+  onFontFamilyChange: (layerId: string, fontFamily: string) => void;
   onTextChange: (layerId: string, text: string) => void;
   onBackgroundColorChange: (layerId: string, color: string) => void;
   onAlignLayer: (
@@ -37,6 +38,7 @@ export const PropertySidebar = ({
   onContentChange,
   onColorChange,
   onFontSizeChange,
+  onFontFamilyChange,
   onTextChange,
   onBackgroundColorChange,
   onAlignLayer,
@@ -303,31 +305,47 @@ export const PropertySidebar = ({
               </div>
 
               <ColorInput
-                label="Background Color"
-                value={layer.styles?.backgroundColor || '#333333'}
-                onChange={(color) => onBackgroundColorChange(layer.id, color)}
-              />
-
-              <ColorInput
                 label="Text Color"
                 value={layer.styles?.color || '#ffffff'}
                 onChange={(color) => onColorChange(layer.id, color)}
               />
 
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
-                <select
-                  value={layer.styles?.fontSize || '14px'}
-                  onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {FONT_SIZE_OPTIONS.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Font Family</label>
+                  <select
+                    value={layer.styles?.fontFamily || 'Arial'}
+                    onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {GOOGLE_FONTS.map((font) => (
+                      <option key={font} value={font}>
+                        {font}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
+                  <select
+                    value={layer.styles?.fontSize || '14px'}
+                    onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {FONT_SIZE_OPTIONS.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
+              <ColorInput
+                label="Background Color"
+                value={layer.styles?.backgroundColor || '#333333'}
+                onChange={(color) => onBackgroundColorChange(layer.id, color)}
+              />
             </>
           )}
 
@@ -354,8 +372,8 @@ export const PropertySidebar = ({
                   />
                 ) : (
                   <>
-                    {/* Rich Text Formatting Buttons with Font Size */}
-                    <div className="flex gap-1 mb-1">
+                    {/* Rich Text Formatting Buttons with Font Size and Font Family */}
+                    <div className="flex flex-wrap gap-1 mb-1">
                       <button
                         onMouseDown={(e) => {
                           e.preventDefault();
@@ -388,9 +406,20 @@ export const PropertySidebar = ({
                         U
                       </button>
                       <select
+                        value={layer.styles?.fontFamily || 'Arial'}
+                        onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
+                        className="flex-1 min-w-0 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {GOOGLE_FONTS.map((font) => (
+                          <option key={font} value={font}>
+                            {font}
+                          </option>
+                        ))}
+                      </select>
+                      <select
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                        className="ml-auto px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>
@@ -408,6 +437,7 @@ export const PropertySidebar = ({
                       style={{
                         color: layer.styles?.color || '#000000',
                         fontSize: layer.styles?.fontSize || '14px',
+                        fontFamily: layer.styles?.fontFamily || 'Arial',
                       }}
                     />
                   </>
