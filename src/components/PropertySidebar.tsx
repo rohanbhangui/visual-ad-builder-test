@@ -132,7 +132,7 @@ export const PropertySidebar = ({
                   setEditedLabel(layer.label);
                   setIsEditingLabel(true);
                 }}
-                className="opacity-0 group-hover/label:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 p-1"
+                className="text-gray-400 hover:text-gray-600 p-1 transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -486,7 +486,7 @@ export const PropertySidebar = ({
                       <select
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
-                        className="flex-1 px-2 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         {GOOGLE_FONTS.map((font) => (
                           <option key={font} value={font}>
@@ -497,7 +497,7 @@ export const PropertySidebar = ({
                       <select
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                        className="px-2 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>
@@ -663,7 +663,7 @@ export const PropertySidebar = ({
                       <select
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
-                        className="w-full px-2 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         {GOOGLE_FONTS.map((font) => (
                           <option key={font} value={font}>
@@ -678,7 +678,7 @@ export const PropertySidebar = ({
                       <select
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                        className="w-full px-2 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>

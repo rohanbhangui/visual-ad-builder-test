@@ -30,3 +30,4 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Micro adjustment fields for position, width and height (with unit adjustments % vs. px)
 - Quick alignment buttons
 - Delete layer button (with confirmation)
+- Ability to edit the label of the layer
