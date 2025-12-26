@@ -645,6 +645,18 @@ export const PropertySidebar = ({
           )}
         </div>
 
+        {/* Text Color for richtext */}
+        {layer.type === 'richtext' && (
+          <div className="mt-4">
+            <ColorInput
+              label="Text Color"
+              value={layer.styles?.color || '#000000'}
+              onChange={(color) => onColorChange(layer.id, color)}
+              disabled={layer.locked}
+            />
+          </div>
+        )}
+
         {/* Delete Button */}
         <div className="mt-6">
           <button

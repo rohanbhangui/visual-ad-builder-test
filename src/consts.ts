@@ -50,7 +50,7 @@ export const COLORS = {
 
 // Tailwind color classes for UI elements
 export const UI_COLORS = {
-  SELECTED_LAYER_BG: 'bg-blue-50', // Light blue background for selected layer in panel
+  SELECTED_LAYER_BG: 'bg-blue-100', // Darker blue background for selected layer in panel
   SELECTED_INDICATOR: 'bg-blue-600', // Blue dot indicator for selected layer
   ACTIVE_BUTTON: 'bg-blue-100', // Light blue for active text alignment buttons
   ACTIVE_BUTTON_HOVER: 'hover:bg-blue-200', // Hover state for active buttons

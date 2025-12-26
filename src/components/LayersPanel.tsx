@@ -173,7 +173,7 @@ export const LayersPanel = ({
             onDragOver={(e) => onLayerDragOver(e, index)}
             onDrop={(e) => onLayerDrop(e, index)}
             className={`layer-item group/layer flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
-              selectedLayerId === layer.id ? UI_COLORS.SELECTED_LAYER_BG : ''
+              selectedLayerId === layer.id ? `${UI_COLORS.SELECTED_LAYER_BG} hover:bg-blue-200` : ''
             }`}
             style={{
               opacity: draggedLayerIndex === index ? 0.4 : 1,
@@ -227,7 +227,9 @@ export const LayersPanel = ({
               <DragHandleIcon />
             </div>
             <div
-              className="flex-1 cursor-pointer hover:bg-gray-50 -my-2 py-2 pr-2 -mr-[72px] rounded-r"
+              className={`flex-1 cursor-pointer -my-2 py-2 pr-2 -mr-[72px] rounded-r ${
+                selectedLayerId !== layer.id ? 'hover:bg-gray-50' : ''
+              }`}
               onClick={(e) => {
                 e.stopPropagation();
                 onSelectLayer(layer.id);

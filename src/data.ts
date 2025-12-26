@@ -114,8 +114,8 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 10, unit: 'px' },
       },
       positionY: {
-        '300x250': { value: 20, unit: 'px' },
-        '336x280': { value: 20, unit: 'px' },
+        '300x250': { value: 50, unit: 'px' },
+        '336x280': { value: 69, unit: 'px' },
         '728x90': { value: 5, unit: 'px' },
       },
       width: {
@@ -124,8 +124,8 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 462, unit: 'px' },
       },
       height: {
-        '300x250': { value: 60, unit: 'px' },
-        '336x280': { value: 60, unit: 'px' },
+        '300x250': { value: 35, unit: 'px' },
+        '336x280': { value: 35, unit: 'px' },
         '728x90': { value: 30, unit: 'px' },
       },
       content: '<strong>Amazing Product</strong>',
@@ -133,6 +133,7 @@ export const sampleCanvas: Canvas = {
         color: '#ff0000',
         fontSize: '20px',
         fontFamily: 'Rubik',
+        textAlign: 'center',
       },
     },
     {
@@ -142,29 +143,30 @@ export const sampleCanvas: Canvas = {
       locked: false,
       positionX: {
         '300x250': { value: 10, unit: 'px' },
-        '336x280': { value: 10, unit: 'px' },
+        '336x280': { value: 21, unit: 'px' },
         '728x90': { value: 10, unit: 'px' },
       },
       positionY: {
         '300x250': { value: 85, unit: 'px' },
-        '336x280': { value: 85, unit: 'px' },
+        '336x280': { value: 104, unit: 'px' },
         '728x90': { value: 45, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
-        '336x280': { value: 316, unit: 'px' },
+        '336x280': { value: 294, unit: 'px' },
         '728x90': { value: 462, unit: 'px' },
       },
       height: {
         '300x250': { value: 50, unit: 'px' },
-        '336x280': { value: 80, unit: 'px' },
+        '336x280': { value: 53, unit: 'px' },
         '728x90': { value: 40, unit: 'px' },
       },
-      content: 'Get 50% off on your first purchase. Limited time offer!',
+      content: 'Get 50% off on your first purchase.\nLimited time offer!',
       styles: {
         color: '#000000',
         fontSize: '14px',
         fontFamily: 'Arial',
+        textAlign: 'center'
       },
     },
     {
@@ -257,7 +259,7 @@ export const sampleCanvas: Canvas = {
         '336x280': { value: 280, unit: 'px' },
         '728x90': { value: 90, unit: 'px' },
       },
-      url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg',
+      url: 'https://images.pexels.com/photos/1303098/pexels-photo-1303098.jpeg',
     },
   ],
   createdAt: new Date(),
