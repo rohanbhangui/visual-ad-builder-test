@@ -13,7 +13,8 @@ Quick test to build a visual ad builder app for multiple sizes
 
 ### Layers Panel
 - Add new elements
-- Reorder elements
+- Reorder elements using drag and drop handles
+- Indicators for active layer
 
 ### Sidebar
 - Color pickers (text and background)
