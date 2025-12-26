@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { HTML5_AD_SIZES, type LayerContent } from '../data';
 import { ColorInput } from './ColorInput';
 import { PositionSizeInput } from './PositionSizeInput';
-
-const FONT_SIZE_OPTIONS = ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '64px', '72px'];
+import { FONT_SIZE_OPTIONS, MAX_TEXT_CONTENT_LENGTH, MAX_BUTTON_TEXT_LENGTH } from '../consts';
 
 interface PropertySidebarProps {
   selectedLayerId: string | null;
@@ -287,7 +286,14 @@ export const PropertySidebar = ({
           {layer.type === 'button' && (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Button Text</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-gray-600">Button Text</label>
+                  <span className={`text-xs ${
+                    layer.text.length > MAX_BUTTON_TEXT_LENGTH ? 'text-red-500' : 'text-gray-500'
+                  }`}>
+                    {layer.text.length}/{MAX_BUTTON_TEXT_LENGTH}
+                  </span>
+                </div>
                 <input
                   type="text"
                   value={layer.text}
@@ -329,7 +335,16 @@ export const PropertySidebar = ({
           {(layer.type === 'text' || layer.type === 'richtext') && (
             <>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Content</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-gray-600">Content</label>
+                  {layer.type === 'text' && (
+                    <span className={`text-xs ${
+                      layer.content.length > MAX_TEXT_CONTENT_LENGTH ? 'text-red-500' : 'text-gray-500'
+                    }`}>
+                      {layer.content.length}/{MAX_TEXT_CONTENT_LENGTH}
+                    </span>
+                  )}
+                </div>
                 {layer.type === 'text' ? (
                   <textarea
                     value={layer.content}

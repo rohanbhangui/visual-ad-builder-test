@@ -150,6 +150,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               pointerEvents: 'none',
               color: layer.styles?.color || '#000000',
               fontSize: layer.styles?.fontSize || '14px',
+              whiteSpace: 'pre-wrap',
             }}
             dangerouslySetInnerHTML={{ __html: layer.content }}
           />
