@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { type LayerContent } from '../data';
 
 interface LayersPanelProps {
@@ -15,7 +15,7 @@ interface LayersPanelProps {
   onLayerDragOver: (e: React.DragEvent, index: number) => void;
   onLayerDrop: (e: React.DragEvent, index: number) => void;
   onLayerDragEnd: () => void;
-  onAddLayer: (type: 'text' | 'richtext' | 'image' | 'video') => void;
+  onAddLayer: (type: 'text' | 'richtext' | 'image' | 'video' | 'button') => void;
 }
 
 export const LayersPanel = ({
@@ -35,6 +35,23 @@ export const LayersPanel = ({
   onAddLayer,
 }: LayersPanelProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
 
   return (
     <div
@@ -51,7 +68,7 @@ export const LayersPanel = ({
         <div onMouseDown={onMouseDown} className="flex-1 cursor-grab">
           Layers
         </div>
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -90,12 +107,12 @@ export const LayersPanel = ({
               </button>
               <button
                 onClick={() => {
-                  onAddLayer('richtext');
+                  onAddLayer('button');
                   setShowDropdown(false);
                 }}
                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
               >
-                Rich Text
+                Button
               </button>
               <button
                 onClick={() => {
@@ -111,9 +128,18 @@ export const LayersPanel = ({
                   onAddLayer('video');
                   setShowDropdown(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
               >
                 Video
+              </button>
+              <button
+                onClick={() => {
+                  onAddLayer('richtext');
+                  setShowDropdown(false);
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+              >
+                Rich Text
               </button>
             </div>
           )}
