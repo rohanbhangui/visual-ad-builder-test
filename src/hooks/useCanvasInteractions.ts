@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
-import { HTML5_AD_SIZES, type LayerContent } from '../data';
+import { type LayerContent, type AdSize } from '../data';
+import { HTML5_AD_SIZES } from '../consts';
 
 interface UseCanvasInteractionsProps {
   mode: 'edit' | 'preview';
   layers: LayerContent[];
   selectedLayerId: string | null;
-  selectedSize: keyof typeof HTML5_AD_SIZES;
+  selectedSize: AdSize;
   isShiftPressed: boolean;
   setLayers: React.Dispatch<React.SetStateAction<LayerContent[]>>;
   setSelectedLayerId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -53,8 +54,8 @@ export const useCanvasInteractions = ({
     const layer = layers.find((l) => l.id === layerId);
     if (!layer) return;
 
-    const posX = layer.positionX[selectedSize];
-    const posY = layer.positionY[selectedSize];
+    const posX = layer.positionX[selectedSize]!;
+    const posY = layer.positionY[selectedSize]!;
 
     setIsDragging(true);
     dragStartRef.current = {
@@ -75,10 +76,10 @@ export const useCanvasInteractions = ({
     const layer = layers.find((l) => l.id === layerId);
     if (!layer) return;
 
-    const posX = layer.positionX[selectedSize];
-    const posY = layer.positionY[selectedSize];
-    const width = layer.width[selectedSize];
-    const height = layer.height[selectedSize];
+    const posX = layer.positionX[selectedSize]!;
+    const posY = layer.positionY[selectedSize]!;
+    const width = layer.width[selectedSize]!;
+    const height = layer.height[selectedSize]!;
 
     setIsResizing(true);
     resizeStartRef.current = {
@@ -100,8 +101,8 @@ export const useCanvasInteractions = ({
       const currentLayer = layers.find((l) => l.id === selectedLayerId);
       if (!currentLayer) return;
 
-      const currentWidth = currentLayer.width[selectedSize].value;
-      const currentHeight = currentLayer.height[selectedSize].value;
+      const currentWidth = currentLayer.width[selectedSize]!.value;
+      const currentHeight = currentLayer.height[selectedSize]!.value;
 
       let newX = dragStartRef.current.layerX + dx;
       let newY = dragStartRef.current.layerY + dy;
@@ -156,14 +157,18 @@ export const useCanvasInteractions = ({
 
           const otherPosX = layer.positionX[selectedSize];
           const otherPosY = layer.positionY[selectedSize];
-          const otherWidth = layer.width[selectedSize].value;
-          const otherHeight = layer.height[selectedSize].value;
+          const otherWidth = layer.width[selectedSize];
+          const otherHeight = layer.height[selectedSize];
+
+          // Skip if layer doesn't have data for selected size
+          if (!otherPosX || !otherPosY || !otherWidth || !otherHeight) return;
+
           const otherX = otherPosX.value;
           const otherY = otherPosY.value;
-          const otherRight = otherX + otherWidth;
-          const otherBottom = otherY + otherHeight;
-          const otherCenterX = otherX + otherWidth / 2;
-          const otherCenterY = otherY + otherHeight / 2;
+          const otherRight = otherX + otherWidth.value;
+          const otherBottom = otherY + otherHeight.value;
+          const otherCenterX = otherX + otherWidth.value / 2;
+          const otherCenterY = otherY + otherHeight.value / 2;
 
           if (Math.abs(newX - otherX) < SNAP_THRESHOLD) {
             newX = otherX;
@@ -317,14 +322,18 @@ export const useCanvasInteractions = ({
 
           const otherPosX = layer.positionX[selectedSize];
           const otherPosY = layer.positionY[selectedSize];
-          const otherWidth = layer.width[selectedSize].value;
-          const otherHeight = layer.height[selectedSize].value;
+          const otherWidth = layer.width[selectedSize];
+          const otherHeight = layer.height[selectedSize];
+
+          // Skip if layer doesn't have data for selected size
+          if (!otherPosX || !otherPosY || !otherWidth || !otherHeight) return;
+
           const otherX = otherPosX.value;
           const otherY = otherPosY.value;
-          const otherRight = otherX + otherWidth;
-          const otherBottom = otherY + otherHeight;
-          const otherCenterX = otherX + otherWidth / 2;
-          const otherCenterY = otherY + otherHeight / 2;
+          const otherRight = otherX + otherWidth.value;
+          const otherBottom = otherY + otherHeight.value;
+          const otherCenterX = otherX + otherWidth.value / 2;
+          const otherCenterY = otherY + otherHeight.value / 2;
 
           // Vertical snapping
           if (Math.abs(newX - otherX) < SNAP_THRESHOLD) {
@@ -450,4 +459,4 @@ export const useCanvasInteractions = ({
     handleMouseLeave,
     setSnapLines,
   };
-}
+};

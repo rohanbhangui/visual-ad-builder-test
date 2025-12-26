@@ -78,4 +78,4 @@ export const PositionSizeInput = ({ label, value, unit, onChange }: PositionSize
       </div>
     </div>
   );
-}
+};

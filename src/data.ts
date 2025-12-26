@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { GOOGLE_FONTS, HTML5_AD_SIZES } from './consts';
 
-export type FontFamily = typeof GOOGLE_FONTS[number];
+export type FontFamily = (typeof GOOGLE_FONTS)[number];
 export type AdSize = keyof typeof HTML5_AD_SIZES;
 
 // Position type for x, y coordinates

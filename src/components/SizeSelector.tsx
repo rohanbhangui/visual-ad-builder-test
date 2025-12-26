@@ -1,4 +1,4 @@
-import { HTML5_AD_SIZES } from '../data';
+import { HTML5_AD_SIZES } from '../consts';
 
 interface SizeSelectorProps {
   allowedSizes: Array<keyof typeof HTML5_AD_SIZES>;
@@ -35,4 +35,4 @@ export const SizeSelector = ({ allowedSizes, selectedSize, onSizeChange }: SizeS
       })}
     </div>
   );
-}
+};

@@ -1,12 +1,12 @@
 import React from 'react';
-import { type LayerContent } from '../data';
+import { type LayerContent, type AdSize } from '../data';
 import { getGoogleFontsLink } from '../utils/googleFonts';
 
 interface CanvasProps {
   mode: 'edit' | 'preview';
   layers: LayerContent[];
   selectedLayerId: string | null;
-  selectedSize: string;
+  selectedSize: AdSize;
   dimensions: { width: number; height: number };
   snapLines: Array<{ type: 'horizontal' | 'vertical'; position: number }>;
   onLayerMouseDown: (e: React.MouseEvent, layerId: string) => void;
@@ -33,11 +33,20 @@ export const Canvas: React.FC<CanvasProps> = ({
 }) => {
   const generatePreviewHTML = (): string => {
     const layerElements = layers
+      .filter((layer) => {
+        // Only render layers that have data for the selected size
+        return (
+          layer.positionX[selectedSize] &&
+          layer.positionY[selectedSize] &&
+          layer.width[selectedSize] &&
+          layer.height[selectedSize]
+        );
+      })
       .map((layer, index) => {
-        const posX = layer.positionX[selectedSize];
-        const posY = layer.positionY[selectedSize];
-        const width = layer.width[selectedSize];
-        const height = layer.height[selectedSize];
+        const posX = layer.positionX[selectedSize]!;
+        const posY = layer.positionY[selectedSize]!;
+        const width = layer.width[selectedSize]!;
+        const height = layer.height[selectedSize]!;
         const zIndex = layers.length - index;
 
         const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex};`;
@@ -69,8 +78,11 @@ export const Canvas: React.FC<CanvasProps> = ({
       .join('\n');
 
     // Collect all font families used in layers
-    const fontFamilies = layers.flatMap(layer => {
-      if ((layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') && layer.styles?.fontFamily) {
+    const fontFamilies = layers.flatMap((layer) => {
+      if (
+        (layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') &&
+        layer.styles?.fontFamily
+      ) {
         return [layer.styles.fontFamily];
       }
       return [];
@@ -120,6 +132,12 @@ export const Canvas: React.FC<CanvasProps> = ({
     const posY = layer.positionY[selectedSize];
     const width = layer.width[selectedSize];
     const height = layer.height[selectedSize];
+
+    // Skip rendering if layer doesn't have data for selected size
+    if (!posX || !posY || !width || !height) {
+      return null;
+    }
+
     const isSelected = selectedLayerId === layer.id;
 
     const style: React.CSSProperties = {
@@ -148,11 +166,11 @@ export const Canvas: React.FC<CanvasProps> = ({
         content = (
           <img
             src={layer.url}
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: (layer.styles?.objectFit as any) || 'cover', 
-              pointerEvents: 'none' 
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: (layer.styles?.objectFit as any) || 'cover',
+              pointerEvents: 'none',
             }}
             alt={layer.label}
           />

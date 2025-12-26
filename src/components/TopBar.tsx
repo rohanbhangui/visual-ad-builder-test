@@ -22,4 +22,4 @@ export const TopBar = ({ mode, onModeChange }: TopBarProps) => {
       </div>
     </div>
   );
-}
+};

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { sampleCanvas, HTML5_AD_SIZES, type LayerContent } from './data';
+import { sampleCanvas, type LayerContent, type AdSize } from './data';
+import { HTML5_AD_SIZES } from './consts';
 import { TopBar } from './components/TopBar';
 import { SizeSelector } from './components/SizeSelector';
 import { LayersPanel } from './components/LayersPanel';
@@ -12,7 +13,7 @@ const App = () => {
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
   const [layers, setLayers] = useState<LayerContent[]>(sampleCanvas.layers);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
-  const [selectedSize, setSelectedSize] = useState<keyof typeof HTML5_AD_SIZES>('336x280');
+  const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [layersPanelSide, setLayersPanelSide] = useState<'left' | 'right'>('right');
   const [isLayersPanelDragging, setIsLayersPanelDragging] = useState(false);
@@ -26,7 +27,9 @@ const App = () => {
   // Load Google Fonts when layers change
   useEffect(() => {
     const fontsInUse = layers
-      .filter((layer) => layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button')
+      .filter(
+        (layer) => layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button'
+      )
       .map((layer) => layer.styles?.fontFamily)
       .filter((font): font is string => !!font);
 
@@ -219,7 +222,7 @@ const App = () => {
               ...l[property],
               [selectedSize]: {
                 value,
-                unit: unit || l[property][selectedSize].unit || 'px',
+                unit: unit || l[property][selectedSize]!.unit || 'px',
               },
             },
           };
@@ -366,16 +369,16 @@ const App = () => {
         const canvasWidth = dimensions.width;
         const canvasHeight = dimensions.height;
         const layerWidth =
-          layer.width[selectedSize].unit === 'px'
-            ? layer.width[selectedSize].value
-            : (canvasWidth * layer.width[selectedSize].value) / 100;
+          layer.width[selectedSize]!.unit === 'px'
+            ? layer.width[selectedSize]!.value
+            : (canvasWidth * layer.width[selectedSize]!.value) / 100;
         const layerHeight =
-          layer.height[selectedSize].unit === 'px'
-            ? layer.height[selectedSize].value
-            : (canvasHeight * layer.height[selectedSize].value) / 100;
+          layer.height[selectedSize]!.unit === 'px'
+            ? layer.height[selectedSize]!.value
+            : (canvasHeight * layer.height[selectedSize]!.value) / 100;
 
-        let newPosX = layer.positionX[selectedSize].value;
-        let newPosY = layer.positionY[selectedSize].value;
+        let newPosX = layer.positionX[selectedSize]!.value;
+        let newPosY = layer.positionY[selectedSize]!.value;
 
         switch (alignment) {
           case 'left':
@@ -548,6 +551,6 @@ const App = () => {
       </div>
     </div>
   );
-}
+};
 
 export default App;

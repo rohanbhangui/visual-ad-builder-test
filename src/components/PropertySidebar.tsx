@@ -1,14 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
-import { HTML5_AD_SIZES, type LayerContent } from '../data';
+import { type LayerContent, type AdSize } from '../data';
 import { ColorInput } from './ColorInput';
 import { PositionSizeInput } from './PositionSizeInput';
 import { UrlInput } from './UrlInput';
-import { FONT_SIZE_OPTIONS, MAX_TEXT_CONTENT_LENGTH, MAX_BUTTON_TEXT_LENGTH, GOOGLE_FONTS } from '../consts';
+import {
+  FONT_SIZE_OPTIONS,
+  MAX_TEXT_CONTENT_LENGTH,
+  MAX_BUTTON_TEXT_LENGTH,
+  GOOGLE_FONTS,
+} from '../consts';
 
 interface PropertySidebarProps {
   selectedLayerId: string | null;
   layers: LayerContent[];
-  selectedSize: keyof typeof HTML5_AD_SIZES;
+  selectedSize: AdSize;
   onPropertyChange: (
     layerId: string,
     property: 'positionX' | 'positionY' | 'width' | 'height',
@@ -83,10 +88,10 @@ export const PropertySidebar = ({
   const layer = layers.find((l) => l.id === selectedLayerId);
   if (!layer) return null;
 
-  const posX = layer.positionX[selectedSize];
-  const posY = layer.positionY[selectedSize];
-  const width = layer.width[selectedSize];
-  const height = layer.height[selectedSize];
+  const posX = layer.positionX[selectedSize]!;
+  const posY = layer.positionY[selectedSize]!;
+  const width = layer.width[selectedSize]!;
+  const height = layer.height[selectedSize]!;
 
   return (
     <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
@@ -348,9 +353,11 @@ export const PropertySidebar = ({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-medium text-gray-600">Button Text</label>
-                  <span className={`text-xs ${
-                    layer.text.length > MAX_BUTTON_TEXT_LENGTH ? 'text-red-500' : 'text-gray-500'
-                  }`}>
+                  <span
+                    className={`text-xs ${
+                      layer.text.length > MAX_BUTTON_TEXT_LENGTH ? 'text-red-500' : 'text-gray-500'
+                    }`}
+                  >
                     {layer.text.length}/{MAX_BUTTON_TEXT_LENGTH}
                   </span>
                 </div>
@@ -370,7 +377,9 @@ export const PropertySidebar = ({
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Font Family</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Font Family
+                  </label>
                   <select
                     value={layer.styles?.fontFamily || 'Arial'}
                     onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
@@ -414,9 +423,13 @@ export const PropertySidebar = ({
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-medium text-gray-600">Content</label>
                   {layer.type === 'text' && (
-                    <span className={`text-xs ${
-                      layer.content.length > MAX_TEXT_CONTENT_LENGTH ? 'text-red-500' : 'text-gray-500'
-                    }`}>
+                    <span
+                      className={`text-xs ${
+                        layer.content.length > MAX_TEXT_CONTENT_LENGTH
+                          ? 'text-red-500'
+                          : 'text-gray-500'
+                      }`}
+                    >
                       {layer.content.length}/{MAX_TEXT_CONTENT_LENGTH}
                     </span>
                   )}
@@ -542,4 +555,4 @@ export const PropertySidebar = ({
       </div>
     </div>
   );
-}
+};

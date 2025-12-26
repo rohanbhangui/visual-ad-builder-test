@@ -39,9 +39,11 @@ export const ColorInput = ({ label, value, onChange }: ColorInputProps) => {
   return (
     <div>
       <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      <div className={`flex items-stretch border rounded overflow-hidden ${
-        error ? 'border-red-500' : 'border-gray-300'
-      }`}>
+      <div
+        className={`flex items-stretch border rounded overflow-hidden ${
+          error ? 'border-red-500' : 'border-gray-300'
+        }`}
+      >
         <input
           type="color"
           value={value || '#000000'}
@@ -62,4 +64,4 @@ export const ColorInput = ({ label, value, onChange }: ColorInputProps) => {
       </div>
     </div>
   );
-}
+};

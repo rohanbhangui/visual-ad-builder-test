@@ -5,9 +5,7 @@ let linkElement: HTMLLinkElement | null = null;
 
 export function loadGoogleFonts(fonts: string[]) {
   // Filter to only Google Fonts (exclude system fonts like Arial)
-  const googleFontsToLoad = fonts.filter((font) => 
-    GOOGLE_FONTS.includes(font) && font !== 'Arial'
-  );
+  const googleFontsToLoad = fonts.filter((font) => GOOGLE_FONTS.includes(font) && font !== 'Arial');
 
   if (googleFontsToLoad.length === 0) {
     return;
@@ -35,9 +33,9 @@ export function loadGoogleFonts(fonts: string[]) {
 
 export function getGoogleFontsLink(fonts: string[]): string {
   // Filter to only Google Fonts (exclude system fonts like Arial) and deduplicate
-  const uniqueFonts = [...new Set(fonts.filter((font) => 
-    GOOGLE_FONTS.includes(font) && font !== 'Arial'
-  ))];
+  const uniqueFonts = [
+    ...new Set(fonts.filter((font) => GOOGLE_FONTS.includes(font) && font !== 'Arial')),
+  ];
 
   if (uniqueFonts.length === 0) {
     return '';
