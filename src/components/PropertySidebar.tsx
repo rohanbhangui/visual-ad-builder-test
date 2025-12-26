@@ -294,12 +294,27 @@ export const PropertySidebar = ({
           {/* Image Controls */}
           {layer.type === 'image' && (
             <>
-              <UrlInput
-                label="Image URL"
-                value={layer.url}
-                onChange={(url) => onImageUrlChange(layer.id, url)}
-                placeholder="https://example.com/image.jpg"
-              />
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
+                {layer.url && (
+                  <div className="mb-2">
+                    <img
+                      src={layer.url}
+                      alt="Preview"
+                      className="w-[100px] h-[66px] object-cover border border-gray-300 rounded"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                <UrlInput
+                  label=""
+                  value={layer.url}
+                  onChange={(url) => onImageUrlChange(layer.id, url)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Image Fit</label>
