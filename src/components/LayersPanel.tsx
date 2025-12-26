@@ -74,7 +74,9 @@ export const LayersPanel = ({
               e.stopPropagation();
               setShowDropdown(!showDropdown);
             }}
-            className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+            className={`w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer ${
+              showDropdown ? 'bg-gray-200' : ''
+            }`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -93,7 +95,7 @@ export const LayersPanel = ({
           </button>
           {showDropdown && (
             <div
-              className="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded shadow-lg z-50"
+              className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow-lg z-50"
               onMouseDown={(e) => e.stopPropagation()}
             >
               <button
@@ -101,45 +103,79 @@ export const LayersPanel = ({
                   onAddLayer('text');
                   setShowDropdown(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
+                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
               >
-                Text
+                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">Text</div>
+                  <div className="text-xs font-normal text-gray-500">Simple text content</div>
+                </div>
               </button>
               <button
                 onClick={() => {
                   onAddLayer('button');
                   setShowDropdown(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
+                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
               >
-                Button
+                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="8" width="18" height="8" rx="2" strokeWidth="2" />
+                </svg>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">Button</div>
+                  <div className="text-xs font-normal text-gray-500">Clickable button link</div>
+                </div>
               </button>
               <button
                 onClick={() => {
                   onAddLayer('image');
                   setShowDropdown(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
+                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
               >
-                Image
+                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 15l-5-5L5 21" />
+                </svg>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">Image</div>
+                  <div className="text-xs font-normal text-gray-500">Static image element</div>
+                </div>
               </button>
               <button
                 onClick={() => {
                   onAddLayer('video');
                   setShowDropdown(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 border-b border-gray-100"
+                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
               >
-                Video
+                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="2" y="6" width="20" height="12" rx="2" strokeWidth="2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 9l5 3-5 3z" fill="currentColor" />
+                </svg>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">Video</div>
+                  <div className="text-xs font-normal text-gray-500">Embedded video player</div>
+                </div>
               </button>
               <button
                 onClick={() => {
                   onAddLayer('richtext');
                   setShowDropdown(false);
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-start gap-2 cursor-pointer"
               >
-                Rich Text
+                <svg className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 6h12M6 10h12M6 14h12M6 18h7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 17h2" />
+                </svg>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">Rich Text</div>
+                  <div className="text-xs font-normal text-gray-500">Formatted text with styling</div>
+                </div>
               </button>
             </div>
           )}
@@ -151,7 +187,7 @@ export const LayersPanel = ({
             key={layer.id}
             onDragOver={(e) => onLayerDragOver(e, index)}
             onDrop={(e) => onLayerDrop(e, index)}
-            className={`layer-item flex items-center gap-2 px-4 py-2 border-b border-gray-100 hover:bg-gray-50 ${
+            className={`layer-item flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
               selectedLayerId === layer.id ? 'bg-blue-50' : ''
             }`}
             style={{
@@ -213,7 +249,7 @@ export const LayersPanel = ({
               </svg>
             </div>
             <div
-              className="flex-1 cursor-pointer"
+              className="flex-1 cursor-pointer hover:bg-gray-50 -my-2 py-2 -mr-4 pr-4 rounded-r"
               onClick={(e) => {
                 e.stopPropagation();
                 onSelectLayer(layer.id);

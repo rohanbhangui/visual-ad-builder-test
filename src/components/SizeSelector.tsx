@@ -18,7 +18,7 @@ export const SizeSelector = ({ allowedSizes, selectedSize, onSizeChange }: SizeS
           <button
             key={size}
             onClick={() => onSizeChange(size)}
-            className="flex flex-col items-center gap-2 p-2 transition-opacity hover:opacity-80"
+            className="flex flex-col items-center gap-2 p-2 transition-opacity hover:opacity-80 cursor-pointer"
           >
             <div
               className={`bg-white shadow transition-colors duration-200 border-2 ${

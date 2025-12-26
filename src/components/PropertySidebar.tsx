@@ -26,11 +26,13 @@ interface PropertySidebarProps {
   onColorChange: (layerId: string, color: string) => void;
   onFontSizeChange: (layerId: string, fontSize: string) => void;
   onFontFamilyChange: (layerId: string, fontFamily: string) => void;
+  onTextAlignChange: (layerId: string, textAlign: 'left' | 'center' | 'right') => void;
   onTextChange: (layerId: string, text: string) => void;
   onBackgroundColorChange: (layerId: string, color: string) => void;
   onImageUrlChange: (layerId: string, url: string) => void;
   onObjectFitChange: (layerId: string, objectFit: string) => void;
   onVideoUrlChange: (layerId: string, url: string) => void;
+  onVideoPropertyChange: (layerId: string, property: 'autoplay' | 'controls', value: boolean) => void;
   onAlignLayer: (
     layerId: string,
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
@@ -48,11 +50,13 @@ export const PropertySidebar = ({
   onColorChange,
   onFontSizeChange,
   onFontFamilyChange,
+  onTextAlignChange,
   onTextChange,
   onBackgroundColorChange,
   onImageUrlChange,
   onObjectFitChange,
   onVideoUrlChange,
+  onVideoPropertyChange,
   onAlignLayer,
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -301,7 +305,7 @@ export const PropertySidebar = ({
                     <img
                       src={layer.url}
                       alt="Preview"
-                      className="w-[100px] h-[66px] object-cover border border-gray-300 rounded"
+                      className="w-[100px] h-[56px] object-cover border border-gray-300 rounded"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
@@ -334,12 +338,51 @@ export const PropertySidebar = ({
 
           {/* Video Controls */}
           {layer.type === 'video' && (
-            <UrlInput
-              label="Video URL"
-              value={layer.url}
-              onChange={(url) => onVideoUrlChange(layer.id, url)}
-              placeholder="https://example.com/video.mp4"
-            />
+            <>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Video URL</label>
+                {layer.url && (
+                  <div className="mb-2">
+                    <video
+                      src={layer.url}
+                      preload="metadata"
+                      className="w-[100px] h-[56px] object-cover border border-gray-300 rounded"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                <UrlInput
+                  label=""
+                  value={layer.url}
+                  onChange={(url) => onVideoUrlChange(layer.id, url)}
+                  placeholder="https://example.com/video.mp4"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={layer.properties?.autoplay ?? false}
+                    onChange={(e) => onVideoPropertyChange(layer.id, 'autoplay', e.target.checked)}
+                    className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">Autoplay</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={layer.properties?.controls ?? true}
+                    onChange={(e) => onVideoPropertyChange(layer.id, 'controls', e.target.checked)}
+                    className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">Show Controls</span>
+                </label>
+              </div>
+            </>
           )}
 
           {/* Button Controls */}
@@ -438,8 +481,34 @@ export const PropertySidebar = ({
                   />
                 ) : (
                   <>
-                    {/* Rich Text Formatting Buttons with Font Size and Font Family */}
-                    <div className="flex flex-wrap gap-1 mb-1">
+                    {/* Font Family and Font Size */}
+                    <div className="flex gap-2 mb-1">
+                      <select
+                        value={layer.styles?.fontFamily || 'Arial'}
+                        onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
+                        className="flex-1 px-2 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {GOOGLE_FONTS.map((font) => (
+                          <option key={font} value={font}>
+                            {font}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={layer.styles?.fontSize || '14px'}
+                        onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
+                        className="px-2 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {FONT_SIZE_OPTIONS.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Rich Text Formatting and Alignment Buttons */}
+                    <div className="flex gap-1 mb-1">
                       <button
                         onMouseDown={(e) => {
                           e.preventDefault();
@@ -471,28 +540,48 @@ export const PropertySidebar = ({
                       >
                         U
                       </button>
-                      <select
-                        value={layer.styles?.fontFamily || 'Arial'}
-                        onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
-                        className="flex-1 min-w-0 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {GOOGLE_FONTS.map((font) => (
-                          <option key={font} value={font}>
-                            {font}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={layer.styles?.fontSize || '14px'}
-                        onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                        className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {FONT_SIZE_OPTIONS.map((size) => (
-                          <option key={size} value={size}>
-                            {size}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="w-px bg-gray-300 mx-1"></div>
+                      <div className="inline-flex border border-gray-300 rounded overflow-hidden">
+                        <button
+                          onClick={() => onTextAlignChange(layer.id, 'left')}
+                          className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 hover:bg-gray-50 ${
+                            (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100' : ''
+                          }`}
+                          title="Align Left"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="15" y2="12"></line>
+                            <line x1="3" y1="18" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => onTextAlignChange(layer.id, 'center')}
+                          className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 hover:bg-gray-50 ${
+                            layer.styles?.textAlign === 'center' ? 'bg-blue-100' : ''
+                          }`}
+                          title="Align Center"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="6" y1="12" x2="18" y2="12"></line>
+                            <line x1="4" y1="18" x2="20" y2="18"></line>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => onTextAlignChange(layer.id, 'right')}
+                          className={`px-3 py-1 text-sm hover:bg-gray-50 ${
+                            layer.styles?.textAlign === 'right' ? 'bg-blue-100' : ''
+                          }`}
+                          title="Align Right"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="9" y1="12" x2="21" y2="12"></line>
+                            <line x1="6" y1="18" x2="21" y2="18"></line>
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                     <div
                       ref={contentEditableRef}
@@ -510,29 +599,96 @@ export const PropertySidebar = ({
                 )}
               </div>
 
-              {/* Color Picker */}
-              <ColorInput
-                label="Text Color"
-                value={layer.styles?.color || '#000000'}
-                onChange={(color) => onColorChange(layer.id, color)}
-              />
-
-              {/* Font Size for Text (non-richtext) */}
+              {/* Font Family and Font Size for Text (non-richtext) */}
               {layer.type === 'text' && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
-                  <select
-                    value={layer.styles?.fontSize || '14px'}
-                    onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {FONT_SIZE_OPTIONS.map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <>
+                  {/* Text Color and Text Align side by side */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <ColorInput
+                      label="Text Color"
+                      value={layer.styles?.color || '#000000'}
+                      onChange={(color) => onColorChange(layer.id, color)}
+                    />
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Text Align</label>
+                      <div className="inline-flex border border-gray-300 rounded overflow-hidden">
+                        <button
+                          onClick={() => onTextAlignChange(layer.id, 'left')}
+                          className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 hover:bg-gray-50 ${
+                            (layer.styles?.textAlign || 'left') === 'left' ? 'bg-blue-100' : ''
+                          }`}
+                          title="Align Left"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="15" y2="12"></line>
+                            <line x1="3" y1="18" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => onTextAlignChange(layer.id, 'center')}
+                          className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 hover:bg-gray-50 ${
+                            layer.styles?.textAlign === 'center' ? 'bg-blue-100' : ''
+                          }`}
+                          title="Align Center"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="6" y1="12" x2="18" y2="12"></line>
+                            <line x1="4" y1="18" x2="20" y2="18"></line>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => onTextAlignChange(layer.id, 'right')}
+                          className={`px-3 h-8 flex items-center text-sm hover:bg-gray-50 ${
+                            layer.styles?.textAlign === 'right' ? 'bg-blue-100' : ''
+                          }`}
+                          title="Align Right"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="9" y1="12" x2="21" y2="12"></line>
+                            <line x1="6" y1="18" x2="21" y2="18"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Font Family and Font Size side by side */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Font Family</label>
+                      <select
+                        value={layer.styles?.fontFamily || 'Arial'}
+                        onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
+                        className="w-full px-2 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {GOOGLE_FONTS.map((font) => (
+                          <option key={font} value={font}>
+                            {font}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
+                      <select
+                        value={layer.styles?.fontSize || '14px'}
+                        onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
+                        className="w-full px-2 py-2 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {FONT_SIZE_OPTIONS.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </>
               )}
             </>
           )}

@@ -58,14 +58,16 @@ export const Canvas: React.FC<CanvasProps> = ({
             content = `<img src="${layer.url}" style="${style} object-fit: cover;" alt="${layer.label}">`;
             break;
           case 'text':
-            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'};">${layer.content}</div>`;
+            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
             break;
           case 'richtext':
-            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'};">${layer.content}</div>`;
+            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
-              content = `<video src="${layer.url}" style="${style}" controls></video>`;
+              const autoplay = layer.properties?.autoplay ? ' autoplay muted' : '';
+              const controls = layer.properties?.controls !== false ? ' controls' : '';
+              content = `<video src="${layer.url}" style="${style}"${autoplay}${controls}></video>`;
             }
             break;
           case 'button':
@@ -185,6 +187,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               color: layer.styles?.color || '#000000',
               fontSize: layer.styles?.fontSize || '14px',
               fontFamily: layer.styles?.fontFamily || 'Arial',
+              textAlign: layer.styles?.textAlign || 'left',
               whiteSpace: 'pre-wrap',
             }}
             dangerouslySetInnerHTML={{ __html: layer.content }}
@@ -196,7 +199,8 @@ export const Canvas: React.FC<CanvasProps> = ({
           content = (
             <video
               src={layer.url}
-              controls
+              preload="metadata"
+              controls={layer.properties?.controls ?? true}
               style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
             />
           );

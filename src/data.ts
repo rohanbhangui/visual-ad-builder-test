@@ -36,6 +36,7 @@ export interface TextLayer extends BaseLayer {
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
+    textAlign?: 'left' | 'center' | 'right';
   };
 }
 
@@ -46,6 +47,7 @@ export interface RichtextLayer extends BaseLayer {
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
+    textAlign?: 'left' | 'center' | 'right';
   };
 }
 
@@ -62,6 +64,10 @@ export interface ImageLayer extends BaseLayer {
 export interface VideoLayer extends BaseLayer {
   type: 'video';
   url: string;
+  properties?: {
+    autoplay?: boolean;
+    controls?: boolean;
+  };
   styles?: {
     color?: string;
     fontSize?: string;
@@ -147,7 +153,7 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 708, unit: 'px' },
       },
       height: {
-        '300x250': { value: 80, unit: 'px' },
+        '300x250': { value: 50, unit: 'px' },
         '336x280': { value: 80, unit: 'px' },
         '728x90': { value: 40, unit: 'px' },
       },
@@ -168,7 +174,7 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 0, unit: 'px' },
       },
       positionY: {
-        '300x250': { value: 170, unit: 'px' },
+        '300x250': { value: 140, unit: 'px' },
         '336x280': { value: 170, unit: 'px' },
         '728x90': { value: 0, unit: 'px' },
       },
@@ -182,7 +188,11 @@ export const sampleCanvas: Canvas = {
         '336x280': { value: 50, unit: 'px' },
         '728x90': { value: 0, unit: 'px' },
       },
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4',
+      url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
+      properties: {
+        autoplay: true,
+        controls: false,
+      },
     },
     {
       id: uuidv4(),

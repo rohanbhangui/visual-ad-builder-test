@@ -290,7 +290,22 @@ const App = () => {
       })
     );
   };
-
+  const handleTextAlignChange = (layerId: string, textAlign: 'left' | 'center' | 'right') => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && (l.type === 'text' || l.type === 'richtext')) {
+          return {
+            ...l,
+            styles: {
+              ...l.styles,
+              textAlign,
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
   const handleTextChange = (layerId: string, text: string) => {
     setLayers((prev) =>
       prev.map((l) => {
@@ -352,6 +367,27 @@ const App = () => {
       prev.map((l) => {
         if (l.id === layerId && l.type === 'video') {
           return { ...l, url };
+        }
+        return l;
+      })
+    );
+  };
+
+  const handleVideoPropertyChange = (
+    layerId: string,
+    property: 'autoplay' | 'controls',
+    value: boolean
+  ) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'video') {
+          return {
+            ...l,
+            properties: {
+              ...l.properties,
+              [property]: value,
+            },
+          };
         }
         return l;
       })
@@ -540,11 +576,13 @@ const App = () => {
             onColorChange={handleColorChange}
             onFontSizeChange={handleFontSizeChange}
             onFontFamilyChange={handleFontFamilyChange}
+            onTextAlignChange={handleTextAlignChange}
             onTextChange={handleTextChange}
             onBackgroundColorChange={handleBackgroundColorChange}
             onImageUrlChange={handleImageUrlChange}
             onObjectFitChange={handleObjectFitChange}
             onVideoUrlChange={handleVideoUrlChange}
+            onVideoPropertyChange={handleVideoPropertyChange}
             onAlignLayer={handleAlignLayer}
           />
         )}

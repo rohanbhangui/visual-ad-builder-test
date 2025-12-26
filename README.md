@@ -10,19 +10,23 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Bounding box for resize and movement
 - Snapping guides
 - Free flow resize and movement (when `shift` key is held)
-- Multiple ad sizes with save points for position and styling depending on the size
+- Ad size selector with independent styles and position
 - Preview mode toggle (renders html with css into iframe)
+- `delete/backspace` key to delete a selected layer (with confirmation)
 
 ### Layers Panel
 - Add new elements
 - Reorder elements using drag and drop handles
 - Indicators for active layer
+- Layers panel is floating and can be snapped to left or right edge
 
 ### Sidebar
 - Color pickers (text and background)
 - Rich text with font family, size and styling (Bold, italics, underline)
-- Character count for text fields
+- Character count for text and richtext fields (with validations)
+- Basic validations for color and url inputs
 - Images/videos (via url)
 - Image preview
-- Micro adjustment fields for position, width and height
+- Micro adjustment fields for position, width and height (with unit adjustments % vs. px)
 - Quick alignment buttons
+- Delete layer button (with confirmation)
