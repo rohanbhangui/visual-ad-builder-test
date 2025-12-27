@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { type LayerContent } from '../data';
 import { COLORS, UI_COLORS } from '../consts';
 import PlusIcon from '../assets/icons/plus.svg?react';
-import XIcon from '../assets/icons/x.svg?react';
 import ExpandIcon from '../assets/icons/expand.svg?react';
 import CollapseIcon from '../assets/icons/collapse.svg?react';
 import DragHandleIcon from '../assets/icons/drag-handle.svg?react';

@@ -7,8 +7,8 @@ Url: https://visual-ad-builder-test.vercel.app/
 ## Key Features
 
 ### Visual Editor
-- Bounding box for resize and movement
-- Snapping guides
+- Bounding box for resize and movement (blue with corner handles)
+- Snapping guides (red)
 - Free flow resize and movement (when `shift` key is held)
 - Ad size selector with independent styles and position
 - Preview mode toggle (renders html with css into iframe)
@@ -18,8 +18,9 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Add new elements
 - Reorder elements using drag and drop handles
 - Indicators for active layer
-- Indicators and buttons to lock and unlock layers
-- Layers panel is floating and can be snapped to left or right edge
+- Lock and unlock layers
+- Floating and can be snapped to left or right edge
+- Can collapse to make more space
 
 
 ### Sidebar

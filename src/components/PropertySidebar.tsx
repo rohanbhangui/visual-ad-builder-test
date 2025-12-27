@@ -343,6 +343,14 @@ export const PropertySidebar = ({
           {/* Button Controls */}
           {layer.type === 'button' && (
             <>
+              <UrlInput
+                label="Button URL"
+                value={layer.url}
+                onChange={(url) => onImageUrlChange(layer.id, url)}
+                placeholder="https://example.com"
+                disabled={layer.locked}
+              />
+
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-medium text-gray-600">Button Text</label>
