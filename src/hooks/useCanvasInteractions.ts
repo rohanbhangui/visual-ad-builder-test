@@ -255,42 +255,47 @@ export const useCanvasInteractions = ({
         const currentLayer = layers.find((l) => l.id === selectedLayerId);
         if (!currentLayer) return;
 
+        const MIN_SIZE = 30;
+        const centerX = layerX + width / 2;
+        const centerY = layerY + height / 2;
+
         let newWidth = width;
         let newHeight = height;
         let newX = layerX;
         let newY = layerY;
 
+        // Calculate initial resize based on Alt key
         if (isAltPressed) {
-          // Center resize: adjust opposite edge by the same amount
+          // Center resize: keep center fixed, adjust both edges equally
           if (direction.includes('e') || direction.includes('w')) {
-            const desiredWidth = width + dx * 2;
-            newWidth = Math.max(30, desiredWidth);
-            // Only adjust position if width actually changed
-            const actualDx = (newWidth - width) / 2;
-            newX = layerX - actualDx;
+            const multiplier = direction.includes('w') ? -1 : 1;
+            newWidth = Math.max(MIN_SIZE, width + dx * 2 * multiplier);
+            newX = centerX - newWidth / 2;
           }
           if (direction.includes('s') || direction.includes('n')) {
-            const desiredHeight = height + dy * 2;
-            newHeight = Math.max(30, desiredHeight);
-            // Only adjust position if height actually changed
-            const actualDy = (newHeight - height) / 2;
-            newY = layerY - actualDy;
+            const multiplier = direction.includes('n') ? -1 : 1;
+            newHeight = Math.max(MIN_SIZE, height + dy * 2 * multiplier);
+            newY = centerY - newHeight / 2;
           }
         } else {
           // Normal resize: only adjust the edge being dragged
-          if (direction.includes('e')) newWidth = Math.max(30, width + dx);
+          if (direction.includes('e')) newWidth = Math.max(MIN_SIZE, width + dx);
           if (direction.includes('w')) {
-            newWidth = Math.max(30, width - dx);
-            newX = layerX + dx;
+            newWidth = Math.max(MIN_SIZE, width - dx);
+            newX = layerX + (width - newWidth);
           }
-          if (direction.includes('s')) newHeight = Math.max(30, height + dy);
+          if (direction.includes('s')) newHeight = Math.max(MIN_SIZE, height + dy);
           if (direction.includes('n')) {
-            newHeight = Math.max(30, height - dy);
-            newY = layerY + dy;
+            newHeight = Math.max(MIN_SIZE, height - dy);
+            newY = layerY + (height - newHeight);
           }
         }
 
         const guides: Array<{ type: 'vertical' | 'horizontal'; position: number }> = [];
+        let isLeftSnapping = false;
+        let isRightSnapping = false;
+        let isTopSnapping = false;
+        let isBottomSnapping = false;
 
         if (!isShiftPressed) {
           const canvasEdges = {
@@ -307,36 +312,62 @@ export const useCanvasInteractions = ({
           const currentCenterX = newX + newWidth / 2;
           const currentCenterY = newY + newHeight / 2;
 
-          // Snap to canvas edges
-          if (Math.abs(newX - canvasEdges.left) < SNAP_THRESHOLD) {
-            if (direction.includes('w')) {
-              newWidth = width + (layerX - canvasEdges.left);
-              newX = canvasEdges.left;
+          // Helper to check and apply snapping
+          const snapToEdge = (
+            current: number,
+            target: number,
+            edge: 'left' | 'right' | 'top' | 'bottom'
+          ) => {
+            if (Math.abs(current - target) < SNAP_THRESHOLD) {
+              if (edge === 'left' && direction.includes('w')) {
+                const snappedWidth = width + (layerX - target);
+                if (snappedWidth >= MIN_SIZE) {
+                  newWidth = snappedWidth;
+                  newX = target;
+                  isLeftSnapping = true;
+                }
+              } else if (edge === 'right' && direction.includes('e')) {
+                const snappedWidth = target - newX;
+                if (snappedWidth >= MIN_SIZE) {
+                  newWidth = snappedWidth;
+                  isRightSnapping = true;
+                }
+              } else if (edge === 'top' && direction.includes('n')) {
+                const snappedHeight = height + (layerY - target);
+                if (snappedHeight >= MIN_SIZE) {
+                  newHeight = snappedHeight;
+                  newY = target;
+                  isTopSnapping = true;
+                }
+              } else if (edge === 'bottom' && direction.includes('s')) {
+                const snappedHeight = target - newY;
+                if (snappedHeight >= MIN_SIZE) {
+                  newHeight = snappedHeight;
+                  isBottomSnapping = true;
+                }
+              }
+              return true;
             }
+            return false;
+          };
+
+          // Snap to canvas edges
+          if (snapToEdge(newX, canvasEdges.left, 'left')) {
             guides.push({ type: 'vertical', position: canvasEdges.left });
           }
-          if (Math.abs(currentRight - canvasEdges.right) < SNAP_THRESHOLD) {
-            if (direction.includes('e')) {
-              newWidth = canvasEdges.right - newX;
-            }
+          if (snapToEdge(currentRight, canvasEdges.right, 'right')) {
             guides.push({ type: 'vertical', position: canvasEdges.right });
           }
-          if (Math.abs(currentCenterX - canvasEdges.centerX) < SNAP_THRESHOLD) {
-            guides.push({ type: 'vertical', position: canvasEdges.centerX });
-          }
-
-          if (Math.abs(newY - canvasEdges.top) < SNAP_THRESHOLD) {
-            if (direction.includes('n')) {
-              newHeight = height + (layerY - canvasEdges.top);
-              newY = canvasEdges.top;
-            }
+          if (snapToEdge(newY, canvasEdges.top, 'top')) {
             guides.push({ type: 'horizontal', position: canvasEdges.top });
           }
-          if (Math.abs(currentBottom - canvasEdges.bottom) < SNAP_THRESHOLD) {
-            if (direction.includes('s')) {
-              newHeight = canvasEdges.bottom - newY;
-            }
+          if (snapToEdge(currentBottom, canvasEdges.bottom, 'bottom')) {
             guides.push({ type: 'horizontal', position: canvasEdges.bottom });
+          }
+
+          // Add center guide lines (visual only, no snapping)
+          if (Math.abs(currentCenterX - canvasEdges.centerX) < SNAP_THRESHOLD) {
+            guides.push({ type: 'vertical', position: canvasEdges.centerX });
           }
           if (Math.abs(currentCenterY - canvasEdges.centerY) < SNAP_THRESHOLD) {
             guides.push({ type: 'horizontal', position: canvasEdges.centerY });
@@ -351,7 +382,6 @@ export const useCanvasInteractions = ({
             const otherWidth = layer.width[selectedSize];
             const otherHeight = layer.height[selectedSize];
 
-            // Skip if layer doesn't have data for selected size
             if (!otherPosX || !otherPosY || !otherWidth || !otherHeight) return;
 
             const otherX = otherPosX.value;
@@ -361,68 +391,49 @@ export const useCanvasInteractions = ({
             const otherCenterX = otherX + otherWidth.value / 2;
             const otherCenterY = otherY + otherHeight.value / 2;
 
-            // Vertical snapping
-            if (Math.abs(newX - otherX) < SNAP_THRESHOLD) {
-              if (direction.includes('w')) {
-                newWidth = width + (layerX - otherX);
-                newX = otherX;
-              }
-              guides.push({ type: 'vertical', position: otherX });
+            // Vertical snapping (left and right edges)
+            if (snapToEdge(newX, otherX, 'left') || snapToEdge(newX, otherRight, 'left')) {
+              guides.push({ type: 'vertical', position: snapToEdge(newX, otherX, 'left') ? otherX : otherRight });
             }
-            if (Math.abs(currentRight - otherRight) < SNAP_THRESHOLD) {
-              if (direction.includes('e')) {
-                newWidth = otherRight - newX;
-              }
-              guides.push({ type: 'vertical', position: otherRight });
-            }
-            if (Math.abs(newX - otherRight) < SNAP_THRESHOLD) {
-              if (direction.includes('w')) {
-                newWidth = width + (layerX - otherRight);
-                newX = otherRight;
-              }
-              guides.push({ type: 'vertical', position: otherRight });
-            }
-            if (Math.abs(currentRight - otherX) < SNAP_THRESHOLD) {
-              if (direction.includes('e')) {
-                newWidth = otherX - newX;
-              }
-              guides.push({ type: 'vertical', position: otherX });
-            }
-            if (Math.abs(currentCenterX - otherCenterX) < SNAP_THRESHOLD) {
-              guides.push({ type: 'vertical', position: otherCenterX });
+            if (snapToEdge(currentRight, otherRight, 'right') || snapToEdge(currentRight, otherX, 'right')) {
+              guides.push({ type: 'vertical', position: snapToEdge(currentRight, otherRight, 'right') ? otherRight : otherX });
             }
 
-            // Horizontal snapping
-            if (Math.abs(newY - otherY) < SNAP_THRESHOLD) {
-              if (direction.includes('n')) {
-                newHeight = height + (layerY - otherY);
-                newY = otherY;
-              }
-              guides.push({ type: 'horizontal', position: otherY });
+            // Horizontal snapping (top and bottom edges)
+            if (snapToEdge(newY, otherY, 'top') || snapToEdge(newY, otherBottom, 'top')) {
+              guides.push({ type: 'horizontal', position: snapToEdge(newY, otherY, 'top') ? otherY : otherBottom });
             }
-            if (Math.abs(currentBottom - otherBottom) < SNAP_THRESHOLD) {
-              if (direction.includes('s')) {
-                newHeight = otherBottom - newY;
-              }
-              guides.push({ type: 'horizontal', position: otherBottom });
+            if (snapToEdge(currentBottom, otherBottom, 'bottom') || snapToEdge(currentBottom, otherY, 'bottom')) {
+              guides.push({ type: 'horizontal', position: snapToEdge(currentBottom, otherBottom, 'bottom') ? otherBottom : otherY });
             }
-            if (Math.abs(newY - otherBottom) < SNAP_THRESHOLD) {
-              if (direction.includes('n')) {
-                newHeight = height + (layerY - otherBottom);
-                newY = otherBottom;
-              }
-              guides.push({ type: 'horizontal', position: otherBottom });
-            }
-            if (Math.abs(currentBottom - otherY) < SNAP_THRESHOLD) {
-              if (direction.includes('s')) {
-                newHeight = otherY - newY;
-              }
-              guides.push({ type: 'horizontal', position: otherY });
+
+            // Center guide lines (visual only)
+            if (Math.abs(currentCenterX - otherCenterX) < SNAP_THRESHOLD) {
+              guides.push({ type: 'vertical', position: otherCenterX });
             }
             if (Math.abs(currentCenterY - otherCenterY) < SNAP_THRESHOLD) {
               guides.push({ type: 'horizontal', position: otherCenterY });
             }
           });
+
+          // Maintain center when Alt is pressed and an edge snaps
+          if (isAltPressed) {
+            if (direction.includes('e') && isRightSnapping) {
+              const snappedRight = newX + newWidth;
+              newWidth = Math.max(MIN_SIZE, 2 * (snappedRight - centerX));
+              newX = centerX - newWidth / 2;
+            } else if (direction.includes('w') && isLeftSnapping) {
+              newWidth = Math.max(MIN_SIZE, 2 * (centerX - newX));
+            }
+
+            if (direction.includes('s') && isBottomSnapping) {
+              const snappedBottom = newY + newHeight;
+              newHeight = Math.max(MIN_SIZE, 2 * (snappedBottom - centerY));
+              newY = centerY - newHeight / 2;
+            } else if (direction.includes('n') && isTopSnapping) {
+              newHeight = Math.max(MIN_SIZE, 2 * (centerY - newY));
+            }
+          }
         }
 
         setSnapLines(guides);
