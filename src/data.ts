@@ -128,11 +128,11 @@ export const sampleCanvas: Canvas = {
         '336x280': { value: 35, unit: 'px' },
         '728x90': { value: 30, unit: 'px' },
       },
-      content: '<strong>Amazing Product</strong>',
+      content: '<strong>Holiday Sale!</strong>',
       styles: {
         color: '#ff0000',
         fontSize: '20px',
-        fontFamily: 'Rubik',
+        fontFamily: 'Playfair Display',
         textAlign: 'center',
       },
     },
@@ -181,7 +181,7 @@ export const sampleCanvas: Canvas = {
       },
       positionY: {
         '300x250': { value: 140, unit: 'px' },
-        '336x280': { value: 170, unit: 'px' },
+        '336x280': { value: 157, unit: 'px' },
         '728x90': { value: 17, unit: 'px' },
       },
       width: {
