@@ -153,7 +153,28 @@ const App = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedLayerId, layers]);
+  }, [selectedLayerId, layers, selectedSize]);
+
+  // Handle window resize to reposition layers panel
+  useEffect(() => {
+    const handleResize = () => {
+      const windowWidth = window.innerWidth;
+      const sidebarWidth = 320;
+      const panelWidth = 300;
+      
+      // Recalculate position based on current side
+      const newX = layersPanelSide === 'right' 
+        ? windowWidth - sidebarWidth - panelWidth - 10 
+        : 10;
+      
+      setLayersPanelPos((prev) => ({ x: newX, y: prev.y }));
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [layersPanelSide]);
 
   // Extended handleMouseUp for layers panel dragging
   const handleExtendedMouseUp = () => {
