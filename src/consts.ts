@@ -43,9 +43,9 @@ export const MAX_BUTTON_TEXT_LENGTH = 50;
 
 // UI Colors
 export const COLORS = {
-  BLUE_PRIMARY: '#3b82f6', // Primary blue for drag indicators
-  BLUE_SELECTED: '#2563eb', // Selection outline and borders
-  RED_GUIDELINE: '#ef4444', // Snap guidelines color
+  BLUE_PRIMARY: '#3b82f6', // Tailwind blue-500 - Primary blue for drag indicators
+  BLUE_SELECTED: '#2563eb', // Tailwind blue-600 - Selection outline and borders
+  RED_GUIDELINE: '#ef4444', // Tailwind red-500 - Snap guidelines color
 } as const;
 
 // Tailwind color classes for UI elements
