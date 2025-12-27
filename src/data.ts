@@ -33,7 +33,7 @@ export interface BaseLayer {
 export interface TextLayer extends BaseLayer {
   type: 'text';
   content: string;
-  styles?: {
+  styles: {
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
@@ -45,7 +45,7 @@ export interface TextLayer extends BaseLayer {
 export interface RichtextLayer extends BaseLayer {
   type: 'richtext';
   content: string; // HTML content
-  styles?: {
+  styles: {
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
@@ -57,7 +57,7 @@ export interface RichtextLayer extends BaseLayer {
 export interface ImageLayer extends BaseLayer {
   type: 'image';
   url: string;
-  styles?: {
+  styles: {
     color?: string;
     fontSize?: string;
     objectFit?: string;
@@ -72,7 +72,7 @@ export interface VideoLayer extends BaseLayer {
     autoplay?: boolean;
     controls?: boolean;
   };
-  styles?: {
+  styles: {
     color?: string;
     fontSize?: string;
     opacity: number;
@@ -83,7 +83,7 @@ export interface ButtonLayer extends BaseLayer {
   type: 'button';
   text: string;
   url: string;
-  styles?: {
+  styles: {
     backgroundColor?: string;
     color?: string;
     fontSize?: string;
