@@ -12,7 +12,8 @@ Url: https://visual-ad-builder-test.vercel.app/
 
 - Bounding box for resize and movement (blue with corner handles)
 - Snapping guides (red)
-- Free flow resize and movement (when `shift` key is held)
+- Toggle for snapping vs free flow
+- Aspect ratio lock (hold `shift`) when scaling something
 - Resize on edge (hold `alt` to resize from both sides, with snapping)
 - Ad size selector with independent styles and position
 - Preview mode toggle (renders html with css into iframe)

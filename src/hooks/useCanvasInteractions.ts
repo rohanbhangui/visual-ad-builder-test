@@ -554,6 +554,36 @@ export const useCanvasInteractions = ({
               const bottomEdgeCenterX = layerX + width / 2;
               newX = bottomEdgeCenterX - newWidth / 2;
             }
+          } else if (isShiftPressed && !isAltPressed && isCorner) {
+            // Shift only (corner resize): When edge snaps, freeze that dimension and adjust the other
+            const oppositeCornerX = direction.includes('e') ? layerX : layerX + width;
+            const oppositeCornerY = direction.includes('s') ? layerY : layerY + height;
+
+            if (isRightSnapping || isLeftSnapping) {
+              // Width is frozen by snap, adjust height to maintain aspect ratio
+              const snappedWidth = isRightSnapping ? (newX + newWidth - oppositeCornerX) : Math.abs(oppositeCornerX - newX);
+              newWidth = Math.max(MIN_SIZE, Math.abs(snappedWidth));
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              
+              if (direction.includes('w')) {
+                newX = oppositeCornerX - newWidth;
+              }
+              if (direction.includes('n')) {
+                newY = oppositeCornerY - newHeight;
+              }
+            } else if (isTopSnapping || isBottomSnapping) {
+              // Height is frozen by snap, adjust width to maintain aspect ratio
+              const snappedHeight = isBottomSnapping ? (newY + newHeight - oppositeCornerY) : Math.abs(oppositeCornerY - newY);
+              newHeight = Math.max(MIN_SIZE, Math.abs(snappedHeight));
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              
+              if (direction.includes('w')) {
+                newX = oppositeCornerX - newWidth;
+              }
+              if (direction.includes('n')) {
+                newY = oppositeCornerY - newHeight;
+              }
+            }
           } else if (isShiftPressed && isAltPressed) {
             // Both modifiers: Maintain center and aspect ratio when edge snaps
             if (direction.includes('e') && isRightSnapping) {
