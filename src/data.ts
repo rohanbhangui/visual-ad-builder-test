@@ -166,7 +166,7 @@ export const sampleCanvas: Canvas = {
         color: '#000000',
         fontSize: '14px',
         fontFamily: 'Arial',
-        textAlign: 'center'
+        textAlign: 'center',
       },
     },
     {

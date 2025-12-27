@@ -112,9 +112,11 @@ export const LayersPanel = ({
         right: panelPos.x === -1 && panelSide === 'right' ? '10px' : 'auto',
       }}
     >
-      <div className={`px-4 py-3 font-semibold text-gray-900 flex items-center justify-between ${
-        !isCollapsed ? 'border-b border-gray-200' : ''
-      }`}>
+      <div
+        className={`px-4 py-3 font-semibold text-gray-900 flex items-center justify-between ${
+          !isCollapsed ? 'border-b border-gray-200' : ''
+        }`}
+      >
         <div onMouseDown={onMouseDown} className="flex-1 cursor-grab">
           Layers
         </div>
@@ -142,141 +144,150 @@ export const LayersPanel = ({
             >
               <PlusIcon />
             </button>
-          {showDropdown ? (
-            <div
-              className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow-lg z-[1001]"
-              onMouseDown={(e) => e.stopPropagation()}
-            >
-              {layerTypes.map((layerType, index) => {
-                const Icon = layerType.icon;
-                const isLast = index === layerTypes.length - 1;
-                return (
-                  <button
-                    key={layerType.type}
-                    onClick={() => {
-                      onAddLayer(layerType.type);
-                      setShowDropdown(false);
-                    }}
-                    className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-start gap-2 cursor-pointer ${
-                      !isLast ? 'border-b border-gray-100' : ''
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900">{layerType.label}</div>
-                      <div className="text-xs font-normal text-gray-500">{layerType.description}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
+            {showDropdown ? (
+              <div
+                className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow-lg z-[1001]"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                {layerTypes.map((layerType, index) => {
+                  const Icon = layerType.icon;
+                  const isLast = index === layerTypes.length - 1;
+                  return (
+                    <button
+                      key={layerType.type}
+                      onClick={() => {
+                        onAddLayer(layerType.type);
+                        setShowDropdown(false);
+                      }}
+                      className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-start gap-2 cursor-pointer ${
+                        !isLast ? 'border-b border-gray-100' : ''
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">{layerType.label}</div>
+                        <div className="text-xs font-normal text-gray-500">
+                          {layerType.description}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
       {!isCollapsed ? (
-        <div className="overflow-y-auto overflow-x-hidden max-h-[440px]" onClick={() => setShowDropdown(false)}>
-        {layers.map((layer, index) => (
-          <div
-            key={layer.id}
-            onDragOver={(e) => onLayerDragOver(e, index)}
-            onDrop={(e) => onLayerDrop(e, index)}
-            className={`layer-item group/layer flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
-              selectedLayerId === layer.id ? `${UI_COLORS.SELECTED_LAYER_BG} hover:bg-blue-200` : ''
-            }`}
-            style={{
-              opacity: draggedLayerIndex === index ? 0.4 : 1,
-              ...(dragOverLayerIndex === index && draggedLayerIndex !== index
-                ? {
-                    borderTop: `1px solid ${COLORS.BLUE_PRIMARY}`,
+        <div
+          className="overflow-y-auto overflow-x-hidden max-h-[440px]"
+          onClick={() => setShowDropdown(false)}
+        >
+          {layers.map((layer, index) => (
+            <div
+              key={layer.id}
+              onDragOver={(e) => onLayerDragOver(e, index)}
+              onDrop={(e) => onLayerDrop(e, index)}
+              className={`layer-item group/layer flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
+                selectedLayerId === layer.id
+                  ? `${UI_COLORS.SELECTED_LAYER_BG} hover:bg-blue-200`
+                  : ''
+              }`}
+              style={{
+                opacity: draggedLayerIndex === index ? 0.4 : 1,
+                ...(dragOverLayerIndex === index && draggedLayerIndex !== index
+                  ? {
+                      borderTop: `1px solid ${COLORS.BLUE_PRIMARY}`,
+                    }
+                  : {}),
+                ...(dragOverLayerIndex === index + 1 && draggedLayerIndex !== index
+                  ? {
+                      borderBottom: `1px solid ${COLORS.BLUE_PRIMARY}`,
+                    }
+                  : {}),
+              }}
+            >
+              <div
+                draggable
+                onDragStart={(e) => {
+                  onLayerDragStart(e, index);
+
+                  // Create a custom drag image
+                  const layerItem = (e.target as HTMLElement).closest('.layer-item') as HTMLElement;
+                  if (layerItem) {
+                    const clone = layerItem.cloneNode(true) as HTMLElement;
+                    clone.style.position = 'absolute';
+                    clone.style.top = '-9999px';
+                    clone.style.left = '-9999px';
+                    clone.style.width = `${layerItem.offsetWidth}px`;
+                    clone.style.height = `${layerItem.offsetHeight}px`;
+                    clone.style.backgroundColor = 'white';
+                    clone.style.border = `2px solid ${COLORS.BLUE_PRIMARY}`;
+                    clone.style.borderRadius = '4px';
+                    clone.style.opacity = '0.95';
+                    clone.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                    document.body.appendChild(clone);
+
+                    const rect = layerItem.getBoundingClientRect();
+                    // Set drag image offset to grab from left edge (where handle is)
+                    e.dataTransfer.setDragImage(clone, 25, rect.height / 2);
+
+                    setTimeout(() => {
+                      if (document.body.contains(clone)) {
+                        document.body.removeChild(clone);
+                      }
+                    }, 0);
                   }
-                : {}),
-              ...(dragOverLayerIndex === index + 1 && draggedLayerIndex !== index
+                }}
+                onDragEnd={onLayerDragEnd}
+                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 flex items-center justify-center text-lg w-5 h-full"
+              >
+                <DragHandleIcon />
+              </div>
+              <div
+                className={`flex-1 cursor-pointer -my-2 py-2 pr-2 -mr-[72px] rounded-r ${
+                  selectedLayerId !== layer.id ? 'hover:bg-gray-50' : ''
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectLayer(layer.id);
+                }}
+              >
+                <div className="text-sm font-medium text-gray-900">{layer.label}</div>
+                <div className="text-xs text-gray-500">{layer.type}</div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleLock(layer.id);
+                }}
+                className={`p-1 transition-colors cursor-pointer ${
+                  layer.locked
+                    ? 'text-gray-600 hover:text-gray-800'
+                    : 'text-gray-400 opacity-0 group-hover/layer:opacity-100 hover:text-gray-600'
+                }`}
+                title={layer.locked ? 'Unlock layer' : 'Lock layer'}
+              >
+                {layer.locked ? <LockIcon /> : <UnlockIcon />}
+              </button>
+              {selectedLayerId === layer.id ? (
+                <div className={`w-2 h-2 rounded-full ${UI_COLORS.SELECTED_INDICATOR}`} />
+              ) : null}
+            </div>
+          ))}
+          {/* Drop zone for end of list */}
+          <div
+            onDragOver={(e) => onLayerDragOver(e, layers.length)}
+            onDrop={(e) => onLayerDrop(e, layers.length)}
+            className="h-2"
+            style={{
+              ...(dragOverLayerIndex === layers.length && draggedLayerIndex !== null
                 ? {
-                    borderBottom: `1px solid ${COLORS.BLUE_PRIMARY}`,
+                    borderTop: `1px solid ${COLORS.BLUE_SELECTED}`,
                   }
                 : {}),
             }}
-          >
-            <div
-              draggable
-              onDragStart={(e) => {
-                onLayerDragStart(e, index);
-
-                // Create a custom drag image
-                const layerItem = (e.target as HTMLElement).closest('.layer-item') as HTMLElement;
-                if (layerItem) {
-                  const clone = layerItem.cloneNode(true) as HTMLElement;
-                  clone.style.position = 'absolute';
-                  clone.style.top = '-9999px';
-                  clone.style.left = '-9999px';
-                  clone.style.width = `${layerItem.offsetWidth}px`;
-                  clone.style.height = `${layerItem.offsetHeight}px`;
-                  clone.style.backgroundColor = 'white';
-                  clone.style.border = `2px solid ${COLORS.BLUE_PRIMARY}`;
-                  clone.style.borderRadius = '4px';
-                  clone.style.opacity = '0.95';
-                  clone.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                  document.body.appendChild(clone);
-
-                  const rect = layerItem.getBoundingClientRect();
-                  // Set drag image offset to grab from left edge (where handle is)
-                  e.dataTransfer.setDragImage(clone, 25, rect.height / 2);
-
-                  setTimeout(() => {
-                    if (document.body.contains(clone)) {
-                      document.body.removeChild(clone);
-                    }
-                  }, 0);
-                }
-              }}
-              onDragEnd={onLayerDragEnd}
-              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 flex items-center justify-center text-lg w-5 h-full"
-            >
-              <DragHandleIcon />
-            </div>
-            <div
-              className={`flex-1 cursor-pointer -my-2 py-2 pr-2 -mr-[72px] rounded-r ${
-                selectedLayerId !== layer.id ? 'hover:bg-gray-50' : ''
-              }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectLayer(layer.id);
-              }}
-            >
-              <div className="text-sm font-medium text-gray-900">{layer.label}</div>
-              <div className="text-xs text-gray-500">{layer.type}</div>
-            </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleLock(layer.id);
-              }}
-              className={`p-1 transition-colors cursor-pointer ${
-                layer.locked
-                  ? 'text-gray-600 hover:text-gray-800'
-                  : 'text-gray-400 opacity-0 group-hover/layer:opacity-100 hover:text-gray-600'
-              }`}
-              title={layer.locked ? 'Unlock layer' : 'Lock layer'}
-            >
-              {layer.locked ? <LockIcon /> : <UnlockIcon />}
-            </button>
-            {selectedLayerId === layer.id ? <div className={`w-2 h-2 rounded-full ${UI_COLORS.SELECTED_INDICATOR}`} /> : null}
-          </div>
-        ))}
-        {/* Drop zone for end of list */}
-        <div
-          onDragOver={(e) => onLayerDragOver(e, layers.length)}
-          onDrop={(e) => onLayerDrop(e, layers.length)}
-          className="h-2"
-          style={{
-            ...(dragOverLayerIndex === layers.length && draggedLayerIndex !== null
-              ? {
-                  borderTop: `1px solid ${COLORS.BLUE_SELECTED}`,
-                }
-              : {}),
-          }}
-        />
+          />
         </div>
       ) : null}
     </div>

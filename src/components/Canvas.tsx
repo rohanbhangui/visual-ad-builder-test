@@ -93,42 +93,43 @@ export const Canvas: React.FC<CanvasProps> = ({
     const googleFontsLink = fontFamilies.length > 0 ? getGoogleFontsLink(fontFamilies) : '';
 
     return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  ${googleFontsLink ? `<link href="${googleFontsLink}" rel="stylesheet">` : ''}
-  <style>
-    html, body, div, span, h1, h2, h3, h4, h5, h6, p, img, video, button {
-      margin: 0;
-      padding: 0;
-      border: 0;
-      font-size: 100%;
-      font-weight: normal;
-      vertical-align: baseline;
-    }
-    body {
-      width: ${dimensions.width}px;
-      height: ${dimensions.height}px;
-      position: relative;
-      overflow: hidden;
-      -webkit-text-size-adjust: 100%;
-      background: white;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    * {
-      box-sizing: border-box;
-    }
-  </style>
-</head>
-<body>
-  ${layerElements}
-</body>
-</html>`;
-  };
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          ${googleFontsLink ? `<link href="${googleFontsLink}" rel="stylesheet">` : ''}
+          <style>
+            html, body, div, span, h1, h2, h3, h4, h5, h6, p, img, video, button {
+              margin: 0;
+              padding: 0;
+              border: 0;
+              font-size: 100%;
+              font-weight: normal;
+              vertical-align: baseline;
+            }
+            body {
+              width: ${dimensions.width}px;
+              height: ${dimensions.height}px;
+              position: relative;
+              overflow: hidden;
+              -webkit-text-size-adjust: 100%;
+              background: white;
+              margin: 0;
+              padding: 0;
+              user-select: none;
+              -webkit-user-select: none;
+            }
+            * {
+              box-sizing: border-box;
+            }
+          </style>
+        </head>
+        <body>
+          ${layerElements}
+        </body>
+      </html>
+    `;
+};
 
   const renderLayer = (layer: LayerContent, index: number) => {
     const posX = layer.positionX[selectedSize];
@@ -156,12 +157,9 @@ export const Canvas: React.FC<CanvasProps> = ({
       pointerEvents: layer.locked ? 'none' : 'auto',
     };
 
-    const contentWrapperStyle: React.CSSProperties = {
-      width: '100%',
-      height: '100%',
-      overflow: layer.type === 'text' || layer.type === 'richtext' ? 'hidden' : undefined,
-      position: 'relative',
-    };
+    const contentWrapperClassName = `w-full h-full relative ${
+      layer.type === 'text' || layer.type === 'richtext' ? 'overflow-hidden' : ''
+    }`.trim();
 
     let content = null;
 
@@ -170,11 +168,9 @@ export const Canvas: React.FC<CanvasProps> = ({
         content = (
           <img
             src={layer.url}
+            className="w-full h-full pointer-events-none"
             style={{
-              width: '100%',
-              height: '100%',
               objectFit: (layer.styles?.objectFit as any) || 'cover',
-              pointerEvents: 'none',
             }}
             alt={layer.label}
           />
@@ -184,13 +180,12 @@ export const Canvas: React.FC<CanvasProps> = ({
       case 'richtext':
         content = (
           <div
+            className="pointer-events-none whitespace-pre-wrap"
             style={{
-              pointerEvents: 'none',
               color: layer.styles?.color || '#000000',
               fontSize: layer.styles?.fontSize || '14px',
               fontFamily: layer.styles?.fontFamily || 'Arial',
               textAlign: layer.styles?.textAlign || 'left',
-              whiteSpace: 'pre-wrap',
             }}
             dangerouslySetInnerHTML={{ __html: layer.content }}
           />
@@ -203,7 +198,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               src={layer.url}
               preload="metadata"
               controls={layer.properties?.controls ?? true}
-              style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+              className="w-full h-full pointer-events-none"
             />
           );
         }
@@ -211,17 +206,12 @@ export const Canvas: React.FC<CanvasProps> = ({
       case 'button':
         content = (
           <div
+            className="w-full h-full flex items-center justify-center pointer-events-none"
             style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
               backgroundColor: layer.styles?.backgroundColor || '#333333',
               color: layer.styles?.color || '#ffffff',
               fontSize: layer.styles?.fontSize || '14px',
               fontFamily: layer.styles?.fontFamily || 'Arial',
-              pointerEvents: 'none',
             }}
           >
             {layer.text}
@@ -241,117 +231,53 @@ export const Canvas: React.FC<CanvasProps> = ({
         }}
         className={layer.locked ? '' : 'group hover:outline hover:outline-2 hover:outline-blue-400'}
       >
-        <div style={contentWrapperStyle}>{content}</div>
+        <div className={contentWrapperClassName}>{content}</div>
         {mode === 'edit' && isSelected && !layer.locked ? (
           <>
             {/* Corner handles */}
             <div
+              className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-nw-resize z-10"
               style={{
-                position: 'absolute',
-                top: '-6px',
-                left: '-6px',
-                width: '12px',
-                height: '12px',
-                background: 'white',
                 border: `2px solid ${COLORS.BLUE_SELECTED}`,
-                borderRadius: '50%',
-                cursor: 'nw-resize',
-                zIndex: 10,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'nw')}
             />
             <div
+              className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-ne-resize z-10"
               style={{
-                position: 'absolute',
-                top: '-6px',
-                right: '-6px',
-                width: '12px',
-                height: '12px',
-                background: 'white',
                 border: `2px solid ${COLORS.BLUE_SELECTED}`,
-                borderRadius: '50%',
-                cursor: 'ne-resize',
-                zIndex: 10,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'ne')}
             />
             <div
+              className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-sw-resize z-10"
               style={{
-                position: 'absolute',
-                bottom: '-6px',
-                left: '-6px',
-                width: '12px',
-                height: '12px',
-                background: 'white',
                 border: `2px solid ${COLORS.BLUE_SELECTED}`,
-                borderRadius: '50%',
-                cursor: 'sw-resize',
-                zIndex: 10,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'sw')}
             />
             <div
+              className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-se-resize z-10"
               style={{
-                position: 'absolute',
-                bottom: '-6px',
-                right: '-6px',
-                width: '12px',
-                height: '12px',
-                background: 'white',
                 border: `2px solid ${COLORS.BLUE_SELECTED}`,
-                borderRadius: '50%',
-                cursor: 'se-resize',
-                zIndex: 10,
               }}
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'se')}
             />
             {/* Edge resize areas (invisible) */}
             <div
-              style={{
-                position: 'absolute',
-                top: '-4px',
-                left: '12px',
-                right: '12px',
-                height: '8px',
-                cursor: 'n-resize',
-                zIndex: 9,
-              }}
+              className="absolute -top-1 left-3 right-3 h-2 cursor-n-resize z-[9]"
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'n')}
             />
             <div
-              style={{
-                position: 'absolute',
-                right: '-4px',
-                top: '12px',
-                bottom: '12px',
-                width: '8px',
-                cursor: 'e-resize',
-                zIndex: 9,
-              }}
+              className="absolute -right-1 top-3 bottom-3 w-2 cursor-e-resize z-[9]"
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'e')}
             />
             <div
-              style={{
-                position: 'absolute',
-                bottom: '-4px',
-                left: '12px',
-                right: '12px',
-                height: '8px',
-                cursor: 's-resize',
-                zIndex: 9,
-              }}
+              className="absolute -bottom-1 left-3 right-3 h-2 cursor-s-resize z-[9]"
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 's')}
             />
             <div
-              style={{
-                position: 'absolute',
-                left: '-4px',
-                top: '12px',
-                bottom: '12px',
-                width: '8px',
-                cursor: 'w-resize',
-                zIndex: 9,
-              }}
+              className="absolute -left-1 top-3 bottom-3 w-2 cursor-w-resize z-[9]"
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'w')}
             />
           </>
@@ -382,11 +308,9 @@ export const Canvas: React.FC<CanvasProps> = ({
           {snapLines.map((line, idx) => (
             <div
               key={idx}
+              className="absolute pointer-events-none z-[9999]"
               style={{
-                position: 'absolute',
                 backgroundColor: COLORS.RED_GUIDELINE,
-                pointerEvents: 'none',
-                zIndex: 9999,
                 ...(line.type === 'vertical'
                   ? { left: `${line.position}px`, top: 0, width: '1px', height: '100%' }
                   : { top: `${line.position}px`, left: 0, height: '1px', width: '100%' }),
@@ -398,11 +322,10 @@ export const Canvas: React.FC<CanvasProps> = ({
       ) : (
         <iframe
           srcDoc={generatePreviewHTML()}
+          className="border-0 shadow-md"
           style={{
             width: `${dimensions.width}px`,
             height: `${dimensions.height}px`,
-            border: 0,
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
           }}
           title="Preview"
         />

@@ -8,7 +8,13 @@ interface PositionSizeInputProps {
   disabled?: boolean;
 }
 
-export const PositionSizeInput = ({ label, value, unit, onChange, disabled }: PositionSizeInputProps) => {
+export const PositionSizeInput = ({
+  label,
+  value,
+  unit,
+  onChange,
+  disabled,
+}: PositionSizeInputProps) => {
   const [error, setError] = useState<string>('');
 
   const validateValue = (val: number, currentUnit: 'px' | '%'): boolean => {

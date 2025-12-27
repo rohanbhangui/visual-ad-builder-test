@@ -9,6 +9,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 ## Key Features
 
 ### Visual Editor
+
 - Bounding box for resize and movement (blue with corner handles)
 - Snapping guides (red)
 - Free flow resize and movement (when `shift` key is held)
@@ -18,6 +19,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - arrow keys move elements (hold `shift` to move by 10px at a time)
 
 ### Layers Panel
+
 - Add new elements
 - Reorder elements using drag and drop handles
 - Indicators for active layer
@@ -26,6 +28,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Can collapse to make more space
 
 ### Sidebar
+
 - Color pickers (text and background)
 - Rich text with font family, size and styling (Bold, italics, underline)
 - Character count for text and richtext fields (with validations)

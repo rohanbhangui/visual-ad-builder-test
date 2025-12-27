@@ -27,7 +27,8 @@ export default defineConfig([
         'error',
         {
           selector: 'JSXExpressionContainer > LogicalExpression[operator="&&"]',
-          message: 'Avoid using && for conditional rendering. Use ternary operator (condition ? <Component /> : null) instead to prevent rendering 0 or false.',
+          message:
+            'Avoid using && for conditional rendering. Use ternary operator (condition ? <Component /> : null) instead to prevent rendering 0 or false.',
         },
       ],
     },

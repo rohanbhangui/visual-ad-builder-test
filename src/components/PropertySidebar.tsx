@@ -43,7 +43,11 @@ interface PropertySidebarProps {
   onImageUrlChange: (layerId: string, url: string) => void;
   onObjectFitChange: (layerId: string, objectFit: string) => void;
   onVideoUrlChange: (layerId: string, url: string) => void;
-  onVideoPropertyChange: (layerId: string, property: 'autoplay' | 'controls', value: boolean) => void;
+  onVideoPropertyChange: (
+    layerId: string,
+    property: 'autoplay' | 'controls',
+    value: boolean
+  ) => void;
   onAlignLayer: (
     layerId: string,
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
@@ -271,7 +275,14 @@ export const PropertySidebar = ({
                     />
                   ) : (
                     <div className="w-[100px] h-[56px] bg-gray-400 border border-gray-300 rounded flex items-center justify-center">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="2"
+                      >
                         <rect x="3" y="3" width="18" height="18" rx="2" />
                         <circle cx="8.5" cy="8.5" r="1.5" />
                         <polyline points="21 15 16 10 5 21" />
@@ -322,7 +333,14 @@ export const PropertySidebar = ({
                     />
                   ) : (
                     <div className="w-[100px] h-[56px] bg-gray-400 border border-gray-300 rounded flex items-center justify-center">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1.5">
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        fill="white"
+                        stroke="white"
+                        strokeWidth="1.5"
+                      >
                         <circle cx="12" cy="12" r="10" fill="none" />
                         <polygon points="10,8 16,12 10,16" />
                       </svg>
@@ -447,7 +465,7 @@ export const PropertySidebar = ({
           ) : null}
 
           {/* Text Content Editor */}
-          {(layer.type === 'text' || layer.type === 'richtext') ? (
+          {layer.type === 'text' || layer.type === 'richtext' ? (
             <>
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -544,7 +562,9 @@ export const PropertySidebar = ({
                           onClick={() => onTextAlignChange(layer.id, 'left')}
                           disabled={layer.locked}
                           className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 ${
-                            (layer.styles?.textAlign || 'left') === 'left' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
+                            (layer.styles?.textAlign || 'left') === 'left'
+                              ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+                              : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Left"
                         >
@@ -554,7 +574,9 @@ export const PropertySidebar = ({
                           onClick={() => onTextAlignChange(layer.id, 'center')}
                           disabled={layer.locked}
                           className={`px-3 py-1 text-sm border-r border-gray-300 last:border-r-0 ${
-                            layer.styles?.textAlign === 'center' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
+                            layer.styles?.textAlign === 'center'
+                              ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+                              : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Center"
                         >
@@ -564,7 +586,9 @@ export const PropertySidebar = ({
                           onClick={() => onTextAlignChange(layer.id, 'right')}
                           disabled={layer.locked}
                           className={`px-3 py-1 text-sm ${
-                            layer.styles?.textAlign === 'right' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
+                            layer.styles?.textAlign === 'right'
+                              ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+                              : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Right"
                         >
@@ -599,15 +623,19 @@ export const PropertySidebar = ({
                       onChange={(color) => onColorChange(layer.id, color)}
                       disabled={layer.locked}
                     />
-                    
+
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Text Align</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Text Align
+                      </label>
                       <div className="inline-flex border border-gray-300 rounded overflow-hidden">
                         <button
                           onClick={() => onTextAlignChange(layer.id, 'left')}
                           disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
-                            (layer.styles?.textAlign || 'left') === 'left' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
+                            (layer.styles?.textAlign || 'left') === 'left'
+                              ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+                              : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Left"
                         >
@@ -617,7 +645,9 @@ export const PropertySidebar = ({
                           onClick={() => onTextAlignChange(layer.id, 'center')}
                           disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
-                            layer.styles?.textAlign === 'center' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
+                            layer.styles?.textAlign === 'center'
+                              ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+                              : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Center"
                         >
@@ -627,7 +657,9 @@ export const PropertySidebar = ({
                           onClick={() => onTextAlignChange(layer.id, 'right')}
                           disabled={layer.locked}
                           className={`px-3 h-8 flex items-center text-sm ${
-                            layer.styles?.textAlign === 'right' ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}` : 'hover:bg-gray-50'
+                            layer.styles?.textAlign === 'right'
+                              ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+                              : 'hover:bg-gray-50'
                           } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                           title="Align Right"
                         >
@@ -640,7 +672,9 @@ export const PropertySidebar = ({
                   {/* Font Family and Font Size side by side */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Font Family</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Font Family
+                      </label>
                       <select
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
@@ -656,7 +690,9 @@ export const PropertySidebar = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Font Size
+                      </label>
                       <select
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
