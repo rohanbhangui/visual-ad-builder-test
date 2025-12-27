@@ -85,7 +85,7 @@ ${layerElements}
   // Generate CSS for responsive behavior
   const generateResponsiveCSS = (): string => {
     const mediaQueries = allowedSizes
-      .map((size, index) => {
+      .map((size) => {
         const dimensions = HTML5_AD_SIZES[size];
         
         return `
