@@ -111,7 +111,7 @@ export const sampleCanvas: Canvas = {
   name: 'Sample HTML5 Ad',
   allowedSizes: ['300x250', '336x280', '728x90'],
   styles: {
-    backgroundColor: '#8B7355',
+    backgroundColor: '#ffffff',
   },
   layers: [
     {
@@ -278,7 +278,7 @@ export const sampleCanvas: Canvas = {
       },
       url: 'https://images.pexels.com/photos/1303098/pexels-photo-1303098.jpeg',
       styles: {
-        opacity: 0.33,
+        opacity: 0.46,
       },
     },
   ],
