@@ -26,6 +26,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Lock and unlock layers
 - Floating and can be snapped to left or right edge
 - Can collapse to make more space
+- Canvas settings
 
 ### Sidebar
 

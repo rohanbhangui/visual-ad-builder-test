@@ -25,6 +25,7 @@ interface PropertySidebarProps {
   selectedLayerId: string | null;
   layers: LayerContent[];
   selectedSize: AdSize;
+  canvasName?: string;
   canvasBackgroundColor?: string;
   onPropertyChange: (
     layerId: string,
@@ -54,6 +55,8 @@ interface PropertySidebarProps {
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
   ) => void;
   onOpacityChange: (layerId: string, opacity: number) => void;
+  canvasName?: string;
+  onCanvasNameChange: (name: string) => void;
   onCanvasBackgroundColorChange: (color: string) => void;
 }
 
@@ -61,6 +64,7 @@ export const PropertySidebar = ({
   selectedLayerId,
   layers,
   selectedSize,
+  canvasName,
   canvasBackgroundColor,
   onPropertyChange,
   onDelete,
@@ -78,6 +82,7 @@ export const PropertySidebar = ({
   onVideoPropertyChange,
   onAlignLayer,
   onOpacityChange,
+  onCanvasNameChange,
   onCanvasBackgroundColorChange,
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
@@ -117,6 +122,20 @@ export const PropertySidebar = ({
           </div>
 
           <div className="space-y-3">
+            {/* Canvas Name */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                Ad Name
+              </label>
+              <input
+                type="text"
+                value={canvasName || ''}
+                onChange={(e) => onCanvasNameChange(e.target.value)}
+                className="w-full h-8 px-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter ad name"
+              />
+            </div>
+
             {/* Canvas Background Color */}
             <div>
               <ColorInput
@@ -328,7 +347,7 @@ export const PropertySidebar = ({
                   value={layer.styles?.objectFit || 'cover'}
                   onChange={(e) => onObjectFitChange(layer.id, e.target.value)}
                   disabled={layer.locked}
-                  className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 >
                   <option value="cover">Cover</option>
                   <option value="contain">Contain</option>
@@ -452,7 +471,7 @@ export const PropertySidebar = ({
                     value={layer.styles?.fontFamily || 'Arial'}
                     onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
                     disabled={layer.locked}
-                    className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   >
                     {GOOGLE_FONTS.map((font) => (
                       <option key={font} value={font}>
@@ -467,7 +486,7 @@ export const PropertySidebar = ({
                     value={layer.styles?.fontSize || '14px'}
                     onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                     disabled={layer.locked}
-                    className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   >
                     {FONT_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>
@@ -521,7 +540,7 @@ export const PropertySidebar = ({
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
                         disabled={layer.locked}
-                        className={`flex-1 px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`flex-1 h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       >
                         {GOOGLE_FONTS.map((font) => (
                           <option key={font} value={font}>
@@ -533,7 +552,7 @@ export const PropertySidebar = ({
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                         disabled={layer.locked}
-                        className={`px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>
@@ -702,7 +721,7 @@ export const PropertySidebar = ({
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
                         disabled={layer.locked}
-                        className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       >
                         {GOOGLE_FONTS.map((font) => (
                           <option key={font} value={font}>
@@ -720,7 +739,7 @@ export const PropertySidebar = ({
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                         disabled={layer.locked}
-                        className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>

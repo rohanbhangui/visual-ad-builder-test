@@ -12,6 +12,7 @@ import { loadGoogleFonts } from './utils/googleFonts';
 const App = () => {
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
   const [layers, setLayers] = useState<LayerContent[]>(sampleCanvas.layers);
+  const [canvasName, setCanvasName] = useState<string>(sampleCanvas.name);
   const [canvasBackgroundColor, setCanvasBackgroundColor] = useState<string>(
     sampleCanvas.styles?.backgroundColor || '#ffffff'
   );
@@ -673,7 +674,9 @@ const App = () => {
             selectedLayerId={selectedLayerId}
             layers={layers}
             selectedSize={selectedSize}
+            canvasName={canvasName}
             canvasBackgroundColor={canvasBackgroundColor}
+            onCanvasNameChange={setCanvasName}
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}
             onLabelChange={handleLabelChange}
