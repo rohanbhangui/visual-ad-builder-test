@@ -55,7 +55,6 @@ interface PropertySidebarProps {
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
   ) => void;
   onOpacityChange: (layerId: string, opacity: number) => void;
-  canvasName?: string;
   onCanvasNameChange: (name: string) => void;
   onCanvasBackgroundColorChange: (color: string) => void;
 }
