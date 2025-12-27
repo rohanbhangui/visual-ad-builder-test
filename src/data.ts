@@ -122,7 +122,7 @@ export const sampleCanvas: Canvas = {
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
-        '728x90': { value: 10, unit: 'px' },
+        '728x90': { value: 124, unit: 'px' },
       },
       positionY: {
         '300x250': { value: 121, unit: 'px' },
@@ -132,7 +132,7 @@ export const sampleCanvas: Canvas = {
       width: {
         '300x250': { value: 280, unit: 'px' },
         '336x280': { value: 316, unit: 'px' },
-        '728x90': { value: 462, unit: 'px' },
+        '728x90': { value: 234, unit: 'px' },
       },
       height: {
         '300x250': { value: 35, unit: 'px' },
@@ -156,7 +156,7 @@ export const sampleCanvas: Canvas = {
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 21, unit: 'px' },
-        '728x90': { value: 10, unit: 'px' },
+        '728x90': { value: 98, unit: 'px' },
       },
       positionY: {
         '300x250': { value: 156, unit: 'px' },
@@ -166,7 +166,7 @@ export const sampleCanvas: Canvas = {
       width: {
         '300x250': { value: 280, unit: 'px' },
         '336x280': { value: 294, unit: 'px' },
-        '728x90': { value: 462, unit: 'px' },
+        '728x90': { value: 284, unit: 'px' },
       },
       height: {
         '300x250': { value: 50, unit: 'px' },
