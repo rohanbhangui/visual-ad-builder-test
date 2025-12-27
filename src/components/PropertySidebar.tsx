@@ -450,7 +450,7 @@ export const PropertySidebar = ({
                   value={layer.text}
                   onChange={(e) => onTextChange(layer.id, e.target.value)}
                   disabled={layer.locked}
-                  className={`w-full px-2 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 />
               </div>
 
