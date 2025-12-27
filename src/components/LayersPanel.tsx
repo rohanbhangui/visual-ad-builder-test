@@ -71,7 +71,7 @@ export const LayersPanel = ({
 
   return (
     <div
-      className={`absolute w-[300px] max-h-[500px] bg-white rounded-lg shadow-xl z-[1000] overflow-hidden select-none ${
+      className={`absolute w-[300px] bg-white rounded-lg shadow-xl z-[1000] select-none ${
         isDragging ? 'cursor-grabbing' : 'cursor-grab'
       }`}
       style={{
@@ -80,7 +80,9 @@ export const LayersPanel = ({
         right: panelPos.x === -1 && panelSide === 'right' ? '10px' : 'auto',
       }}
     >
-      <div className="px-4 py-3 border-b border-gray-200 font-semibold text-gray-900 flex items-center justify-between">
+      <div className={`px-4 py-3 font-semibold text-gray-900 flex items-center justify-between ${
+        !isCollapsed ? 'border-b border-gray-200' : ''
+      }`}>
         <div onMouseDown={onMouseDown} className="flex-1 cursor-grab">
           Layers
         </div>
@@ -110,7 +112,7 @@ export const LayersPanel = ({
             </button>
           {showDropdown && (
             <div
-              className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow-lg z-50"
+              className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow-lg z-[1001]"
               onMouseDown={(e) => e.stopPropagation()}
             >
               <button
