@@ -21,6 +21,7 @@ const App = () => {
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
   const [isShiftPressed, setIsShiftPressed] = useState(false);
+  const [isAltPressed, setIsAltPressed] = useState(false);
   const [layersPanelSide, setLayersPanelSide] = useState<'left' | 'right'>('right');
   const [isLayersPanelDragging, setIsLayersPanelDragging] = useState(false);
   const [layersPanelPos, setLayersPanelPos] = useState({ x: -1, y: 10 });
@@ -72,6 +73,7 @@ const App = () => {
     selectedLayerId,
     selectedSize,
     isShiftPressed,
+    isAltPressed,
     setLayers,
     setSelectedLayerId,
   });
@@ -80,6 +82,9 @@ const App = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         setIsShiftPressed(true);
+      }
+      if (e.key === 'Alt') {
+        setIsAltPressed(true);
       }
 
       // Check if user is typing in an input/textarea/contentEditable
@@ -152,6 +157,9 @@ const App = () => {
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         setIsShiftPressed(false);
+      }
+      if (e.key === 'Alt') {
+        setIsAltPressed(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);

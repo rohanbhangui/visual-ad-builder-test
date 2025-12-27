@@ -8,6 +8,7 @@ interface UseCanvasInteractionsProps {
   selectedLayerId: string | null;
   selectedSize: AdSize;
   isShiftPressed: boolean;
+  isAltPressed: boolean;
   setLayers: React.Dispatch<React.SetStateAction<LayerContent[]>>;
   setSelectedLayerId: React.Dispatch<React.SetStateAction<string | null>>;
 }
@@ -18,6 +19,7 @@ export const useCanvasInteractions = ({
   selectedLayerId,
   selectedSize,
   isShiftPressed,
+  isAltPressed,
   setLayers,
   setSelectedLayerId,
 }: UseCanvasInteractionsProps) => {
@@ -258,15 +260,34 @@ export const useCanvasInteractions = ({
         let newX = layerX;
         let newY = layerY;
 
-        if (direction.includes('e')) newWidth = Math.max(10, width + dx);
-        if (direction.includes('w')) {
-          newWidth = Math.max(10, width - dx);
-          newX = layerX + dx;
-        }
-        if (direction.includes('s')) newHeight = Math.max(10, height + dy);
-        if (direction.includes('n')) {
-          newHeight = Math.max(10, height - dy);
-          newY = layerY + dy;
+        if (isAltPressed) {
+          // Center resize: adjust opposite edge by the same amount
+          if (direction.includes('e') || direction.includes('w')) {
+            const desiredWidth = width + dx * 2;
+            newWidth = Math.max(30, desiredWidth);
+            // Only adjust position if width actually changed
+            const actualDx = (newWidth - width) / 2;
+            newX = layerX - actualDx;
+          }
+          if (direction.includes('s') || direction.includes('n')) {
+            const desiredHeight = height + dy * 2;
+            newHeight = Math.max(30, desiredHeight);
+            // Only adjust position if height actually changed
+            const actualDy = (newHeight - height) / 2;
+            newY = layerY - actualDy;
+          }
+        } else {
+          // Normal resize: only adjust the edge being dragged
+          if (direction.includes('e')) newWidth = Math.max(30, width + dx);
+          if (direction.includes('w')) {
+            newWidth = Math.max(30, width - dx);
+            newX = layerX + dx;
+          }
+          if (direction.includes('s')) newHeight = Math.max(30, height + dy);
+          if (direction.includes('n')) {
+            newHeight = Math.max(30, height - dy);
+            newY = layerY + dy;
+          }
         }
 
         const guides: Array<{ type: 'vertical' | 'horizontal'; position: number }> = [];
@@ -446,6 +467,7 @@ export const useCanvasInteractions = ({
       layers,
       selectedSize,
       isShiftPressed,
+      isAltPressed,
       dimensions,
       setLayers,
     ]
