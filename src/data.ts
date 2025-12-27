@@ -38,6 +38,7 @@ export interface TextLayer extends BaseLayer {
     fontSize?: string;
     fontFamily?: FontFamily;
     textAlign?: 'left' | 'center' | 'right';
+    opacity: number;
   };
 }
 
@@ -49,6 +50,7 @@ export interface RichtextLayer extends BaseLayer {
     fontSize?: string;
     fontFamily?: FontFamily;
     textAlign?: 'left' | 'center' | 'right';
+    opacity: number;
   };
 }
 
@@ -59,6 +61,7 @@ export interface ImageLayer extends BaseLayer {
     color?: string;
     fontSize?: string;
     objectFit?: string;
+    opacity: number;
   };
 }
 
@@ -72,6 +75,7 @@ export interface VideoLayer extends BaseLayer {
   styles?: {
     color?: string;
     fontSize?: string;
+    opacity: number;
   };
 }
 
@@ -84,6 +88,7 @@ export interface ButtonLayer extends BaseLayer {
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
+    opacity: number;
   };
 }
 
@@ -93,6 +98,9 @@ export interface Canvas {
   name: string;
   allowedSizes: AdSize[];
   layers: LayerContent[];
+  styles?: {
+    backgroundColor?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -102,10 +110,13 @@ export const sampleCanvas: Canvas = {
   id: uuidv4(),
   name: 'Sample HTML5 Ad',
   allowedSizes: ['300x250', '336x280', '728x90'],
+  styles: {
+    backgroundColor: '#8B7355',
+  },
   layers: [
     {
       id: uuidv4(),
-      label: 'Main Headline',
+      label: 'Headline',
       type: 'richtext',
       locked: false,
       positionX: {
@@ -134,11 +145,12 @@ export const sampleCanvas: Canvas = {
         fontSize: '20px',
         fontFamily: 'Playfair Display',
         textAlign: 'center',
+        opacity: 1,
       },
     },
     {
       id: uuidv4(),
-      label: 'Description Text',
+      label: 'Description',
       type: 'text',
       locked: false,
       positionX: {
@@ -167,6 +179,7 @@ export const sampleCanvas: Canvas = {
         fontSize: '14px',
         fontFamily: 'Arial',
         textAlign: 'center',
+        opacity: 1,
       },
     },
     {
@@ -198,6 +211,9 @@ export const sampleCanvas: Canvas = {
       properties: {
         autoplay: true,
         controls: false,
+      },
+      styles: {
+        opacity: 1,
       },
     },
     {
@@ -232,6 +248,7 @@ export const sampleCanvas: Canvas = {
         color: '#ffffff',
         fontSize: '14px',
         fontFamily: 'Arial',
+        opacity: 1,
       },
     },
     {
@@ -260,6 +277,9 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 90, unit: 'px' },
       },
       url: 'https://images.pexels.com/photos/1303098/pexels-photo-1303098.jpeg',
+      styles: {
+        opacity: 0.33,
+      },
     },
   ],
   createdAt: new Date(),

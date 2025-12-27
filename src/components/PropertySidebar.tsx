@@ -25,6 +25,7 @@ interface PropertySidebarProps {
   selectedLayerId: string | null;
   layers: LayerContent[];
   selectedSize: AdSize;
+  canvasBackgroundColor?: string;
   onPropertyChange: (
     layerId: string,
     property: 'positionX' | 'positionY' | 'width' | 'height',
@@ -52,12 +53,15 @@ interface PropertySidebarProps {
     layerId: string,
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
   ) => void;
+  onOpacityChange: (layerId: string, opacity: number) => void;
+  onCanvasBackgroundColorChange: (color: string) => void;
 }
 
 export const PropertySidebar = ({
   selectedLayerId,
   layers,
   selectedSize,
+  canvasBackgroundColor,
   onPropertyChange,
   onDelete,
   onLabelChange,
@@ -73,6 +77,8 @@ export const PropertySidebar = ({
   onVideoUrlChange,
   onVideoPropertyChange,
   onAlignLayer,
+  onOpacityChange,
+  onCanvasBackgroundColorChange,
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
@@ -101,8 +107,25 @@ export const PropertySidebar = ({
     return (
       <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
         <div className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Options</h2>
-          <p className="text-sm text-gray-500">Select a layer to edit its properties</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Options</h2>
+          
+          {/* Canvas Settings Label */}
+          <div className="mb-4 group/label mt-1">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-medium text-gray-700 flex-1 mt-0.5">Canvas Settings</h3>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {/* Canvas Background Color */}
+            <div>
+              <ColorInput
+                label="Background Color"
+                value={canvasBackgroundColor || '#ffffff'}
+                onChange={onCanvasBackgroundColorChange}
+              />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -724,6 +747,55 @@ export const PropertySidebar = ({
             />
           </div>
         ) : null}
+
+        {/* Layer Opacity */}
+        <div className="mt-4">
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Layer Opacity
+          </label>
+          <div className="flex items-center gap-2">
+            <div
+              className="flex-1 relative h-1 bg-gray-200 rounded-full cursor-pointer"
+              onMouseDown={(e) => {
+                if (layer.locked) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const updateOpacity = (clientX: number) => {
+                  const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+                  const percentage = (x / rect.width) * 100;
+                  onOpacityChange(layer.id, percentage / 100);
+                };
+                
+                updateOpacity(e.clientX);
+                
+                const handleMouseMove = (e: MouseEvent) => {
+                  updateOpacity(e.clientX);
+                };
+                
+                const handleMouseUp = () => {
+                  document.removeEventListener('mousemove', handleMouseMove);
+                  document.removeEventListener('mouseup', handleMouseUp);
+                };
+                
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+              }}
+            >
+              <div
+                className="absolute top-0 left-0 h-full bg-blue-500 rounded-full"
+                style={{ width: `${(layer.styles?.opacity || 1) * 100}%` }}
+              />
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border border-gray-300 rounded-full shadow-sm ${
+                  layer.locked ? 'cursor-not-allowed' : 'cursor-pointer'
+                }`}
+                style={{ left: `calc(${(layer.styles?.opacity || 1) * 100}% - 8px)` }}
+              />
+            </div>
+            <span className="text-xs text-gray-600 w-10 text-right">
+              {Math.round((layer.styles?.opacity || 1) * 100)}%
+            </span>
+          </div>
+        </div>
 
         {/* Delete Button */}
         <div className="mt-6">

@@ -40,3 +40,4 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Delete layer button (with confirmation)
 - Ability to edit the label of the layer
 - Edit/Update layer label
+- Opacity support

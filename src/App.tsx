@@ -12,6 +12,9 @@ import { loadGoogleFonts } from './utils/googleFonts';
 const App = () => {
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
   const [layers, setLayers] = useState<LayerContent[]>(sampleCanvas.layers);
+  const [canvasBackgroundColor, setCanvasBackgroundColor] = useState<string>(
+    sampleCanvas.styles?.backgroundColor || '#ffffff'
+  );
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
   const [isShiftPressed, setIsShiftPressed] = useState(false);
@@ -410,6 +413,27 @@ const App = () => {
     );
   };
 
+  const handleOpacityChange = (layerId: string, opacity: number) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId) {
+          return {
+            ...l,
+            styles: {
+              ...l.styles,
+              opacity,
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
+
+  const handleCanvasBackgroundColorChange = (color: string) => {
+    setCanvasBackgroundColor(color);
+  };
+
   const handleImageUrlChange = (layerId: string, url: string) => {
     setLayers((prev) =>
       prev.map((l) => {
@@ -621,6 +645,7 @@ const App = () => {
             selectedLayerId={selectedLayerId}
             selectedSize={selectedSize}
             dimensions={dimensions}
+            canvasBackgroundColor={canvasBackgroundColor}
             snapLines={snapLines}
             onLayerMouseDown={handleLayerMouseDown}
             onResizeMouseDown={handleResizeMouseDown}
@@ -647,6 +672,7 @@ const App = () => {
             selectedLayerId={selectedLayerId}
             layers={layers}
             selectedSize={selectedSize}
+            canvasBackgroundColor={canvasBackgroundColor}
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}
             onLabelChange={handleLabelChange}
@@ -662,6 +688,8 @@ const App = () => {
             onVideoUrlChange={handleVideoUrlChange}
             onVideoPropertyChange={handleVideoPropertyChange}
             onAlignLayer={handleAlignLayer}
+            onOpacityChange={handleOpacityChange}
+            onCanvasBackgroundColorChange={handleCanvasBackgroundColorChange}
           />
         ) : null}
       </div>

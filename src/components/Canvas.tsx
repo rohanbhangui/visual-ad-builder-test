@@ -9,6 +9,7 @@ interface CanvasProps {
   selectedLayerId: string | null;
   selectedSize: AdSize;
   dimensions: { width: number; height: number };
+  canvasBackgroundColor?: string;
   snapLines: Array<{ type: 'horizontal' | 'vertical'; position: number }>;
   onLayerMouseDown: (e: React.MouseEvent, layerId: string) => void;
   onResizeMouseDown: (e: React.MouseEvent, layerId: string, corner: string) => void;
@@ -24,6 +25,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   selectedLayerId,
   selectedSize,
   dimensions,
+  canvasBackgroundColor,
   snapLines,
   onLayerMouseDown,
   onResizeMouseDown,
@@ -113,7 +115,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               position: relative;
               overflow: hidden;
               -webkit-text-size-adjust: 100%;
-              background: white;
+              background: ${canvasBackgroundColor || 'white'};
               margin: 0;
               padding: 0;
               user-select: none;
@@ -155,6 +157,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       outlineOffset: '-2px',
       zIndex: layers.length - index,
       pointerEvents: layer.locked ? 'none' : 'auto',
+      opacity: layer.styles?.opacity || 1,
     };
 
     const contentWrapperClassName = `w-full h-full relative ${
@@ -295,7 +298,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             width: `${dimensions.width}px`,
             height: `${dimensions.height}px`,
             position: 'relative',
-            background: 'white',
+            background: canvasBackgroundColor || 'white',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
             userSelect: 'none',
             WebkitUserSelect: 'none',
