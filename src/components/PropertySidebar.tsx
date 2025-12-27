@@ -753,7 +753,7 @@ export const PropertySidebar = ({
           <label className="block text-xs font-medium text-gray-600 mb-1">
             Layer Opacity
           </label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <div
               className="flex-1 relative h-1 bg-gray-200 rounded-full cursor-pointer"
               onMouseDown={(e) => {
@@ -793,9 +793,22 @@ export const PropertySidebar = ({
                 style={{ left: `calc(${(layer.styles?.opacity || 1) * 100}% - 8px)` }}
               />
             </div>
-            <span className="text-xs text-gray-600 w-10 text-right">
-              {Math.round((layer.styles?.opacity || 1) * 100)}%
-            </span>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={Math.round((layer.styles?.opacity || 1) * 100)}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (!isNaN(value)) {
+                  const clamped = Math.max(0, Math.min(100, value));
+                  onOpacityChange(layer.id, clamped / 100);
+                }
+              }}
+              disabled={layer.locked}
+              className="w-14 px-2 py-1 text-sm border border-gray-300 rounded text-right focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ fontSize: '14px' }}
+            />
           </div>
         </div>
 
