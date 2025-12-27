@@ -75,19 +75,71 @@ const App = () => {
       if (e.key === 'Shift') {
         setIsShiftPressed(true);
       }
+      
+      // Check if user is typing in an input/textarea/contentEditable
+      const activeElement = document.activeElement;
+      const isTyping = activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          (activeElement as HTMLElement).isContentEditable);
+      
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerId) {
-        // Don't delete if user is typing in an input/textarea/contentEditable
-        const activeElement = document.activeElement;
-        if (
-          activeElement &&
-          (activeElement.tagName === 'INPUT' ||
-            activeElement.tagName === 'TEXTAREA' ||
-            (activeElement as HTMLElement).isContentEditable)
-        ) {
+        if (isTyping) {
           return;
         }
         e.preventDefault();
         handleDeleteLayer(selectedLayerId);
+      }
+      
+      // Arrow key navigation for moving layers
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && selectedLayerId) {
+        if (isTyping) {
+          return;
+        }
+        e.preventDefault();
+        
+        const moveAmount = e.shiftKey ? 10 : 1;
+        
+        setLayers((prev) =>
+          prev.map((layer) => {
+            if (layer.id !== selectedLayerId) return layer;
+            
+            const posX = layer.positionX[selectedSize];
+            const posY = layer.positionY[selectedSize];
+            
+            if (!posX || !posY) return layer;
+            
+            let newX = posX.value;
+            let newY = posY.value;
+            
+            switch (e.key) {
+              case 'ArrowLeft':
+                newX -= moveAmount;
+                break;
+              case 'ArrowRight':
+                newX += moveAmount;
+                break;
+              case 'ArrowUp':
+                newY -= moveAmount;
+                break;
+              case 'ArrowDown':
+                newY += moveAmount;
+                break;
+            }
+            
+            return {
+              ...layer,
+              positionX: {
+                ...layer.positionX,
+                [selectedSize]: { value: newX, unit: posX.unit },
+              },
+              positionY: {
+                ...layer.positionY,
+                [selectedSize]: { value: newY, unit: posY.unit },
+              },
+            };
+          })
+        );
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {

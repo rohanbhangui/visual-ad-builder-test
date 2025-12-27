@@ -15,6 +15,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Ad size selector with independent styles and position
 - Preview mode toggle (renders html with css into iframe)
 - `delete/backspace` key to delete a selected layer (with confirmation)
+- arrow keys move elements (hold `shift` to move by 10px at a time)
 
 ### Layers Panel
 - Add new elements
@@ -24,7 +25,6 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Floating and can be snapped to left or right edge
 - Can collapse to make more space
 
-
 ### Sidebar
 - Color pickers (text and background)
 - Rich text with font family, size and styling (Bold, italics, underline)
@@ -32,7 +32,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Basic validations for color and url inputs
 - Images/videos (via url)
 - Image preview
-- Micro adjustment fields for position, width and height (with unit adjustments % vs. px)
+- Precise adjustments fields for position, width and height (with unit adjustments % vs. px)
 - Quick alignment buttons
 - Delete layer button (with confirmation)
 - Ability to edit the label of the layer
