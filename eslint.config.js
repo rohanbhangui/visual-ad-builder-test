@@ -19,5 +19,17 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Disallow && for conditional rendering, require ternary operators instead
+      // This prevents issues with 0, NaN, or empty strings being rendered
+      '@typescript-eslint/prefer-nullish-coalescing': 'off', // We'll handle this manually
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'JSXExpressionContainer > LogicalExpression[operator="&&"]',
+          message: 'Avoid using && for conditional rendering. Use ternary operator (condition ? <Component /> : null) instead to prevent rendering 0 or false.',
+        },
+      ],
+    },
   },
 ]);

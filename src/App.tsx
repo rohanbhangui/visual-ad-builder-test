@@ -598,7 +598,7 @@ const App = () => {
           onClick={() => setSelectedLayerId(null)}
         >
           {/* Floating Layers Panel */}
-          {mode === 'edit' && (
+          {mode === 'edit' ? (
             <LayersPanel
               layers={layers}
               selectedLayerId={selectedLayerId}
@@ -616,7 +616,7 @@ const App = () => {
               onAddLayer={handleAddLayer}
               onToggleLock={handleToggleLock}
             />
-          )}
+          ) : null}
 
           <Canvas
             mode={mode}
@@ -645,7 +645,7 @@ const App = () => {
           />
         </div>
 
-        {mode === 'edit' && (
+        {mode === 'edit' ? (
           <PropertySidebar
             selectedLayerId={selectedLayerId}
             layers={layers}
@@ -666,7 +666,7 @@ const App = () => {
             onVideoPropertyChange={handleVideoPropertyChange}
             onAlignLayer={handleAlignLayer}
           />
-        )}
+        ) : null}
       </div>
     </div>
   );

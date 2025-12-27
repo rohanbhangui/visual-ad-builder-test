@@ -246,11 +246,11 @@ export const PropertySidebar = ({
           </div>
 
           {/* Image Controls */}
-          {layer.type === 'image' && (
+          {layer.type === 'image' ? (
             <>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
-                {layer.url && (
+                {layer.url ? (
                   <div className="mb-2">
                     <img
                       src={layer.url}
@@ -261,7 +261,7 @@ export const PropertySidebar = ({
                       }}
                     />
                   </div>
-                )}
+                ) : null}
                 <UrlInput
                   label=""
                   value={layer.url}
@@ -286,14 +286,14 @@ export const PropertySidebar = ({
                 </select>
               </div>
             </>
-          )}
+          ) : null}
 
           {/* Video Controls */}
-          {layer.type === 'video' && (
+          {layer.type === 'video' ? (
             <>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Video URL</label>
-                {layer.url && (
+                {layer.url ? (
                   <div className="mb-2">
                     <video
                       src={layer.url}
@@ -304,7 +304,7 @@ export const PropertySidebar = ({
                       }}
                     />
                   </div>
-                )}
+                ) : null}
                 <UrlInput
                   label=""
                   value={layer.url}
@@ -338,10 +338,10 @@ export const PropertySidebar = ({
                 </label>
               </div>
             </>
-          )}
+          ) : null}
 
           {/* Button Controls */}
-          {layer.type === 'button' && (
+          {layer.type === 'button' ? (
             <>
               <UrlInput
                 label="Button URL"
@@ -420,15 +420,15 @@ export const PropertySidebar = ({
                 disabled={layer.locked}
               />
             </>
-          )}
+          ) : null}
 
           {/* Text Content Editor */}
-          {(layer.type === 'text' || layer.type === 'richtext') && (
+          {(layer.type === 'text' || layer.type === 'richtext') ? (
             <>
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-medium text-gray-600">Content</label>
-                  {layer.type === 'text' && (
+                  {layer.type === 'text' ? (
                     <span
                       className={`text-xs ${
                         layer.content.length > MAX_TEXT_CONTENT_LENGTH
@@ -438,7 +438,7 @@ export const PropertySidebar = ({
                     >
                       {layer.content.length}/{MAX_TEXT_CONTENT_LENGTH}
                     </span>
-                  )}
+                  ) : null}
                 </div>
                 {layer.type === 'text' ? (
                   <textarea
@@ -565,7 +565,7 @@ export const PropertySidebar = ({
               </div>
 
               {/* Font Family and Font Size for Text (non-richtext) */}
-              {layer.type === 'text' && (
+              {layer.type === 'text' ? (
                 <>
                   {/* Text Color and Text Align side by side */}
                   <div className="grid grid-cols-2 gap-2">
@@ -648,13 +648,13 @@ export const PropertySidebar = ({
                     </div>
                   </div>
                 </>
-              )}
+              ) : null}
             </>
-          )}
+          ) : null}
         </div>
 
         {/* Text Color for richtext */}
-        {layer.type === 'richtext' && (
+        {layer.type === 'richtext' ? (
           <div className="mt-4">
             <ColorInput
               label="Text Color"
@@ -663,7 +663,7 @@ export const PropertySidebar = ({
               disabled={layer.locked}
             />
           </div>
-        )}
+        ) : null}
 
         {/* Delete Button */}
         <div className="mt-6">

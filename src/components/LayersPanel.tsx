@@ -142,7 +142,7 @@ export const LayersPanel = ({
             >
               <PlusIcon />
             </button>
-          {showDropdown && (
+          {showDropdown ? (
             <div
               className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow-lg z-[1001]"
               onMouseDown={(e) => e.stopPropagation()}
@@ -170,11 +170,11 @@ export const LayersPanel = ({
                 );
               })}
             </div>
-          )}
+          ) : null}
           </div>
         </div>
       </div>
-      {!isCollapsed && (
+      {!isCollapsed ? (
         <div className="overflow-y-auto overflow-x-hidden max-h-[440px]" onClick={() => setShowDropdown(false)}>
         {layers.map((layer, index) => (
           <div
@@ -261,7 +261,7 @@ export const LayersPanel = ({
             >
               {layer.locked ? <LockIcon /> : <UnlockIcon />}
             </button>
-            {selectedLayerId === layer.id && <div className={`w-2 h-2 rounded-full ${UI_COLORS.SELECTED_INDICATOR}`} />}
+            {selectedLayerId === layer.id ? <div className={`w-2 h-2 rounded-full ${UI_COLORS.SELECTED_INDICATOR}`} /> : null}
           </div>
         ))}
         {/* Drop zone for end of list */}
@@ -278,7 +278,7 @@ export const LayersPanel = ({
           }}
         />
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

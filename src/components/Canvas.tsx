@@ -242,7 +242,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         className={layer.locked ? '' : 'group hover:outline hover:outline-2 hover:outline-blue-400'}
       >
         <div style={contentWrapperStyle}>{content}</div>
-        {mode === 'edit' && isSelected && !layer.locked && (
+        {mode === 'edit' && isSelected && !layer.locked ? (
           <>
             {/* Corner handles */}
             <div
@@ -355,7 +355,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               onMouseDown={(e) => onResizeMouseDown(e, layer.id, 'w')}
             />
           </>
-        )}
+        ) : null}
       </div>
     );
   };
