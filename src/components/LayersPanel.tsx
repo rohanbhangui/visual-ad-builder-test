@@ -52,6 +52,39 @@ export const LayersPanel = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const layerTypes = [
+    {
+      type: 'text' as const,
+      icon: LayerTextIcon,
+      label: 'Text',
+      description: 'Simple text content',
+    },
+    {
+      type: 'button' as const,
+      icon: LayerButtonIcon,
+      label: 'Button',
+      description: 'Clickable button link',
+    },
+    {
+      type: 'image' as const,
+      icon: LayerImageIcon,
+      label: 'Image',
+      description: 'Static image element',
+    },
+    {
+      type: 'video' as const,
+      icon: LayerVideoIcon,
+      label: 'Video',
+      description: 'Embedded video player',
+    },
+    {
+      type: 'richtext' as const,
+      icon: LayerRichtextIcon,
+      label: 'Rich Text',
+      description: 'Formatted text with styling',
+    },
+  ];
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -114,71 +147,28 @@ export const LayersPanel = ({
               className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow-lg z-[1001]"
               onMouseDown={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => {
-                  onAddLayer('text');
-                  setShowDropdown(false);
-                }}
-                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
-              >
-                <LayerTextIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">Text</div>
-                  <div className="text-xs font-normal text-gray-500">Simple text content</div>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  onAddLayer('button');
-                  setShowDropdown(false);
-                }}
-                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
-              >
-                <LayerButtonIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">Button</div>
-                  <div className="text-xs font-normal text-gray-500">Clickable button link</div>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  onAddLayer('image');
-                  setShowDropdown(false);
-                }}
-                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
-              >
-                <LayerImageIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">Image</div>
-                  <div className="text-xs font-normal text-gray-500">Static image element</div>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  onAddLayer('video');
-                  setShowDropdown(false);
-                }}
-                className="w-full px-3 py-2 text-left hover:bg-gray-50 border-b border-gray-100 flex items-start gap-2 cursor-pointer"
-              >
-                <LayerVideoIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">Video</div>
-                  <div className="text-xs font-normal text-gray-500">Embedded video player</div>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  onAddLayer('richtext');
-                  setShowDropdown(false);
-                }}
-                className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-start gap-2 cursor-pointer"
-              >
-                <LayerRichtextIcon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900">Rich Text</div>
-                  <div className="text-xs font-normal text-gray-500">Formatted text with styling</div>
-                </div>
-              </button>
+              {layerTypes.map((layerType, index) => {
+                const Icon = layerType.icon;
+                const isLast = index === layerTypes.length - 1;
+                return (
+                  <button
+                    key={layerType.type}
+                    onClick={() => {
+                      onAddLayer(layerType.type);
+                      setShowDropdown(false);
+                    }}
+                    className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-start gap-2 cursor-pointer ${
+                      !isLast ? 'border-b border-gray-100' : ''
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 mt-0.5 text-gray-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">{layerType.label}</div>
+                      <div className="text-xs font-normal text-gray-500">{layerType.description}</div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
           </div>
