@@ -10,6 +10,8 @@ import { ExportHTMLModal } from './components/ExportHTMLModal';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
+import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
+import freeMoveIcon from './assets/icons/free-move.svg';
 
 const App = () => {
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
@@ -22,6 +24,7 @@ const App = () => {
   const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isAltPressed, setIsAltPressed] = useState(false);
+  const [isSnappingEnabled, setIsSnappingEnabled] = useState(true);
   const [layersPanelSide, setLayersPanelSide] = useState<'left' | 'right'>('right');
   const [isLayersPanelDragging, setIsLayersPanelDragging] = useState(false);
   const [layersPanelPos, setLayersPanelPos] = useState({ x: -1, y: 10 });
@@ -72,6 +75,7 @@ const App = () => {
     layers,
     selectedLayerId,
     selectedSize,
+    isSnappingEnabled,
     isShiftPressed,
     isAltPressed,
     setLayers,
@@ -694,6 +698,26 @@ const App = () => {
             selectedSize={selectedSize}
             onSizeChange={setSelectedSize}
           />
+
+          {/* Snapping Toggle */}
+          <button
+            onClick={() => setIsSnappingEnabled(!isSnappingEnabled)}
+            className={`absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all border w-24 cursor-pointer ${
+              isSnappingEnabled
+                ? 'bg-blue-600 border-blue-700 text-white'
+                : 'bg-white border-gray-200 text-gray-700'
+            }`}
+            title={isSnappingEnabled ? 'Snapping enabled' : 'Snapping disabled'}
+          >
+            <img
+              src={isSnappingEnabled ? magnetOutlineIcon : freeMoveIcon}
+              alt={isSnappingEnabled ? 'magnet' : 'free move'}
+              className={`w-5 h-5 ${isSnappingEnabled ? 'brightness-0 invert' : 'text-gray-700'}`}
+            />
+            <span className="text-sm font-medium">
+              {isSnappingEnabled ? 'Snap' : 'Free'}
+            </span>
+          </button>
         </div>
 
         {mode === 'edit' ? (

@@ -7,6 +7,7 @@ interface UseCanvasInteractionsProps {
   layers: LayerContent[];
   selectedLayerId: string | null;
   selectedSize: AdSize;
+  isSnappingEnabled: boolean;
   isShiftPressed: boolean;
   isAltPressed: boolean;
   setLayers: React.Dispatch<React.SetStateAction<LayerContent[]>>;
@@ -18,6 +19,7 @@ export const useCanvasInteractions = ({
   layers,
   selectedLayerId,
   selectedSize,
+  isSnappingEnabled,
   isShiftPressed,
   isAltPressed,
   setLayers,
@@ -130,7 +132,7 @@ export const useCanvasInteractions = ({
         const currentCenterX = newX + currentWidth / 2;
         const currentCenterY = newY + currentHeight / 2;
 
-        if (!isShiftPressed) {
+        if (isSnappingEnabled) {
           // Snap to canvas edges
           if (Math.abs(newX - canvasEdges.left) < SNAP_THRESHOLD) {
             newX = canvasEdges.left;
@@ -258,15 +260,20 @@ export const useCanvasInteractions = ({
         const MIN_SIZE = 30;
         const centerX = layerX + width / 2;
         const centerY = layerY + height / 2;
+        const aspectRatio = width / height;
 
         let newWidth = width;
         let newHeight = height;
         let newX = layerX;
         let newY = layerY;
 
-        // Calculate initial resize based on Alt key
-        if (isAltPressed) {
-          // Center resize: keep center fixed, adjust both edges equally
+        // Determine if this is a corner or edge resize
+        const isCorner = (direction.includes('n') || direction.includes('s')) && 
+                        (direction.includes('e') || direction.includes('w'));
+
+        // Calculate initial resize based on modifiers
+        if (isAltPressed && !isShiftPressed) {
+          // Alt only: Center resize (both edges move equally)
           if (direction.includes('e') || direction.includes('w')) {
             const multiplier = direction.includes('w') ? -1 : 1;
             newWidth = Math.max(MIN_SIZE, width + dx * 2 * multiplier);
@@ -277,8 +284,90 @@ export const useCanvasInteractions = ({
             newHeight = Math.max(MIN_SIZE, height + dy * 2 * multiplier);
             newY = centerY - newHeight / 2;
           }
+        } else if (isShiftPressed && !isAltPressed) {
+          // Shift only: Aspect ratio locked
+          if (isCorner) {
+            // Corner resize: scale proportionally from opposite corner
+            const deltaX = direction.includes('e') ? dx : -dx;
+            const deltaY = direction.includes('s') ? dy : -dy;
+            
+            // Use the larger change to determine scale
+            const scaleX = (width + deltaX) / width;
+            const scaleY = (height + deltaY) / height;
+            const scale = Math.abs(scaleX) > Math.abs(scaleY) ? scaleX : scaleY;
+            
+            newWidth = Math.max(MIN_SIZE, width * scale);
+            newHeight = Math.max(MIN_SIZE, height * scale);
+            
+            // Adjust position based on which corner
+            if (direction.includes('w')) {
+              newX = layerX + (width - newWidth);
+            }
+            if (direction.includes('n')) {
+              newY = layerY + (height - newHeight);
+            }
+          } else {
+            // Edge resize: scale proportionally from center of opposite edge
+            if (direction.includes('e')) {
+              // Right edge: origin is center of left edge
+              newWidth = Math.max(MIN_SIZE, width + dx);
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              const leftEdgeCenterY = layerY + height / 2;
+              newY = leftEdgeCenterY - newHeight / 2;
+            } else if (direction.includes('w')) {
+              // Left edge: origin is center of right edge
+              newWidth = Math.max(MIN_SIZE, width - dx);
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              const rightEdgeCenterY = layerY + height / 2;
+              newX = layerX + (width - newWidth);
+              newY = rightEdgeCenterY - newHeight / 2;
+            } else if (direction.includes('s')) {
+              // Bottom edge: origin is center of top edge
+              newHeight = Math.max(MIN_SIZE, height + dy);
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              const topEdgeCenterX = layerX + width / 2;
+              newX = topEdgeCenterX - newWidth / 2;
+            } else if (direction.includes('n')) {
+              // Top edge: origin is center of bottom edge
+              newHeight = Math.max(MIN_SIZE, height - dy);
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              const bottomEdgeCenterX = layerX + width / 2;
+              newX = bottomEdgeCenterX - newWidth / 2;
+              newY = layerY + (height - newHeight);
+            }
+          }
+        } else if (isShiftPressed && isAltPressed) {
+          // Both: Aspect ratio locked + center resize
+          if (isCorner) {
+            const deltaX = direction.includes('e') ? dx : -dx;
+            const deltaY = direction.includes('s') ? dy : -dy;
+            
+            const scaleX = (width + deltaX * 2) / width;
+            const scaleY = (height + deltaY * 2) / height;
+            const scale = Math.abs(scaleX) > Math.abs(scaleY) ? scaleX : scaleY;
+            
+            newWidth = Math.max(MIN_SIZE, width * scale);
+            newHeight = Math.max(MIN_SIZE, height * scale);
+            newX = centerX - newWidth / 2;
+            newY = centerY - newHeight / 2;
+          } else {
+            // Edge with both modifiers: scale proportionally from center
+            if (direction.includes('e') || direction.includes('w')) {
+              const multiplier = direction.includes('w') ? -1 : 1;
+              newWidth = Math.max(MIN_SIZE, width + dx * 2 * multiplier);
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            } else {
+              const multiplier = direction.includes('n') ? -1 : 1;
+              newHeight = Math.max(MIN_SIZE, height + dy * 2 * multiplier);
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            }
+          }
         } else {
-          // Normal resize: only adjust the edge being dragged
+          // No modifiers: Normal resize (only adjust the edge being dragged)
           if (direction.includes('e')) newWidth = Math.max(MIN_SIZE, width + dx);
           if (direction.includes('w')) {
             newWidth = Math.max(MIN_SIZE, width - dx);
@@ -297,7 +386,7 @@ export const useCanvasInteractions = ({
         let isTopSnapping = false;
         let isBottomSnapping = false;
 
-        if (!isShiftPressed) {
+        if (isSnappingEnabled) {
           const canvasEdges = {
             left: 0,
             right: dimensions.width,
@@ -416,8 +505,9 @@ export const useCanvasInteractions = ({
             }
           });
 
-          // Maintain center when Alt is pressed and an edge snaps
-          if (isAltPressed) {
+          // Handle snapping adjustments based on modifiers
+          if (isAltPressed && !isShiftPressed) {
+            // Alt only: Maintain center when edge snaps
             if (direction.includes('e') && isRightSnapping) {
               const snappedRight = newX + newWidth;
               newWidth = Math.max(MIN_SIZE, 2 * (snappedRight - centerX));
@@ -432,6 +522,64 @@ export const useCanvasInteractions = ({
               newY = centerY - newHeight / 2;
             } else if (direction.includes('n') && isTopSnapping) {
               newHeight = Math.max(MIN_SIZE, 2 * (centerY - newY));
+            }
+          } else if (isShiftPressed && !isAltPressed && !isCorner) {
+            // Shift only (edge resize): When edge snaps, recalculate to maintain aspect ratio from origin
+            if (direction.includes('e') && isRightSnapping) {
+              // Right edge snapped - recalculate from left edge center
+              const snappedWidth = newX + newWidth - layerX;
+              newWidth = Math.max(MIN_SIZE, snappedWidth);
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              const leftEdgeCenterY = layerY + height / 2;
+              newY = leftEdgeCenterY - newHeight / 2;
+            } else if (direction.includes('w') && isLeftSnapping) {
+              // Left edge snapped - recalculate from right edge center
+              const snappedWidth = (layerX + width) - newX;
+              newWidth = Math.max(MIN_SIZE, snappedWidth);
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              const rightEdgeCenterY = layerY + height / 2;
+              newY = rightEdgeCenterY - newHeight / 2;
+            } else if (direction.includes('s') && isBottomSnapping) {
+              // Bottom edge snapped - recalculate from top edge center
+              const snappedHeight = newY + newHeight - layerY;
+              newHeight = Math.max(MIN_SIZE, snappedHeight);
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              const topEdgeCenterX = layerX + width / 2;
+              newX = topEdgeCenterX - newWidth / 2;
+            } else if (direction.includes('n') && isTopSnapping) {
+              // Top edge snapped - recalculate from bottom edge center
+              const snappedHeight = (layerY + height) - newY;
+              newHeight = Math.max(MIN_SIZE, snappedHeight);
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              const bottomEdgeCenterX = layerX + width / 2;
+              newX = bottomEdgeCenterX - newWidth / 2;
+            }
+          } else if (isShiftPressed && isAltPressed) {
+            // Both modifiers: Maintain center and aspect ratio when edge snaps
+            if (direction.includes('e') && isRightSnapping) {
+              const snappedRight = newX + newWidth;
+              newWidth = Math.max(MIN_SIZE, 2 * (snappedRight - centerX));
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            } else if (direction.includes('w') && isLeftSnapping) {
+              newWidth = Math.max(MIN_SIZE, 2 * (centerX - newX));
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            }
+
+            if (direction.includes('s') && isBottomSnapping) {
+              const snappedBottom = newY + newHeight;
+              newHeight = Math.max(MIN_SIZE, 2 * (snappedBottom - centerY));
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            } else if (direction.includes('n') && isTopSnapping) {
+              newHeight = Math.max(MIN_SIZE, 2 * (centerY - newY));
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
             }
           }
         }
@@ -477,6 +625,7 @@ export const useCanvasInteractions = ({
       selectedLayerId,
       layers,
       selectedSize,
+      isSnappingEnabled,
       isShiftPressed,
       isAltPressed,
       dimensions,
