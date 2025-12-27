@@ -636,6 +636,7 @@ const App = () => {
               onLayerDragEnd={handleLayerDragEnd}
               onAddLayer={handleAddLayer}
               onToggleLock={handleToggleLock}
+              onCanvasSettings={() => setSelectedLayerId(null)}
             />
           ) : null}
 
