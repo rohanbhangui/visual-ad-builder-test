@@ -116,7 +116,7 @@ export const sampleCanvas: Canvas = {
       positionY: {
         '300x250': { value: 50, unit: 'px' },
         '336x280': { value: 69, unit: 'px' },
-        '728x90': { value: 5, unit: 'px' },
+        '728x90': { value: 17, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },

@@ -175,7 +175,7 @@ export const LayersPanel = ({
         </div>
       </div>
       {!isCollapsed && (
-        <div className="overflow-y-auto max-h-[440px]" onClick={() => setShowDropdown(false)}>
+        <div className="overflow-y-auto overflow-x-hidden max-h-[440px]" onClick={() => setShowDropdown(false)}>
         {layers.map((layer, index) => (
           <div
             key={layer.id}
