@@ -6,8 +6,10 @@ import { SizeSelector } from './components/SizeSelector';
 import { LayersPanel } from './components/LayersPanel';
 import { PropertySidebar } from './components/PropertySidebar';
 import { Canvas } from './components/Canvas';
+import { ExportHTMLModal } from './components/ExportHTMLModal';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
+import { generateResponsiveHTML } from './utils/exportHTML';
 
 const App = () => {
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
@@ -25,6 +27,8 @@ const App = () => {
   const [draggedLayerIndex, setDraggedLayerIndex] = useState<number | null>(null);
   const [dragOverLayerIndex, setDragOverLayerIndex] = useState<number | null>(null);
   const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportedHTML, setExportedHTML] = useState('');
 
   const dimensions = HTML5_AD_SIZES[selectedSize];
 
@@ -553,6 +557,16 @@ const App = () => {
     );
   };
 
+  const handleExportHTML = () => {
+    const html = generateResponsiveHTML(
+      layers,
+      sampleCanvas.allowedSizes,
+      canvasBackgroundColor
+    );
+    setExportedHTML(html);
+    setIsExportModalOpen(true);
+  };
+
   const handleAddLayer = (type: 'text' | 'richtext' | 'image' | 'video' | 'button') => {
     const newLayer: LayerContent = {
       id: crypto.randomUUID(),
@@ -608,7 +622,12 @@ const App = () => {
 
   return (
     <div className="w-screen h-screen flex flex-col bg-white">
-      <TopBar mode={mode} onModeChange={setMode} />
+      <TopBar mode={mode} onModeChange={setMode} onExportHTML={handleExportHTML} />
+      <ExportHTMLModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        htmlContent={exportedHTML}
+      />
 
       <div
         className="flex-1 flex overflow-hidden"
