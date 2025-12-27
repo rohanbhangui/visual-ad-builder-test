@@ -72,6 +72,8 @@ export const PropertySidebar = ({
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
+  const [imageLoadError, setImageLoadError] = useState(false);
+  const [videoLoadError, setVideoLoadError] = useState(false);
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
   // Update contentEditable when layer selection changes
@@ -84,6 +86,13 @@ export const PropertySidebar = ({
       el.innerHTML = layer.content;
     }
   }, [selectedLayerId]);
+
+  // Reset media load errors when layer changes or URL changes
+  useEffect(() => {
+    setImageLoadError(false);
+    setVideoLoadError(false);
+  }, [selectedLayerId, layers]);
+
   if (!selectedLayerId) {
     return (
       <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
@@ -250,18 +259,26 @@ export const PropertySidebar = ({
             <>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
-                {layer.url ? (
-                  <div className="mb-2">
+                <div className="mb-2">
+                  {layer.url && !imageLoadError ? (
                     <img
+                      key={layer.url}
                       src={layer.url}
                       alt="Preview"
                       className="w-[100px] h-[56px] object-cover border border-gray-300 rounded"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
+                      onLoad={() => setImageLoadError(false)}
+                      onError={() => setImageLoadError(true)}
                     />
-                  </div>
-                ) : null}
+                  ) : (
+                    <div className="w-[100px] h-[56px] bg-gray-400 border border-gray-300 rounded flex items-center justify-center">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
                 <UrlInput
                   label=""
                   value={layer.url}
@@ -293,18 +310,25 @@ export const PropertySidebar = ({
             <>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Video URL</label>
-                {layer.url ? (
-                  <div className="mb-2">
+                <div className="mb-2">
+                  {layer.url && !videoLoadError ? (
                     <video
+                      key={layer.url}
                       src={layer.url}
                       preload="metadata"
                       className="w-[100px] h-[56px] object-cover border border-gray-300 rounded"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
+                      onLoadedMetadata={() => setVideoLoadError(false)}
+                      onError={() => setVideoLoadError(true)}
                     />
-                  </div>
-                ) : null}
+                  ) : (
+                    <div className="w-[100px] h-[56px] bg-gray-400 border border-gray-300 rounded flex items-center justify-center">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="1.5">
+                        <circle cx="12" cy="12" r="10" fill="none" />
+                        <polygon points="10,8 16,12 10,16" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
                 <UrlInput
                   label=""
                   value={layer.url}
