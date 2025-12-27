@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { type LayerContent } from '../data';
 import { COLORS, UI_COLORS } from '../consts';
 import PlusIcon from '../assets/icons/plus.svg?react';
+import XIcon from '../assets/icons/x.svg?react';
+import ExpandIcon from '../assets/icons/expand.svg?react';
+import CollapseIcon from '../assets/icons/collapse.svg?react';
 import DragHandleIcon from '../assets/icons/drag-handle.svg?react';
 import LockIcon from '../assets/icons/lock.svg?react';
 import UnlockIcon from '../assets/icons/unlock.svg?react';
@@ -47,6 +50,7 @@ export const LayersPanel = ({
   onToggleLock,
 }: LayersPanelProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,18 +84,30 @@ export const LayersPanel = ({
         <div onMouseDown={onMouseDown} className="flex-1 cursor-grab">
           Layers
         </div>
-        <div className="relative" ref={dropdownRef}>
+        <div className="flex items-center gap-1">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setShowDropdown(!showDropdown);
+              setIsCollapsed(!isCollapsed);
+              setShowDropdown(false);
             }}
-            className={`w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer ${
-              showDropdown ? 'bg-gray-200' : ''
-            }`}
+            className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+            title={isCollapsed ? 'Expand layers' : 'Collapse layers'}
           >
-            <PlusIcon />
+            {isCollapsed ? <ExpandIcon /> : <CollapseIcon />}
           </button>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDropdown(!showDropdown);
+              }}
+              className={`w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer ${
+                showDropdown ? 'bg-gray-200' : ''
+              }`}
+            >
+              <PlusIcon />
+            </button>
           {showDropdown && (
             <div
               className="absolute right-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow-lg z-50"
@@ -164,9 +180,11 @@ export const LayersPanel = ({
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
-      <div className="overflow-y-auto max-h-[440px]" onClick={() => setShowDropdown(false)}>
+      {!isCollapsed && (
+        <div className="overflow-y-auto max-h-[440px]" onClick={() => setShowDropdown(false)}>
         {layers.map((layer, index) => (
           <div
             key={layer.id}
@@ -268,7 +286,8 @@ export const LayersPanel = ({
               : {}),
           }}
         />
-      </div>
+        </div>
+      )}
     </div>
   );
 };
