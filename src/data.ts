@@ -125,8 +125,8 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 10, unit: 'px' },
       },
       positionY: {
-        '300x250': { value: 50, unit: 'px' },
-        '336x280': { value: 69, unit: 'px' },
+        '300x250': { value: 121, unit: 'px' },
+        '336x280': { value: 142, unit: 'px' },
         '728x90': { value: 17, unit: 'px' },
       },
       width: {
@@ -159,8 +159,8 @@ export const sampleCanvas: Canvas = {
         '728x90': { value: 10, unit: 'px' },
       },
       positionY: {
-        '300x250': { value: 85, unit: 'px' },
-        '336x280': { value: 104, unit: 'px' },
+        '300x250': { value: 156, unit: 'px' },
+        '336x280': { value: 177, unit: 'px' },
         '728x90': { value: 45, unit: 'px' },
       },
       width: {
@@ -190,22 +190,22 @@ export const sampleCanvas: Canvas = {
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
-        '728x90': { value: 498, unit: 'px' },
+        '728x90': { value: 568, unit: 'px' },
       },
       positionY: {
-        '300x250': { value: 140, unit: 'px' },
-        '336x280': { value: 157, unit: 'px' },
-        '728x90': { value: 17, unit: 'px' },
+        '300x250': { value: 19, unit: 'px' },
+        '336x280': { value: 21, unit: 'px' },
+        '728x90': { value: 0, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
         '336x280': { value: 316, unit: 'px' },
-        '728x90': { value: 100, unit: 'px' },
+        '728x90': { value: 160, unit: 'px' },
       },
       height: {
-        '300x250': { value: 50, unit: 'px' },
-        '336x280': { value: 50, unit: 'px' },
-        '728x90': { value: 56, unit: 'px' },
+        '300x250': { value: 92, unit: 'px' },
+        '336x280': { value: 111, unit: 'px' },
+        '728x90': { value: 90, unit: 'px' },
       },
       url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
       properties: {
@@ -224,7 +224,7 @@ export const sampleCanvas: Canvas = {
       positionX: {
         '300x250': { value: 100, unit: 'px' },
         '336x280': { value: 120, unit: 'px' },
-        '728x90': { value: 618, unit: 'px' },
+        '728x90': { value: 421, unit: 'px' },
       },
       positionY: {
         '300x250': { value: 206, unit: 'px' },
