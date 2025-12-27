@@ -26,7 +26,7 @@ export const TopBar = ({ mode, onModeChange, onExportHTML }: TopBarProps) => {
           onClick={onExportHTML}
           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors text-sm"
         >
-          Export HTML
+          Export Template
         </button>
       </div>
     </div>
