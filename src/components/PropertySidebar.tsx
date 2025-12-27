@@ -781,7 +781,9 @@ export const PropertySidebar = ({
               }}
             >
               <div
-                className="absolute top-0 left-0 h-full bg-blue-500 rounded-full"
+                className={`absolute top-0 left-0 h-full rounded-full ${
+                  layer.locked ? 'bg-gray-400' : 'bg-blue-500'
+                }`}
                 style={{ width: `${(layer.styles?.opacity || 1) * 100}%` }}
               />
               <div
