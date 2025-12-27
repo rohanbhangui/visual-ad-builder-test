@@ -51,14 +51,15 @@ export const Canvas: React.FC<CanvasProps> = ({
         const width = layer.width[selectedSize]!;
         const height = layer.height[selectedSize]!;
         const zIndex = layers.length - index;
+        const opacity = layer.styles.opacity;
 
-        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex};`;
+        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; opacity: ${opacity};`;
 
         let content = '';
 
         switch (layer.type) {
           case 'image':
-            content = `<img src="${layer.url}" style="${style} object-fit: cover;" alt="${layer.label}">`;
+            content = `<img src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" alt="${layer.label}">`;
             break;
           case 'text':
             content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
