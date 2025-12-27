@@ -13,6 +13,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Bounding box for resize and movement (blue with corner handles)
 - Snapping guides (red)
 - Free flow resize and movement (when `shift` key is held)
+- Resize on edge (hold `alt` to resize from both sides)
 - Ad size selector with independent styles and position
 - Preview mode toggle (renders html with css into iframe)
 - `delete/backspace` key to delete a selected layer (with confirmation)
