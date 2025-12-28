@@ -63,6 +63,7 @@ export const HTML5_AD_SIZES = {
   '300x250': { width: 300, height: 250 },
   '970x90': { width: 970, height: 90 },
   '120x600': { width: 120, height: 600 },
+  '160x600': { width: 160, height: 600 },
   '300x600': { width: 300, height: 600 },
   '320x50': { width: 320, height: 50 },
   '250x250': { width: 250, height: 250 },

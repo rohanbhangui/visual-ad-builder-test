@@ -633,8 +633,15 @@ const App = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-white">
-      <TopBar mode={mode} onModeChange={setMode} onExportHTML={handleExportHTML} />
+    <div className="w-screen h-screen flex flex-col bg-white overflow-hidden">
+      <TopBar 
+        mode={mode} 
+        selectedSize={selectedSize}
+        allowedSizes={sampleCanvas.allowedSizes}
+        onModeChange={setMode} 
+        onSizeChange={setSelectedSize}
+        onExportHTML={handleExportHTML} 
+      />
       <ExportHTMLModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
@@ -642,7 +649,7 @@ const App = () => {
       />
 
       <div
-        className="flex-1 flex overflow-hidden"
+        className="flex-1 flex overflow-hidden relative"
         onMouseMove={handleLayersPanelMouseMove}
         onMouseUp={handleExtendedMouseUp}
       >
@@ -691,12 +698,6 @@ const App = () => {
                 setSelectedLayerId(null);
               }
             }}
-          />
-
-          <SizeSelector
-            allowedSizes={sampleCanvas.allowedSizes}
-            selectedSize={selectedSize}
-            onSizeChange={setSelectedSize}
           />
 
           {/* Snapping Toggle */}

@@ -1,13 +1,120 @@
+import { useState, useRef, useEffect } from 'react';
+import { HTML5_AD_SIZES } from '../consts';
+import { type AdSize } from '../data';
+
 interface TopBarProps {
   mode: 'edit' | 'preview';
+  selectedSize: AdSize;
+  allowedSizes: AdSize[];
   onModeChange: (mode: 'edit' | 'preview') => void;
+  onSizeChange: (size: AdSize) => void;
   onExportHTML: () => void;
 }
 
-export const TopBar = ({ mode, onModeChange, onExportHTML }: TopBarProps) => {
+// Ad size common names
+const AD_SIZE_NAMES: Record<AdSize, string> = {
+  '728x90': 'Leaderboard',
+  '336x280': 'Large Rectangle',
+  '300x250': 'Medium Rectangle',
+  '970x90': 'Large Leaderboard',
+  '120x600': 'Skyscraper',
+  '160x600': 'Wide Skyscraper',
+  '300x600': 'Half Page',
+  '320x50': 'Mobile Banner',
+  '250x250': 'Square',
+};
+
+export const TopBar = ({ mode, selectedSize, allowedSizes, onModeChange, onSizeChange, onExportHTML }: TopBarProps) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const getAspectRatioBox = (size: AdSize) => {
+    const dimensions = HTML5_AD_SIZES[size];
+    const maxWidth = 24;
+    const maxHeight = 16;
+    
+    let width = dimensions.width;
+    let height = dimensions.height;
+    
+    // Scale to fit within max dimensions while maintaining aspect ratio
+    const scale = Math.min(maxWidth / width, maxHeight / height);
+    width = width * scale;
+    height = height * scale;
+    
+    return (
+      <div 
+        className="border border-gray-400 bg-gray-100"
+        style={{ width: `${width}px`, height: `${height}px`, borderRadius: '2px' }}
+      />
+    );
+  };
+
   return (
-    <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4 bg-white">
-      <h1 className="text-lg font-semibold text-gray-900">Visual Builder</h1>
+    <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4 bg-white relative z-50">
+      <div className="flex items-center gap-4">
+        <h1 className="text-lg font-semibold text-gray-900">Visual Builder</h1>
+        
+        {/* Size Selector Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+          >
+            {getAspectRatioBox(selectedSize)}
+            <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[selectedSize]}</span>
+            <svg
+              className={`w-4 h-4 text-gray-500 transition-transform ml-1 ${isDropdownOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isDropdownOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[200] min-w-[240px]">
+              {allowedSizes.map((size) => (
+                <button
+                  key={size}
+                  onClick={() => {
+                    onSizeChange(size);
+                    setIsDropdownOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 px-4 py-2 transition-colors cursor-pointer text-left relative ${
+                    size === selectedSize 
+                      ? 'bg-blue-100 hover:bg-blue-200' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="w-6 flex justify-center flex-shrink-0">
+                    {getAspectRatioBox(size)}
+                  </div>
+                  <div className="flex flex-col flex-1 leading-tight">
+                    <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[size]}</span>
+                    <span className="font-mono text-[11px] text-gray-600">{size}</span>
+                  </div>
+                  {size === selectedSize && (
+                    <div className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-700">Edit</span>
