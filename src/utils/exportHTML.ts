@@ -47,7 +47,7 @@ export const generateResponsiveHTML = (
             content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
             break;
           case 'video':
-            const autoplay = layer.properties?.autoplay ? ' autoplay muted' : '';
+            const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
             const controls = layer.properties?.controls !== false ? ' controls' : '';
             content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
             break;

@@ -69,9 +69,9 @@ export const Canvas: React.FC<CanvasProps> = ({
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
-              const autoplay = layer.properties?.autoplay ? ' autoplay muted' : '';
+              const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
               const controls = layer.properties?.controls !== false ? ' controls' : '';
-              content = `<video src="${layer.url}" style="${style}"${autoplay}${controls}></video>`;
+              content = `<video src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls}></video>`;
             }
             break;
           case 'button':
@@ -198,9 +198,19 @@ export const Canvas: React.FC<CanvasProps> = ({
           content = (
             <video
               src={layer.url}
-              preload="metadata"
-              controls={layer.properties?.controls ?? true}
+              muted={true}
+              playsInline={true}
+              preload="auto"
               className="w-full h-full pointer-events-none"
+              onLoadedMetadata={(e) => {
+                // Show first frame by loading video then immediately pausing
+                const video = e.currentTarget;
+                video.currentTime = 0.1;
+                video.pause();
+              }}
+              onError={(e) => {
+                console.error('Video load error:', e);
+              }}
             />
           );
         }
