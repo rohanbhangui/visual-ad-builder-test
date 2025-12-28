@@ -24,7 +24,14 @@ const AD_SIZE_NAMES: Record<AdSize, string> = {
   '250x250': 'Square',
 };
 
-export const TopBar = ({ mode, selectedSize, allowedSizes, onModeChange, onSizeChange, onExportHTML }: TopBarProps) => {
+export const TopBar = ({
+  mode,
+  selectedSize,
+  allowedSizes,
+  onModeChange,
+  onSizeChange,
+  onExportHTML,
+}: TopBarProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -43,17 +50,17 @@ export const TopBar = ({ mode, selectedSize, allowedSizes, onModeChange, onSizeC
     const dimensions = HTML5_AD_SIZES[size];
     const maxWidth = 24;
     const maxHeight = 16;
-    
+
     let width = dimensions.width;
     let height = dimensions.height;
-    
+
     // Scale to fit within max dimensions while maintaining aspect ratio
     const scale = Math.min(maxWidth / width, maxHeight / height);
     width = width * scale;
     height = height * scale;
-    
+
     return (
-      <div 
+      <div
         className="border border-gray-400 bg-gray-100"
         style={{ width: `${width}px`, height: `${height}px`, borderRadius: '2px' }}
       />
@@ -61,10 +68,13 @@ export const TopBar = ({ mode, selectedSize, allowedSizes, onModeChange, onSizeC
   };
 
   return (
-    <div className="border-b border-gray-200 flex items-center justify-between px-4 bg-white relative z-50" style={{ height: `${UI_LAYOUT.TOP_BAR_HEIGHT}px` }}>
+    <div
+      className="border-b border-gray-200 flex items-center justify-between px-4 bg-white relative z-50"
+      style={{ height: `${UI_LAYOUT.TOP_BAR_HEIGHT}px` }}
+    >
       <div className="flex items-center gap-4">
         <h1 className="text-lg font-semibold text-gray-900">Visual Builder</h1>
-        
+
         {/* Size Selector Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
@@ -79,7 +89,12 @@ export const TopBar = ({ mode, selectedSize, allowedSizes, onModeChange, onSizeC
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
 
@@ -93,9 +108,7 @@ export const TopBar = ({ mode, selectedSize, allowedSizes, onModeChange, onSizeC
                     setIsDropdownOpen(false);
                   }}
                   className={`w-full flex items-center gap-2 px-4 py-2 transition-colors cursor-pointer text-left relative ${
-                    size === selectedSize 
-                      ? 'bg-blue-100 hover:bg-blue-200' 
-                      : 'hover:bg-gray-50'
+                    size === selectedSize ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                   }`}
                 >
                   <div className="w-6 flex justify-center flex-shrink-0">

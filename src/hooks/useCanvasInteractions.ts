@@ -268,8 +268,9 @@ export const useCanvasInteractions = ({
         let newY = layerY;
 
         // Determine if this is a corner or edge resize
-        const isCorner = (direction.includes('n') || direction.includes('s')) && 
-                        (direction.includes('e') || direction.includes('w'));
+        const isCorner =
+          (direction.includes('n') || direction.includes('s')) &&
+          (direction.includes('e') || direction.includes('w'));
 
         // Calculate initial resize based on modifiers
         if (isAltPressed && !isShiftPressed) {
@@ -290,15 +291,15 @@ export const useCanvasInteractions = ({
             // Corner resize: scale proportionally from opposite corner
             const deltaX = direction.includes('e') ? dx : -dx;
             const deltaY = direction.includes('s') ? dy : -dy;
-            
+
             // Use the larger change to determine scale
             const scaleX = (width + deltaX) / width;
             const scaleY = (height + deltaY) / height;
             const scale = Math.abs(scaleX) > Math.abs(scaleY) ? scaleX : scaleY;
-            
+
             newWidth = Math.max(MIN_SIZE, width * scale);
             newHeight = Math.max(MIN_SIZE, height * scale);
-            
+
             // Adjust position based on which corner
             if (direction.includes('w')) {
               newX = layerX + (width - newWidth);
@@ -341,11 +342,11 @@ export const useCanvasInteractions = ({
           if (isCorner) {
             const deltaX = direction.includes('e') ? dx : -dx;
             const deltaY = direction.includes('s') ? dy : -dy;
-            
+
             const scaleX = (width + deltaX * 2) / width;
             const scaleY = (height + deltaY * 2) / height;
             const scale = Math.abs(scaleX) > Math.abs(scaleY) ? scaleX : scaleY;
-            
+
             newWidth = Math.max(MIN_SIZE, width * scale);
             newHeight = Math.max(MIN_SIZE, height * scale);
             newX = centerX - newWidth / 2;
@@ -482,18 +483,36 @@ export const useCanvasInteractions = ({
 
             // Vertical snapping (left and right edges)
             if (snapToEdge(newX, otherX, 'left') || snapToEdge(newX, otherRight, 'left')) {
-              guides.push({ type: 'vertical', position: snapToEdge(newX, otherX, 'left') ? otherX : otherRight });
+              guides.push({
+                type: 'vertical',
+                position: snapToEdge(newX, otherX, 'left') ? otherX : otherRight,
+              });
             }
-            if (snapToEdge(currentRight, otherRight, 'right') || snapToEdge(currentRight, otherX, 'right')) {
-              guides.push({ type: 'vertical', position: snapToEdge(currentRight, otherRight, 'right') ? otherRight : otherX });
+            if (
+              snapToEdge(currentRight, otherRight, 'right') ||
+              snapToEdge(currentRight, otherX, 'right')
+            ) {
+              guides.push({
+                type: 'vertical',
+                position: snapToEdge(currentRight, otherRight, 'right') ? otherRight : otherX,
+              });
             }
 
             // Horizontal snapping (top and bottom edges)
             if (snapToEdge(newY, otherY, 'top') || snapToEdge(newY, otherBottom, 'top')) {
-              guides.push({ type: 'horizontal', position: snapToEdge(newY, otherY, 'top') ? otherY : otherBottom });
+              guides.push({
+                type: 'horizontal',
+                position: snapToEdge(newY, otherY, 'top') ? otherY : otherBottom,
+              });
             }
-            if (snapToEdge(currentBottom, otherBottom, 'bottom') || snapToEdge(currentBottom, otherY, 'bottom')) {
-              guides.push({ type: 'horizontal', position: snapToEdge(currentBottom, otherBottom, 'bottom') ? otherBottom : otherY });
+            if (
+              snapToEdge(currentBottom, otherBottom, 'bottom') ||
+              snapToEdge(currentBottom, otherY, 'bottom')
+            ) {
+              guides.push({
+                type: 'horizontal',
+                position: snapToEdge(currentBottom, otherBottom, 'bottom') ? otherBottom : otherY,
+              });
             }
 
             // Center guide lines (visual only)
@@ -534,7 +553,7 @@ export const useCanvasInteractions = ({
               newY = leftEdgeCenterY - newHeight / 2;
             } else if (direction.includes('w') && isLeftSnapping) {
               // Left edge snapped - recalculate from right edge center
-              const snappedWidth = (layerX + width) - newX;
+              const snappedWidth = layerX + width - newX;
               newWidth = Math.max(MIN_SIZE, snappedWidth);
               newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
               const rightEdgeCenterY = layerY + height / 2;
@@ -548,7 +567,7 @@ export const useCanvasInteractions = ({
               newX = topEdgeCenterX - newWidth / 2;
             } else if (direction.includes('n') && isTopSnapping) {
               // Top edge snapped - recalculate from bottom edge center
-              const snappedHeight = (layerY + height) - newY;
+              const snappedHeight = layerY + height - newY;
               newHeight = Math.max(MIN_SIZE, snappedHeight);
               newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
               const bottomEdgeCenterX = layerX + width / 2;
@@ -561,10 +580,12 @@ export const useCanvasInteractions = ({
 
             if (isRightSnapping || isLeftSnapping) {
               // Width is frozen by snap, adjust height to maintain aspect ratio
-              const snappedWidth = isRightSnapping ? (newX + newWidth - oppositeCornerX) : Math.abs(oppositeCornerX - newX);
+              const snappedWidth = isRightSnapping
+                ? newX + newWidth - oppositeCornerX
+                : Math.abs(oppositeCornerX - newX);
               newWidth = Math.max(MIN_SIZE, Math.abs(snappedWidth));
               newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
-              
+
               if (direction.includes('w')) {
                 newX = oppositeCornerX - newWidth;
               }
@@ -573,10 +594,12 @@ export const useCanvasInteractions = ({
               }
             } else if (isTopSnapping || isBottomSnapping) {
               // Height is frozen by snap, adjust width to maintain aspect ratio
-              const snappedHeight = isBottomSnapping ? (newY + newHeight - oppositeCornerY) : Math.abs(oppositeCornerY - newY);
+              const snappedHeight = isBottomSnapping
+                ? newY + newHeight - oppositeCornerY
+                : Math.abs(oppositeCornerY - newY);
               newHeight = Math.max(MIN_SIZE, Math.abs(snappedHeight));
               newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
-              
+
               if (direction.includes('w')) {
                 newX = oppositeCornerX - newWidth;
               }

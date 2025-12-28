@@ -28,11 +28,8 @@ export const ExportHTMLModal: React.FC<ExportHTMLModalProps> = ({
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      />
-      
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+
       {/* Modal */}
       <div className="relative bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] flex flex-col">
         {/* Header */}

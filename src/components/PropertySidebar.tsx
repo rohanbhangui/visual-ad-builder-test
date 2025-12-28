@@ -112,7 +112,7 @@ export const PropertySidebar = ({
       <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
         <div className="p-4">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Options</h2>
-          
+
           {/* Canvas Settings Label */}
           <div className="mb-4 group/label mt-1">
             <div className="flex items-center gap-2">
@@ -123,9 +123,7 @@ export const PropertySidebar = ({
           <div className="space-y-3">
             {/* Canvas Name */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                Ad Name
-              </label>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">Ad Name</label>
               <input
                 type="text"
                 value={canvasName || ''}
@@ -768,9 +766,7 @@ export const PropertySidebar = ({
 
         {/* Layer Opacity */}
         <div className="mt-4">
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Layer Opacity
-          </label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Layer Opacity</label>
           <div className="flex items-center gap-3">
             <div
               className="flex-1 relative h-1 bg-gray-200 rounded-full cursor-pointer"
@@ -782,18 +778,18 @@ export const PropertySidebar = ({
                   const percentage = (x / rect.width) * 100;
                   onOpacityChange(layer.id, percentage / 100);
                 };
-                
+
                 updateOpacity(e.clientX);
-                
+
                 const handleMouseMove = (e: MouseEvent) => {
                   updateOpacity(e.clientX);
                 };
-                
+
                 const handleMouseUp = () => {
                   document.removeEventListener('mousemove', handleMouseMove);
                   document.removeEventListener('mouseup', handleMouseUp);
                 };
-                
+
                 document.addEventListener('mousemove', handleMouseMove);
                 document.addEventListener('mouseup', handleMouseUp);
               }}

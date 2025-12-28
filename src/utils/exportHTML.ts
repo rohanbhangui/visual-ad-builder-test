@@ -92,32 +92,34 @@ export const generateResponsiveHTML = (
       .join('\n');
 
     // Generate media queries for other sizes
-    const mediaQueries = allowedSizes.slice(1).map((size) => {
-      const dimensions = HTML5_AD_SIZES[size];
-      
-      const layerStyles = layers
-        .map((layer) => {
-          const layerId = `layer-${layer.id}`;
-          const posX = layer.positionX[size];
-          const posY = layer.positionY[size];
-          const width = layer.width[size];
-          const height = layer.height[size];
+    const mediaQueries = allowedSizes
+      .slice(1)
+      .map((size) => {
+        const dimensions = HTML5_AD_SIZES[size];
 
-          if (!posX || !posY || !width || !height) {
-            return `        #${layerId} { display: none; }`;
-          }
+        const layerStyles = layers
+          .map((layer) => {
+            const layerId = `layer-${layer.id}`;
+            const posX = layer.positionX[size];
+            const posY = layer.positionY[size];
+            const width = layer.width[size];
+            const height = layer.height[size];
 
-          return `        #${layerId} {
+            if (!posX || !posY || !width || !height) {
+              return `        #${layerId} { display: none; }`;
+            }
+
+            return `        #${layerId} {
           display: block;
           left: ${posX.value}${posX.unit || 'px'};
           top: ${posY.value}${posY.unit || 'px'};
           width: ${width.value}${width.unit};
           height: ${height.value}${height.unit};
         }`;
-        })
-        .join('\n');
+          })
+          .join('\n');
 
-      return `
+        return `
       /* ${size} */
       @media (min-width: ${dimensions.width}px) and (min-height: ${dimensions.height}px) {
         .ad-container {
@@ -126,7 +128,8 @@ export const generateResponsiveHTML = (
         }
 ${layerStyles}
       }`;
-    }).join('\n');
+      })
+      .join('\n');
 
     return `
       html, body {

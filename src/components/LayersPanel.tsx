@@ -197,7 +197,9 @@ export const LayersPanel = ({
       {!isCollapsed ? (
         <div
           className="overflow-y-auto overflow-x-hidden"
-          style={{ maxHeight: `${UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT - UI_LAYOUT.LAYERS_PANEL_COLLAPSED_HEIGHT}px` }}
+          style={{
+            maxHeight: `${UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT - UI_LAYOUT.LAYERS_PANEL_COLLAPSED_HEIGHT}px`,
+          }}
           onClick={() => setShowDropdown(false)}
         >
           {layers.map((layer, index) => (

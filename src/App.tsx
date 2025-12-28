@@ -258,9 +258,11 @@ const App = () => {
       const sidebarWidth = 320;
       const edgeSnapThreshold = 150;
       const edgeGap = 10;
-      
+
       // Use current height for drag constraints
-      const currentHeight = isLayersPanelCollapsed ? UI_LAYOUT.LAYERS_PANEL_COLLAPSED_HEIGHT : UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT;
+      const currentHeight = isLayersPanelCollapsed
+        ? UI_LAYOUT.LAYERS_PANEL_COLLAPSED_HEIGHT
+        : UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT;
       // Calculate max Y relative to canvas container (which is below TopBar)
       const containerHeight = windowHeight - UI_LAYOUT.TOP_BAR_HEIGHT;
       const maxY = containerHeight - currentHeight - LAYERS_PANEL_BOTTOM_GAP;
@@ -282,17 +284,18 @@ const App = () => {
 
   const handleToggleLayersCollapse = () => {
     const newCollapsedState = !isLayersPanelCollapsed;
-    
+
     if (!newCollapsedState) {
       const windowHeight = window.innerHeight;
       const containerHeight = windowHeight - UI_LAYOUT.TOP_BAR_HEIGHT;
-      const maxY = containerHeight - UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT - LAYERS_PANEL_BOTTOM_GAP;
-      
+      const maxY =
+        containerHeight - UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT - LAYERS_PANEL_BOTTOM_GAP;
+
       if (layersPanelPos.y > maxY) {
         setLayersPanelPos({ x: layersPanelPos.x, y: maxY });
       }
     }
-    
+
     setIsLayersPanelCollapsed(newCollapsedState);
   };
 
@@ -594,11 +597,7 @@ const App = () => {
   };
 
   const handleExportHTML = () => {
-    const html = generateResponsiveHTML(
-      layers,
-      sampleCanvas.allowedSizes,
-      canvasBackgroundColor
-    );
+    const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor);
     setExportedHTML(html);
     setIsExportModalOpen(true);
   };
@@ -658,13 +657,13 @@ const App = () => {
 
   return (
     <div className="w-screen h-screen flex flex-col bg-white overflow-hidden">
-      <TopBar 
-        mode={mode} 
+      <TopBar
+        mode={mode}
         selectedSize={selectedSize}
         allowedSizes={sampleCanvas.allowedSizes}
-        onModeChange={setMode} 
+        onModeChange={setMode}
         onSizeChange={setSelectedSize}
-        onExportHTML={handleExportHTML} 
+        onExportHTML={handleExportHTML}
       />
       <ExportHTMLModal
         isOpen={isExportModalOpen}
@@ -741,9 +740,7 @@ const App = () => {
               alt={isSnappingEnabled ? 'magnet' : 'free move'}
               className={`w-5 h-5 ${isSnappingEnabled ? 'brightness-0 invert' : 'text-gray-700'}`}
             />
-            <span className="text-sm font-medium">
-              {isSnappingEnabled ? 'Snap' : 'Free'}
-            </span>
+            <span className="text-sm font-medium">{isSnappingEnabled ? 'Snap' : 'Free'}</span>
           </button>
         </div>
 
