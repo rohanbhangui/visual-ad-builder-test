@@ -129,7 +129,7 @@ export const sampleCanvas: Canvas = {
         '300x250': { value: 121, unit: 'px' },
         '336x280': { value: 142, unit: 'px' },
         '728x90': { value: 17, unit: 'px' },
-        '160x600': { value: 224, unit: 'px' },
+        '160x600': { value: 244, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
@@ -167,7 +167,7 @@ export const sampleCanvas: Canvas = {
         '300x250': { value: 156, unit: 'px' },
         '336x280': { value: 177, unit: 'px' },
         '728x90': { value: 45, unit: 'px' },
-        '160x600': { value: 265, unit: 'px' },
+        '160x600': { value: 284i, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
