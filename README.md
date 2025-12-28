@@ -19,7 +19,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Preview mode toggle (renders html with css into iframe)
 - `delete/backspace` key to delete a selected layer (with confirmation)
 - arrow keys move elements (hold `shift` to move by 10px at a time)
-- 1 click export HTML for all allowedSizes (per data)
+- 1 click export HTML for all relavent sizes with id overrides
 
 ### Layers Panel
 
