@@ -10,6 +10,7 @@ interface CanvasProps {
   selectedSize: AdSize;
   dimensions: { width: number; height: number };
   canvasBackgroundColor?: string;
+  isClippingEnabled?: boolean;
   snapLines: Array<{ type: 'horizontal' | 'vertical'; position: number }>;
   onLayerMouseDown: (e: React.MouseEvent, layerId: string) => void;
   onResizeMouseDown: (e: React.MouseEvent, layerId: string, corner: string) => void;
@@ -26,6 +27,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   selectedSize,
   dimensions,
   canvasBackgroundColor,
+  isClippingEnabled = false,
   snapLines,
   onLayerMouseDown,
   onResizeMouseDown,
@@ -283,6 +285,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
             userSelect: 'none',
             WebkitUserSelect: 'none',
+            overflow: isClippingEnabled ? 'hidden' : 'visible',
           }}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}

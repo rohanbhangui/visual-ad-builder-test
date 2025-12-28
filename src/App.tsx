@@ -27,6 +27,7 @@ const App = () => {
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isAltPressed, setIsAltPressed] = useState(false);
   const [isSnappingEnabled, setIsSnappingEnabled] = useState(true);
+  const [isClippingEnabled, setIsClippingEnabled] = useState(false);
   const [layersPanelSide, setLayersPanelSide] = useState<'left' | 'right'>('right');
   const [isLayersPanelDragging, setIsLayersPanelDragging] = useState(false);
   const [layersPanelPos, setLayersPanelPos] = useState({ x: -1, y: 10 });
@@ -711,6 +712,7 @@ const App = () => {
             selectedSize={selectedSize}
             dimensions={dimensions}
             canvasBackgroundColor={canvasBackgroundColor}
+            isClippingEnabled={isClippingEnabled}
             snapLines={snapLines}
             onLayerMouseDown={handleLayerMouseDown}
             onResizeMouseDown={handleResizeMouseDown}
@@ -751,6 +753,8 @@ const App = () => {
             selectedSize={selectedSize}
             canvasName={canvasName}
             canvasBackgroundColor={canvasBackgroundColor}
+            isClippingEnabled={isClippingEnabled}
+            onClippingEnabledChange={setIsClippingEnabled}
             onCanvasNameChange={setCanvasName}
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}

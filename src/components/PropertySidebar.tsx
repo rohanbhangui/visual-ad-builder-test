@@ -27,6 +27,8 @@ interface PropertySidebarProps {
   selectedSize: AdSize;
   canvasName?: string;
   canvasBackgroundColor?: string;
+  isClippingEnabled?: boolean;
+  onClippingEnabledChange?: (enabled: boolean) => void;
   onPropertyChange: (
     layerId: string,
     property: 'positionX' | 'positionY' | 'width' | 'height',
@@ -65,6 +67,8 @@ export const PropertySidebar = ({
   selectedSize,
   canvasName,
   canvasBackgroundColor,
+  isClippingEnabled = false,
+  onClippingEnabledChange,
   onPropertyChange,
   onDelete,
   onLabelChange,
@@ -140,6 +144,19 @@ export const PropertySidebar = ({
                 value={canvasBackgroundColor || '#ffffff'}
                 onChange={onCanvasBackgroundColorChange}
               />
+            </div>
+
+            {/* Clip Layers to Canvas Toggle */}
+            <div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isClippingEnabled}
+                  onChange={(e) => onClippingEnabledChange?.(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="text-gray-700">Clip layers to canvas</span>
+              </label>
             </div>
           </div>
         </div>

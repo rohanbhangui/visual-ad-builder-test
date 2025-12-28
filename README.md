@@ -30,6 +30,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Floating and can be snapped to left or right edge
 - Can collapse to make more space
 - Canvas settings
+- Clip the edit mode to see what will be not visible in the final
 
 ### Sidebar
 
