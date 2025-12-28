@@ -207,7 +207,7 @@ export const LayersPanel = ({
               key={layer.id}
               onDragOver={(e) => onLayerDragOver(e, index)}
               onDrop={(e) => onLayerDrop(e, index)}
-              className={`layer-item group/layer flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
+              className={`layer-item group/layer relative flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
                 selectedLayerId === layer.id
                   ? `${UI_COLORS.SELECTED_LAYER_BG} hover:bg-blue-200`
                   : 'hover:bg-gray-50'
@@ -226,6 +226,10 @@ export const LayersPanel = ({
                   : {}),
               }}
             >
+              {/* Selected indicator - solid line on left edge */}
+              {selectedLayerId === layer.id ? (
+                <div className={`absolute left-0 top-0 bottom-0 w-1 z-10 ${UI_COLORS.SELECTED_INDICATOR}`} />
+              ) : null}
               <div
                 draggable
                 onDragStart={(e) => {
@@ -270,7 +274,7 @@ export const LayersPanel = ({
                   onSelectLayer(layer.id);
                 }}
               >
-                <div className="relative overflow-hidden max-w-[195px]">
+                <div className="relative overflow-hidden max-w-[205px]">
                   <div className='text-sm font-medium text-gray-900 whitespace-nowrap'>{layer.label}</div>
                   
                   {/* Gradient fades based on state - positioned below icons (z-10) */}
@@ -310,9 +314,6 @@ export const LayersPanel = ({
               >
                 {layer.locked ? <LockIcon /> : <UnlockIcon />}
               </button>
-              {selectedLayerId === layer.id ? (
-                <div className={`w-2 h-2 rounded-full relative z-10 ${UI_COLORS.SELECTED_INDICATOR}`} />
-              ) : null}
             </div>
           ))}
           {/* Drop zone for end of list */}
