@@ -598,6 +598,7 @@ const App = () => {
   };
 
   const handleExportHTML = () => {
+    setSelectedLayerId(null);
     const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor);
     setExportedHTML(html);
     setIsExportModalOpen(true);

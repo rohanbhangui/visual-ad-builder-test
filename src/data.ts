@@ -260,7 +260,7 @@ export const sampleCanvas: Canvas = {
       text: 'Shop Now',
       url: 'https://www.google.com',
       styles: {
-        backgroundColor: '#333333',
+        backgroundColor: '#0d821b',
         color: '#ffffff',
         fontSize: '14px',
         fontFamily: 'Arial',
