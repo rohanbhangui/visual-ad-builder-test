@@ -25,6 +25,9 @@ export const generateResponsiveHTML = (
       .map((layer, index) => {
         const zIndex = layers.length - index;
         const opacity = layer.styles.opacity;
+        
+        // Use attributes.id if set, otherwise fall back to UUID
+        const layerId = layer.attributes.id || layer.id;
 
         // Base styles that don't change
         const baseStyle = `position: absolute; z-index: ${zIndex}; opacity: ${opacity};`;
@@ -35,24 +38,24 @@ export const generateResponsiveHTML = (
         switch (layer.type) {
           case 'image':
             additionalStyles = `object-fit: ${layer.styles.objectFit || 'cover'};`;
-            content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" style="${baseStyle} ${additionalStyles}" alt="${layer.label}">`;
+            content = `<img id="${layerId}" src="${layer.url}" style="${baseStyle} ${additionalStyles}" alt="${layer.label}">`;
             break;
           case 'text':
             additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'}; white-space: pre-wrap;`;
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
+            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
             break;
           case 'richtext':
             additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};`;
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
+            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
             break;
           case 'video':
             const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
             const controls = layer.properties?.controls !== false ? ' controls' : '';
-            content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
+            content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
             break;
           case 'button':
             additionalStyles = `display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;`;
-            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${layer.url}" target="_blank" style="${baseStyle} ${additionalStyles}">${layer.text}</a>`;
+            content = `<a id="${layerId}" href="${layer.url}" target="_blank" style="${baseStyle} ${additionalStyles}">${layer.text}</a>`;
             break;
         }
 
@@ -70,7 +73,8 @@ export const generateResponsiveHTML = (
     // Generate base styles for first size
     const baseStyles = layers
       .map((layer) => {
-        const layerId = `layer-${layer.id}`;
+        // Use attributes.id if set, otherwise fall back to UUID
+        const layerId = layer.attributes.id || layer.id;
         const posX = layer.positionX[firstSize];
         const posY = layer.positionY[firstSize];
         const width = layer.width[firstSize];
@@ -98,7 +102,8 @@ export const generateResponsiveHTML = (
 
         const layerStyles = layers
           .map((layer) => {
-            const layerId = `layer-${layer.id}`;
+            // Use attributes.id if set, otherwise fall back to UUID
+            const layerId = layer.attributes.id || layer.id;
             const posX = layer.positionX[size];
             const posY = layer.positionY[size];
             const width = layer.width[size];

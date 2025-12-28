@@ -285,7 +285,7 @@ export const sampleCanvas: Canvas = {
       type: 'image',
       locked: true,
       aspectRatioLocked: false,
-      attributes: { id: 'background-image' },
+      attributes: { id: '' },
       positionX: {
         '300x250': { value: 0, unit: 'px' },
         '336x280': { value: 0, unit: 'px' },
