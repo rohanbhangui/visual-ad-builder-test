@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { sampleCanvas, type LayerContent, type AdSize } from './data';
-import { HTML5_AD_SIZES } from './consts';
+import { HTML5_AD_SIZES, UI_LAYOUT } from './consts';
 import { TopBar } from './components/TopBar';
 import { SizeSelector } from './components/SizeSelector';
 import { LayersPanel } from './components/LayersPanel';
@@ -14,6 +14,9 @@ import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 
 const App = () => {
+  // UI Layout Constants
+  const LAYERS_PANEL_BOTTOM_GAP = 75; // Minimum space from bottom for layers panel
+
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
   const [layers, setLayers] = useState<LayerContent[]>(sampleCanvas.layers);
   const [canvasName, setCanvasName] = useState<string>(sampleCanvas.name);
@@ -28,6 +31,7 @@ const App = () => {
   const [layersPanelSide, setLayersPanelSide] = useState<'left' | 'right'>('right');
   const [isLayersPanelDragging, setIsLayersPanelDragging] = useState(false);
   const [layersPanelPos, setLayersPanelPos] = useState({ x: -1, y: 10 });
+  const [isLayersPanelCollapsed, setIsLayersPanelCollapsed] = useState(false);
   const [draggedLayerIndex, setDraggedLayerIndex] = useState<number | null>(null);
   const [dragOverLayerIndex, setDragOverLayerIndex] = useState<number | null>(null);
   const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
@@ -252,10 +256,15 @@ const App = () => {
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
       const panelWidth = 300;
-      const panelHeight = 500;
       const sidebarWidth = 320;
       const edgeSnapThreshold = 150;
       const edgeGap = 10;
+      
+      // Use current height for drag constraints
+      const currentHeight = isLayersPanelCollapsed ? UI_LAYOUT.LAYERS_PANEL_COLLAPSED_HEIGHT : UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT;
+      // Calculate max Y relative to canvas container (which is below TopBar)
+      const containerHeight = windowHeight - UI_LAYOUT.TOP_BAR_HEIGHT;
+      const maxY = containerHeight - currentHeight - LAYERS_PANEL_BOTTOM_GAP;
 
       if (newX < edgeSnapThreshold) {
         newX = edgeGap;
@@ -266,10 +275,26 @@ const App = () => {
       }
 
       newX = Math.max(edgeGap, Math.min(newX, windowWidth - sidebarWidth - panelWidth - edgeGap));
-      newY = Math.max(edgeGap, Math.min(newY, windowHeight - panelHeight - edgeGap));
+      newY = Math.max(edgeGap, Math.min(newY, maxY));
 
       setLayersPanelPos({ x: newX, y: newY });
     }
+  };
+
+  const handleToggleLayersCollapse = () => {
+    const newCollapsedState = !isLayersPanelCollapsed;
+    
+    if (!newCollapsedState) {
+      const windowHeight = window.innerHeight;
+      const containerHeight = windowHeight - UI_LAYOUT.TOP_BAR_HEIGHT;
+      const maxY = containerHeight - UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT - LAYERS_PANEL_BOTTOM_GAP;
+      
+      if (layersPanelPos.y > maxY) {
+        setLayersPanelPos({ x: layersPanelPos.x, y: maxY });
+      }
+    }
+    
+    setIsLayersPanelCollapsed(newCollapsedState);
   };
 
   const handleLayerDragStart = (e: React.DragEvent, index: number) => {
@@ -666,6 +691,8 @@ const App = () => {
               panelPos={layersPanelPos}
               panelSide={layersPanelSide}
               isDragging={isLayersPanelDragging}
+              isCollapsed={isLayersPanelCollapsed}
+              onToggleCollapse={handleToggleLayersCollapse}
               draggedLayerIndex={draggedLayerIndex}
               dragOverLayerIndex={dragOverLayerIndex}
               onMouseDown={handleLayersPanelMouseDown}

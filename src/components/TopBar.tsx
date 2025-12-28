@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { HTML5_AD_SIZES } from '../consts';
+import { HTML5_AD_SIZES, UI_LAYOUT } from '../consts';
 import { type AdSize } from '../data';
 
 interface TopBarProps {
@@ -61,7 +61,7 @@ export const TopBar = ({ mode, selectedSize, allowedSizes, onModeChange, onSizeC
   };
 
   return (
-    <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4 bg-white relative z-50">
+    <div className="border-b border-gray-200 flex items-center justify-between px-4 bg-white relative z-50" style={{ height: `${UI_LAYOUT.TOP_BAR_HEIGHT}px` }}>
       <div className="flex items-center gap-4">
         <h1 className="text-lg font-semibold text-gray-900">Visual Builder</h1>
         

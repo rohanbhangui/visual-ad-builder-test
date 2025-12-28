@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { type LayerContent } from '../data';
-import { COLORS, UI_COLORS } from '../consts';
+import { COLORS, UI_COLORS, UI_LAYOUT } from '../consts';
 import PlusIcon from '../assets/icons/plus.svg?react';
 import ExpandIcon from '../assets/icons/expand.svg?react';
 import CollapseIcon from '../assets/icons/collapse.svg?react';
@@ -21,6 +21,8 @@ interface LayersPanelProps {
   panelPos: { x: number; y: number };
   panelSide: 'left' | 'right';
   isDragging: boolean;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
   draggedLayerIndex: number | null;
   dragOverLayerIndex: number | null;
   onMouseDown: (e: React.MouseEvent) => void;
@@ -40,6 +42,8 @@ export const LayersPanel = ({
   panelPos,
   panelSide,
   isDragging,
+  isCollapsed,
+  onToggleCollapse,
   draggedLayerIndex,
   dragOverLayerIndex,
   onMouseDown,
@@ -52,7 +56,6 @@ export const LayersPanel = ({
   onCanvasSettings,
 }: LayersPanelProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const layerTypes = [
@@ -137,7 +140,7 @@ export const LayersPanel = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setIsCollapsed(!isCollapsed);
+              onToggleCollapse();
               setShowDropdown(false);
             }}
             className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer"
@@ -193,7 +196,8 @@ export const LayersPanel = ({
       </div>
       {!isCollapsed ? (
         <div
-          className="overflow-y-auto overflow-x-hidden max-h-[440px]"
+          className="overflow-y-auto overflow-x-hidden"
+          style={{ maxHeight: `${UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT - UI_LAYOUT.LAYERS_PANEL_COLLAPSED_HEIGHT}px` }}
           onClick={() => setShowDropdown(false)}
         >
           {layers.map((layer, index) => (

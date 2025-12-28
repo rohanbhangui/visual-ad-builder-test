@@ -56,6 +56,13 @@ export const UI_COLORS = {
   ACTIVE_BUTTON_HOVER: 'hover:bg-blue-200', // Hover state for active buttons
 } as const;
 
+// UI Layout Constants
+export const UI_LAYOUT = {
+  TOP_BAR_HEIGHT: 56, // Height of the top navigation bar in pixels
+  LAYERS_PANEL_EXPANDED_HEIGHT: 322, // Height of the layers panel when expanded in pixels
+  LAYERS_PANEL_COLLAPSED_HEIGHT: 48, // Height of the layers panel when collapsed in pixels
+} as const;
+
 // Common HTML5 ad sizes
 export const HTML5_AD_SIZES = {
   '728x90': { width: 728, height: 90 },
