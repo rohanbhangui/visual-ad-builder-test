@@ -160,7 +160,7 @@ export const sampleCanvas: Canvas = {
     },
     {
       id: uuidv4(),
-      label: 'Description',
+      label: 'Get 50% off on your first purchase. Limited time offer!',
       type: 'text',
       locked: false,
       aspectRatioLocked: false,
