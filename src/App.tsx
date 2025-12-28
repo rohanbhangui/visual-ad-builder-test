@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { sampleCanvas, type LayerContent, type AdSize } from './data';
 import { HTML5_AD_SIZES, UI_LAYOUT } from './consts';
 import { TopBar } from './components/TopBar';
-import { SizeSelector } from './components/SizeSelector';
 import { LayersPanel } from './components/LayersPanel';
 import { PropertySidebar } from './components/PropertySidebar';
 import { Canvas } from './components/Canvas';
