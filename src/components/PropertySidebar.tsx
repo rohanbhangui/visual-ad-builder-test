@@ -216,7 +216,7 @@ export const PropertySidebar = ({
                   setIsEditingLabel(true);
                 }}
                 className={`text-gray-400 hover:text-gray-600 p-1 transition-colors flex-shrink-0 relative z-10 ${
-                  layer.locked ? 'opacity-0 pointer-events-none' : ''
+                  layer.locked ? 'opacity-0 pointer-events-none' : 'cursor-pointer'
                 }`}
               >
                 <EditIcon />
@@ -254,7 +254,7 @@ export const PropertySidebar = ({
               <button
                 onClick={() => onAlignLayer(layer.id, 'left')}
                 disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title="Align Left"
               >
                 <AlignLeftIcon />
@@ -262,7 +262,7 @@ export const PropertySidebar = ({
               <button
                 onClick={() => onAlignLayer(layer.id, 'center-h')}
                 disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title="Center Horizontally"
               >
                 <AlignCenterHIcon />
@@ -270,7 +270,7 @@ export const PropertySidebar = ({
               <button
                 onClick={() => onAlignLayer(layer.id, 'right')}
                 disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title="Align Right"
               >
                 <AlignRightIcon />
@@ -278,7 +278,7 @@ export const PropertySidebar = ({
               <button
                 onClick={() => onAlignLayer(layer.id, 'top')}
                 disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title="Align Top"
               >
                 <AlignTopIcon />
@@ -286,7 +286,7 @@ export const PropertySidebar = ({
               <button
                 onClick={() => onAlignLayer(layer.id, 'center-v')}
                 disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title="Center Vertically"
               >
                 <AlignCenterVIcon />
@@ -294,7 +294,7 @@ export const PropertySidebar = ({
               <button
                 onClick={() => onAlignLayer(layer.id, 'bottom')}
                 disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 title="Align Bottom"
               >
                 <AlignBottomIcon />
@@ -342,7 +342,7 @@ export const PropertySidebar = ({
               onClick={() => onAspectRatioLockToggle(layer.id)}
               disabled={layer.locked}
               className={`absolute left-[calc(50%-12px)] bottom-[5px] -translate-x-1/2 p-0.5 rounded hover:bg-gray-100 transition-colors bg-white ${
-                layer.locked ? 'opacity-50 cursor-not-allowed' : ''
+                layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
               }`}
               title={layer.aspectRatioLocked ? 'Unlock aspect ratio' : 'Lock aspect ratio'}
             >
@@ -401,7 +401,7 @@ export const PropertySidebar = ({
                   value={layer.styles?.objectFit || 'cover'}
                   onChange={(e) => onObjectFitChange(layer.id, e.target.value)}
                   disabled={layer.locked}
-                  className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <option value="cover">Cover</option>
                   <option value="contain">Contain</option>
@@ -459,7 +459,7 @@ export const PropertySidebar = ({
                     checked={layer.properties?.autoplay ?? false}
                     onChange={(e) => onVideoPropertyChange(layer.id, 'autoplay', e.target.checked)}
                     disabled={layer.locked}
-                    className={`w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'cursor-not-allowed' : ''}`}
+                    className={`w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   />
                   <span className="text-gray-700">Autoplay</span>
                 </label>
@@ -470,7 +470,7 @@ export const PropertySidebar = ({
                     checked={layer.properties?.controls ?? true}
                     onChange={(e) => onVideoPropertyChange(layer.id, 'controls', e.target.checked)}
                     disabled={layer.locked}
-                    className={`w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'cursor-not-allowed' : ''}`}
+                    className={`w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   />
                   <span className="text-gray-700">Show Controls</span>
                 </label>
@@ -525,7 +525,7 @@ export const PropertySidebar = ({
                     value={layer.styles?.fontFamily || 'Arial'}
                     onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
                     disabled={layer.locked}
-                    className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {GOOGLE_FONTS.map((font) => (
                       <option key={font} value={font}>
@@ -540,7 +540,7 @@ export const PropertySidebar = ({
                     value={layer.styles?.fontSize || '14px'}
                     onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                     disabled={layer.locked}
-                    className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {FONT_SIZE_OPTIONS.map((size) => (
                       <option key={size} value={size}>
@@ -594,7 +594,7 @@ export const PropertySidebar = ({
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
                         disabled={layer.locked}
-                        className={`flex-1 h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`flex-1 h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         {GOOGLE_FONTS.map((font) => (
                           <option key={font} value={font}>
@@ -606,7 +606,7 @@ export const PropertySidebar = ({
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                         disabled={layer.locked}
-                        className={`h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>
@@ -624,7 +624,7 @@ export const PropertySidebar = ({
                           document.execCommand('bold', false);
                         }}
                         disabled={layer.locked}
-                        className={`px-3 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`px-3 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         title="Bold"
                       >
                         B
@@ -635,7 +635,7 @@ export const PropertySidebar = ({
                           document.execCommand('italic', false);
                         }}
                         disabled={layer.locked}
-                        className={`px-3 py-1 text-sm italic border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`px-3 py-1 text-sm italic border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         title="Italic"
                         style={{ fontFamily: 'Georgia, serif' }}
                       >
@@ -647,7 +647,7 @@ export const PropertySidebar = ({
                           document.execCommand('underline', false);
                         }}
                         disabled={layer.locked}
-                        className={`px-3 py-1 text-sm underline border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`px-3 py-1 text-sm underline border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         title="Underline"
                       >
                         U
@@ -661,7 +661,7 @@ export const PropertySidebar = ({
                             (layer.styles?.textAlign || 'left') === 'left'
                               ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
                               : 'hover:bg-gray-50'
-                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           title="Align Left"
                         >
                           <TextAlignLeftIcon />
@@ -673,7 +673,7 @@ export const PropertySidebar = ({
                             layer.styles?.textAlign === 'center'
                               ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
                               : 'hover:bg-gray-50'
-                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           title="Align Center"
                         >
                           <TextAlignCenterIcon />
@@ -685,7 +685,7 @@ export const PropertySidebar = ({
                             layer.styles?.textAlign === 'right'
                               ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
                               : 'hover:bg-gray-50'
-                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           title="Align Right"
                         >
                           <TextAlignRightIcon />
@@ -732,7 +732,7 @@ export const PropertySidebar = ({
                             (layer.styles?.textAlign || 'left') === 'left'
                               ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
                               : 'hover:bg-gray-50'
-                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           title="Align Left"
                         >
                           <TextAlignLeftIcon />
@@ -744,7 +744,7 @@ export const PropertySidebar = ({
                             layer.styles?.textAlign === 'center'
                               ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
                               : 'hover:bg-gray-50'
-                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           title="Align Center"
                         >
                           <TextAlignCenterIcon />
@@ -756,7 +756,7 @@ export const PropertySidebar = ({
                             layer.styles?.textAlign === 'right'
                               ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
                               : 'hover:bg-gray-50'
-                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           title="Align Right"
                         >
                           <TextAlignRightIcon />
@@ -775,7 +775,7 @@ export const PropertySidebar = ({
                         value={layer.styles?.fontFamily || 'Arial'}
                         onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
                         disabled={layer.locked}
-                        className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         {GOOGLE_FONTS.map((font) => (
                           <option key={font} value={font}>
@@ -793,7 +793,7 @@ export const PropertySidebar = ({
                         value={layer.styles?.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                         disabled={layer.locked}
-                        className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                        className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         {FONT_SIZE_OPTIONS.map((size) => (
                           <option key={size} value={size}>
@@ -889,7 +889,7 @@ export const PropertySidebar = ({
             onClick={() => onDelete(layer.id)}
             disabled={layer.locked}
             className={`w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded transition-colors ${
-              layer.locked ? 'opacity-50 cursor-not-allowed' : ''
+              layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
             }`}
           >
             Delete Layer
