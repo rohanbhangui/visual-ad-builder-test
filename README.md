@@ -1,6 +1,6 @@
 # Visual Ad Builder Test
 
-<img width="1104" height="749" alt="Screenshot 2025-12-26 at 9 01 55 PM" src="https://github.com/user-attachments/assets/ab764985-869b-4984-9e5d-a4874d5fe90e" />
+<img width="1470" height="796" alt="image" src="https://github.com/user-attachments/assets/821a184d-cf22-4233-b27e-ebb8ee56b9ea" />
 
 Quick test to build a visual ad builder app for multiple sizes
 
