@@ -124,7 +124,7 @@ export const sampleCanvas: Canvas = {
       type: 'richtext',
       locked: false,
       aspectRatioLocked: false,
-      attributes: { id: '' },
+      attributes: { id: 'headline' },
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
@@ -164,7 +164,7 @@ export const sampleCanvas: Canvas = {
       type: 'text',
       locked: false,
       aspectRatioLocked: false,
-      attributes: { id: '' },
+      attributes: { id: 'description' },
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 21, unit: 'px' },
@@ -204,7 +204,7 @@ export const sampleCanvas: Canvas = {
       type: 'video',
       locked: false,
       aspectRatioLocked: true,
-      attributes: { id: '' },
+      attributes: { id: 'demo-video' },
       positionX: {
         '300x250': { value: 68, unit: 'px' },
         '336x280': { value: 69, unit: 'px' },
@@ -244,7 +244,7 @@ export const sampleCanvas: Canvas = {
       type: 'button',
       locked: false,
       aspectRatioLocked: false,
-      attributes: { id: '' },
+      attributes: { id: 'cta' },
       positionX: {
         '300x250': { value: 100, unit: 'px' },
         '336x280': { value: 120, unit: 'px' },
@@ -285,7 +285,7 @@ export const sampleCanvas: Canvas = {
       type: 'image',
       locked: true,
       aspectRatioLocked: false,
-      attributes: { id: '' },
+      attributes: { id: 'background-image' },
       positionX: {
         '300x250': { value: 0, unit: 'px' },
         '336x280': { value: 0, unit: 'px' },

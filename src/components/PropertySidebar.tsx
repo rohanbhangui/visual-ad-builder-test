@@ -121,13 +121,9 @@ export const PropertySidebar = ({
     return (
       <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
         <div className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Options</h2>
-
           {/* Canvas Settings Label */}
-          <div className="mb-4 group/label mt-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium text-gray-700 flex-1 mt-0.5">Canvas Settings</h3>
-            </div>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Canvas Settings</h2>
           </div>
 
           <div className="space-y-3">
@@ -181,10 +177,8 @@ export const PropertySidebar = ({
   return (
     <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
       <div className="p-4">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Options</h2>
-
         {/* Editable Label */}
-        <div className="mb-4 group/label">
+        <div className="mb-6">
           {isEditingLabel ? (
             <input
               type="text"
@@ -208,17 +202,20 @@ export const PropertySidebar = ({
                 }
               }}
               autoFocus
-              className="w-full px-2 py-1 text-sm font-medium text-gray-700 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2 py-1 text-lg font-semibold text-gray-900 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           ) : (
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium text-gray-700 flex-1">{layer.label}</h3>
+              <div className="flex-1 min-w-0 relative overflow-hidden">
+                <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">{layer.label}</h2>
+                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
+              </div>
               <button
                 onClick={() => {
                   setEditedLabel(layer.label);
                   setIsEditingLabel(true);
                 }}
-                className={`text-gray-400 hover:text-gray-600 p-1 transition-colors ${
+                className={`text-gray-400 hover:text-gray-600 p-1 transition-colors flex-shrink-0 relative z-10 ${
                   layer.locked ? 'opacity-0 pointer-events-none' : ''
                 }`}
               >

@@ -272,7 +272,30 @@ export const LayersPanel = ({
                   onSelectLayer(layer.id);
                 }}
               >
-                <div className="text-sm font-medium text-gray-900">{layer.label}</div>
+                <div className="relative overflow-hidden max-w-[190px]">
+                  <div className='text-sm font-medium text-gray-900 whitespace-nowrap'>{layer.label}</div>
+                  
+                  {/* Gradient fades based on state - positioned below icons (z-10) */}
+                  {/* Not selected, not hovered */}
+                  {selectedLayerId !== layer.id ? (
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none group-hover/layer:opacity-0 transition-opacity" />
+                  ): null}
+                  
+                  {/* Not selected, hovered */}
+                  {selectedLayerId !== layer.id ? (
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100 transition-opacity" />
+                  ): null}
+                  
+                  {/* Selected, not hovered */}
+                  {selectedLayerId === layer.id ? (
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-100 to-transparent pointer-events-none group-hover/layer:opacity-0 transition-opacity" />
+                  ): null}
+                  
+                  {/* Selected, hovered */}
+                  {selectedLayerId === layer.id ? (
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-200 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100 transition-opacity" />
+                  ): null}
+                </div>
                 <div className="text-xs text-gray-500">{layer.type}</div>
               </div>
               <button
@@ -280,7 +303,7 @@ export const LayersPanel = ({
                   e.stopPropagation();
                   onToggleLock(layer.id);
                 }}
-                className={`p-1 transition-colors cursor-pointer ${
+                className={`p-1 transition-colors cursor-pointer relative z-10 ${
                   layer.locked
                     ? 'text-gray-600 hover:text-gray-800'
                     : 'text-gray-400 opacity-0 group-hover/layer:opacity-100 hover:text-gray-600'
@@ -290,7 +313,7 @@ export const LayersPanel = ({
                 {layer.locked ? <LockIcon /> : <UnlockIcon />}
               </button>
               {selectedLayerId === layer.id ? (
-                <div className={`w-2 h-2 rounded-full ${UI_COLORS.SELECTED_INDICATOR}`} />
+                <div className={`w-2 h-2 rounded-full relative z-10 ${UI_COLORS.SELECTED_INDICATOR}`} />
               ) : null}
             </div>
           ))}
