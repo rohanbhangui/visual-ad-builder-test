@@ -129,7 +129,7 @@ export const sampleCanvas: Canvas = {
         '300x250': { value: 121, unit: 'px' },
         '336x280': { value: 142, unit: 'px' },
         '728x90': { value: 17, unit: 'px' },
-        '160x600': { value: 185, unit: 'px' },
+        '160x600': { value: 224, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
@@ -167,7 +167,7 @@ export const sampleCanvas: Canvas = {
         '300x250': { value: 156, unit: 'px' },
         '336x280': { value: 177, unit: 'px' },
         '728x90': { value: 45, unit: 'px' },
-        '160x600': { value: 245, unit: 'px' },
+        '160x600': { value: 265, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
@@ -199,25 +199,25 @@ export const sampleCanvas: Canvas = {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
         '728x90': { value: 568, unit: 'px' },
-        '160x600': { value: 10, unit: 'px' },
+        '160x600': { value: -100, unit: 'px' },
       },
       positionY: {
         '300x250': { value: 19, unit: 'px' },
         '336x280': { value: 21, unit: 'px' },
         '728x90': { value: 0, unit: 'px' },
-        '160x600': { value: 15, unit: 'px' },
+        '160x600': { value: 0, unit: 'px' },
       },
       width: {
         '300x250': { value: 280, unit: 'px' },
         '336x280': { value: 316, unit: 'px' },
         '728x90': { value: 160, unit: 'px' },
-        '160x600': { value: 140, unit: 'px' },
+        '160x600': { value: 360.8, unit: 'px' },
       },
       height: {
         '300x250': { value: 92, unit: 'px' },
         '336x280': { value: 111, unit: 'px' },
         '728x90': { value: 90, unit: 'px' },
-        '160x600': { value: 150, unit: 'px' },
+        '160x600': { value: 201, unit: 'px' },
       },
       url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
       properties: {
@@ -243,7 +243,7 @@ export const sampleCanvas: Canvas = {
         '300x250': { value: 206, unit: 'px' },
         '336x280': { value: 230, unit: 'px' },
         '728x90': { value: 29, unit: 'px' },
-        '160x600': { value: 335, unit: 'px' },
+        '160x600': { value: 364, unit: 'px' },
       },
       width: {
         '300x250': { value: 100, unit: 'px' },

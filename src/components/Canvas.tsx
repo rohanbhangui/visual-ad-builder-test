@@ -228,6 +228,11 @@ export const Canvas: React.FC<CanvasProps> = ({
         style={style}
         onMouseDown={(e) => {
           if (!layer.locked) {
+            // Clear any hover states from all elements before handling click
+            document.querySelectorAll('[data-layer-hover]').forEach((el) => {
+              (el as HTMLElement).style.outline = '';
+              (el as HTMLElement).style.outlineOffset = '';
+            });
             onLayerMouseDown(e, layer.id);
           }
         }}
@@ -236,6 +241,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             ? 'group hover:outline hover:outline-2 hover:outline-blue-400'
             : ''
         }
+        data-layer-hover={!layer.locked && !isSelected ? 'true' : undefined}
         onMouseEnter={(e) => {
           if (!layer.locked && !isSelected) {
             (e.currentTarget as HTMLElement).style.outline = '2px solid rgba(59, 130, 246, 0.5)';
