@@ -14,6 +14,10 @@ interface UseCanvasInteractionsProps {
   setSelectedLayerId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
+/**
+ * Hook to handle canvas interactions for dragging and resizing layers
+ * Includes snapping, aspect ratio locking, and modifier key support (Shift, Alt)
+ */
 export const useCanvasInteractions = ({
   mode,
   layers,
@@ -25,6 +29,9 @@ export const useCanvasInteractions = ({
   setLayers,
   setSelectedLayerId,
 }: UseCanvasInteractionsProps) => {
+  // ============================================
+  // STATE & REFS
+  // ============================================
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [snapLines, setSnapLines] = useState<
@@ -48,6 +55,11 @@ export const useCanvasInteractions = ({
   const handleMouseMoveRef = useRef<((e: MouseEvent | React.MouseEvent) => void) | null>(null);
   const handleMouseUpRef = useRef<(() => void) | null>(null);
 
+  // ============================================
+  // EVENT HANDLERS - INITIATION
+  // ============================================
+  
+  /** Handler for starting a layer drag operation */
   const handleLayerMouseDown = (e: React.MouseEvent, layerId: string) => {
     if (mode !== 'edit') return;
 
@@ -74,6 +86,7 @@ export const useCanvasInteractions = ({
     };
   };
 
+  /** Handler for starting a layer resize operation */
   const handleResizeMouseDown = (e: React.MouseEvent, layerId: string, direction: string) => {
     if (mode !== 'edit') return;
     e.preventDefault();
@@ -132,8 +145,9 @@ export const useCanvasInteractions = ({
         const currentCenterX = newX + currentWidth / 2;
         const currentCenterY = newY + currentHeight / 2;
 
+        // Apply snapping to canvas and other layers if enabled
         if (isSnappingEnabled) {
-          // Snap to canvas edges
+          // Check and apply snapping to canvas edges (left, right, center-x, top, bottom, center-y)
           if (Math.abs(newX - canvasEdges.left) < SNAP_THRESHOLD) {
             newX = canvasEdges.left;
             guides.push({ type: 'vertical', position: canvasEdges.left });
@@ -160,7 +174,7 @@ export const useCanvasInteractions = ({
             guides.push({ type: 'horizontal', position: canvasEdges.centerY });
           }
 
-          // Snap to other elements
+          // Check and apply snapping to other layers' edges and centers
           layers.forEach((layer) => {
             if (layer.id === selectedLayerId) return;
 
@@ -250,6 +264,7 @@ export const useCanvasInteractions = ({
           })
         );
       } else if (isResizing && selectedLayerId) {
+        // -------------------- RESIZE LOGIC --------------------
         const dx = e.clientX - resizeStartRef.current.x;
         const dy = e.clientY - resizeStartRef.current.y;
         const { direction, width, height, layerX, layerY } = resizeStartRef.current;
@@ -272,12 +287,16 @@ export const useCanvasInteractions = ({
           (direction.includes('n') || direction.includes('s')) &&
           (direction.includes('e') || direction.includes('w'));
 
-        // Aspect ratio should be locked if: layer has aspectRatioLocked OR shift is pressed (but not both)
+        // Determine if aspect ratio should be locked:
+        // - If layer has aspectRatioLocked=true, always lock aspect ratio
+        // - If layer has aspectRatioLocked=false (or undefined), lock only when Shift is pressed
         const shouldLockAspectRatio = currentLayer.aspectRatioLocked
           ? true
           : isShiftPressed && !currentLayer.aspectRatioLocked;
 
-        // Calculate initial resize based on modifiers
+        // ========== INITIAL RESIZE CALCULATION (before snapping) ==========
+        
+        // CASE 1: Alt only (no aspect ratio lock) - Center resize
         if (isAltPressed && !shouldLockAspectRatio) {
           // Alt only: Center resize (both edges move equally)
           if (direction.includes('e') || direction.includes('w')) {
@@ -291,7 +310,7 @@ export const useCanvasInteractions = ({
             newY = centerY - newHeight / 2;
           }
         } else if (shouldLockAspectRatio && !isAltPressed) {
-          // Aspect ratio locked (either by toggle or Shift key)
+          // CASE 2: Aspect ratio locked (by toggle or Shift) - Maintain aspect ratio
           if (isCorner) {
             // Corner resize: scale proportionally from opposite corner
             const deltaX = direction.includes('e') ? dx : -dx;
@@ -343,7 +362,7 @@ export const useCanvasInteractions = ({
             }
           }
         } else if (shouldLockAspectRatio && isAltPressed) {
-          // Aspect ratio locked + center resize
+          // CASE 3: Aspect ratio locked + Alt - Center resize with aspect ratio
           if (isCorner) {
             const deltaX = direction.includes('e') ? dx : -dx;
             const deltaY = direction.includes('s') ? dy : -dy;
@@ -373,7 +392,7 @@ export const useCanvasInteractions = ({
             }
           }
         } else {
-          // No modifiers: Normal resize (only adjust the edge being dragged)
+          // CASE 4: No modifiers - Normal resize (free resize)
           if (direction.includes('e')) newWidth = Math.max(MIN_SIZE, width + dx);
           if (direction.includes('w')) {
             newWidth = Math.max(MIN_SIZE, width - dx);
@@ -386,6 +405,7 @@ export const useCanvasInteractions = ({
           }
         }
 
+        // ========== SNAPPING DETECTION ==========
         const guides: Array<{ type: 'vertical' | 'horizontal'; position: number }> = [];
         let isLeftSnapping = false;
         let isRightSnapping = false;
@@ -407,7 +427,7 @@ export const useCanvasInteractions = ({
           const currentCenterX = newX + newWidth / 2;
           const currentCenterY = newY + newHeight / 2;
 
-          // Helper to check and apply snapping
+          // Helper function to check if an edge is within snap threshold and apply snapping
           const snapToEdge = (
             current: number,
             target: number,
@@ -529,9 +549,12 @@ export const useCanvasInteractions = ({
             }
           });
 
-          // Handle snapping adjustments based on modifiers
+          // ========== SNAPPING ADJUSTMENTS (Modify dimensions when edges snap) ==========
+          // Adjust dimensions after edges snap to maintain modifier key behaviors
+          
           if (isAltPressed && !shouldLockAspectRatio) {
-            // Alt only: Maintain center when edge snaps
+            // ADJUSTMENT CASE 1: Alt only (no aspect ratio lock)
+            // Maintains center position when an edge snaps (no aspect ratio constraint)
             if (direction.includes('e') && isRightSnapping) {
               const snappedRight = newX + newWidth;
               newWidth = Math.max(MIN_SIZE, 2 * (snappedRight - centerX));
@@ -550,7 +573,9 @@ export const useCanvasInteractions = ({
               newY = centerY - newHeight / 2;
             }
           } else if (isAltPressed && shouldLockAspectRatio && !isShiftPressed) {
-            // Alt + aspect ratio locked: Maintain center and aspect ratio when edge snaps (same as Shift + Alt)
+            // ADJUSTMENT CASE 2: Alt + aspect ratio locked
+            // Maintains center position and aspect ratio when an edge snaps
+            // (same behavior as Shift + Alt)
             if (direction.includes('e') && isRightSnapping) {
               const snappedRight = newX + newWidth;
               newWidth = Math.max(MIN_SIZE, 2 * Math.abs(snappedRight - centerX));
@@ -577,7 +602,9 @@ export const useCanvasInteractions = ({
               newY = centerY - newHeight / 2;
             }
           } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && !isAltPressed && !isCorner) {
-            // Shift or aspect ratio locked (edge resize): When edge snaps, recalculate to maintain aspect ratio from origin
+            // ADJUSTMENT CASE 3: Aspect ratio locked - EDGE resize
+            // When an edge snaps, recalculate dimensions to maintain aspect ratio
+            // Grows from the opposite edge's center point
             if (direction.includes('e') && isRightSnapping) {
               // Right edge snapped - recalculate from left edge center
               const snappedWidth = newX + newWidth - layerX;
@@ -608,7 +635,9 @@ export const useCanvasInteractions = ({
               newX = bottomEdgeCenterX - newWidth / 2;
             }
           } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && !isAltPressed && isCorner) {
-            // Shift only (corner resize): When edge snaps, freeze that dimension and adjust the other
+            // ADJUSTMENT CASE 4: Aspect ratio locked - CORNER resize
+            // When an edge snaps, freeze that dimension and adjust the perpendicular dimension
+            // Grows from the opposite corner
             const oppositeCornerX = direction.includes('e') ? layerX : layerX + width;
             const oppositeCornerY = direction.includes('s') ? layerY : layerY + height;
 
@@ -642,7 +671,9 @@ export const useCanvasInteractions = ({
               }
             }
           } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && isAltPressed) {
-            // Shift or aspect ratio locked + Alt: Maintain center and aspect ratio when edge snaps
+            // ADJUSTMENT CASE 5: Aspect ratio locked + Alt (or Shift + Alt)
+            // Maintains center position and aspect ratio when an edge snaps
+            // Equivalent to Case 2
             if (direction.includes('e') && isRightSnapping) {
               const snappedRight = newX + newWidth;
               newWidth = Math.max(MIN_SIZE, 2 * Math.abs(snappedRight - centerX));
@@ -720,12 +751,18 @@ export const useCanvasInteractions = ({
     ]
   );
 
+  // ============================================
+  // EVENT HANDLERS - CLEANUP
+  // ============================================
+  
+  /** Handler for ending drag or resize operations */
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setIsResizing(false);
     setSnapLines([]);
   }, []);
 
+  /** Handler for mouse leaving the canvas area */
   const handleMouseLeave = useCallback(() => {
     // Only cleanup if not actively dragging or resizing
     // (global listeners will handle those cases)
@@ -734,11 +771,16 @@ export const useCanvasInteractions = ({
     }
   }, [isDragging, isResizing]);
 
-  // Update refs with latest handlers
+  // ============================================
+  // EFFECTS - GLOBAL EVENT LISTENERS
+  // ============================================
+  
+  // Update refs with latest handlers to avoid stale closures
   handleMouseMoveRef.current = handleMouseMove;
   handleMouseUpRef.current = handleMouseUp;
 
   // Add global mouse listeners during drag/resize to handle fast mouse movements
+  // that might escape the canvas bounds
   useEffect(() => {
     if (!isDragging && !isResizing) return;
 
@@ -759,6 +801,10 @@ export const useCanvasInteractions = ({
     };
   }, [isDragging, isResizing]);
 
+  // ============================================
+  // RETURN
+  // ============================================
+  
   return {
     isDragging,
     isResizing,
