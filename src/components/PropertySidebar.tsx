@@ -62,6 +62,7 @@ interface PropertySidebarProps {
   onAspectRatioLockToggle: (layerId: string) => void;
   onCanvasNameChange: (name: string) => void;
   onCanvasBackgroundColorChange: (color: string) => void;
+  onHtmlIdChange: (layerId: string, htmlId: string) => void;
 }
 
 export const PropertySidebar = ({
@@ -91,6 +92,7 @@ export const PropertySidebar = ({
   onAspectRatioLockToggle,
   onCanvasNameChange,
   onCanvasBackgroundColorChange,
+  onHtmlIdChange,
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
@@ -227,6 +229,27 @@ export const PropertySidebar = ({
         </div>
 
         <div className="space-y-3">
+          {/* HTML ID */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Element ID</label>
+            <input
+              type="text"
+              value={layer.attributes.id || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Only allow valid HTML ID characters (no spaces)
+                if (!/\s/.test(value)) {
+                  onHtmlIdChange(layer.id, value);
+                }
+              }}
+              placeholder="e.g., my-element"
+              disabled={layer.locked}
+              className={`w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''
+              }`}
+            />
+          </div>
+
           {/* Alignment Buttons */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Alignment</label>

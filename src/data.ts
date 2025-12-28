@@ -25,6 +25,9 @@ export interface BaseLayer {
   label: string;
   locked: boolean;
   aspectRatioLocked?: boolean;
+  attributes: {
+    id?: string; // HTML id attribute for the element
+  };
   positionX: Partial<Record<AdSize, Size>>; // Keyed by ad size
   positionY: Partial<Record<AdSize, Size>>; // Keyed by ad size
   width: Partial<Record<AdSize, Size>>; // Keyed by ad size
@@ -121,6 +124,7 @@ export const sampleCanvas: Canvas = {
       type: 'richtext',
       locked: false,
       aspectRatioLocked: false,
+      attributes: { id: '' },
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
@@ -160,6 +164,7 @@ export const sampleCanvas: Canvas = {
       type: 'text',
       locked: false,
       aspectRatioLocked: false,
+      attributes: { id: '' },
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 21, unit: 'px' },
@@ -199,6 +204,7 @@ export const sampleCanvas: Canvas = {
       type: 'video',
       locked: false,
       aspectRatioLocked: true,
+      attributes: { id: '' },
       positionX: {
         '300x250': { value: 68, unit: 'px' },
         '336x280': { value: 69, unit: 'px' },
@@ -238,6 +244,7 @@ export const sampleCanvas: Canvas = {
       type: 'button',
       locked: false,
       aspectRatioLocked: false,
+      attributes: { id: '' },
       positionX: {
         '300x250': { value: 100, unit: 'px' },
         '336x280': { value: 120, unit: 'px' },
@@ -278,6 +285,7 @@ export const sampleCanvas: Canvas = {
       type: 'image',
       locked: true,
       aspectRatioLocked: false,
+      attributes: { id: '' },
       positionX: {
         '300x250': { value: 0, unit: 'px' },
         '336x280': { value: 0, unit: 'px' },

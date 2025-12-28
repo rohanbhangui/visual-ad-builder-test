@@ -61,23 +61,23 @@ export const Canvas: React.FC<CanvasProps> = ({
 
         switch (layer.type) {
           case 'image':
-            content = `<img src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" alt="${layer.label}">`;
+            content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" alt="${layer.label}">`;
             break;
           case 'text':
-            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
             break;
           case 'richtext':
-            content = `<div style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
               const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
               const controls = layer.properties?.controls !== false ? ' controls' : '';
-              content = `<video src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls}></video>`;
+              content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls}></video>`;
             }
             break;
           case 'button':
-            content = `<a href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;">${layer.text}</a>`;
+            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;">${layer.text}</a>`;
             break;
         }
 
@@ -171,6 +171,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       case 'image':
         content = (
           <img
+            {...(layer.attributes.id && { id: layer.attributes.id })}
             src={layer.url}
             className="w-full h-full pointer-events-none"
             style={{
@@ -184,6 +185,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       case 'richtext':
         content = (
           <div
+            {...(layer.attributes.id && { id: layer.attributes.id })}
             className="pointer-events-none whitespace-pre-wrap"
             style={{
               color: layer.styles?.color || '#000000',
@@ -199,6 +201,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         if (width.value > 0 && height.value > 0) {
           content = (
             <video
+              {...(layer.attributes.id && { id: layer.attributes.id })}
               src={layer.url}
               muted={true}
               playsInline={true}
@@ -220,6 +223,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       case 'button':
         content = (
           <div
+            {...(layer.attributes.id && { id: layer.attributes.id })}
             className="w-full h-full flex items-center justify-center pointer-events-none"
             style={{
               backgroundColor: layer.styles?.backgroundColor || '#333333',

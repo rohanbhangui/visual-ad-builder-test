@@ -25,7 +25,6 @@ export const generateResponsiveHTML = (
       .map((layer, index) => {
         const zIndex = layers.length - index;
         const opacity = layer.styles.opacity;
-        const layerId = `layer-${layer.id}`;
 
         // Base styles that don't change
         const baseStyle = `position: absolute; z-index: ${zIndex}; opacity: ${opacity};`;
@@ -36,24 +35,24 @@ export const generateResponsiveHTML = (
         switch (layer.type) {
           case 'image':
             additionalStyles = `object-fit: ${layer.styles.objectFit || 'cover'};`;
-            content = `<img id="${layerId}" src="${layer.url}" style="${baseStyle} ${additionalStyles}" alt="${layer.label}">`;
+            content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" style="${baseStyle} ${additionalStyles}" alt="${layer.label}">`;
             break;
           case 'text':
             additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'}; white-space: pre-wrap;`;
-            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
             break;
           case 'richtext':
             additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};`;
-            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
             break;
           case 'video':
             const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
             const controls = layer.properties?.controls !== false ? ' controls' : '';
-            content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
+            content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
             break;
           case 'button':
             additionalStyles = `display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;`;
-            content = `<a id="${layerId}" href="${layer.url}" target="_blank" style="${baseStyle} ${additionalStyles}">${layer.text}</a>`;
+            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${layer.url}" target="_blank" style="${baseStyle} ${additionalStyles}">${layer.text}</a>`;
             break;
         }
 

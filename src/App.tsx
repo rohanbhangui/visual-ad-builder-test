@@ -393,6 +393,21 @@ const App = () => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, label: newLabel } : l)));
   };
 
+  const handleHtmlIdChange = (layerId: string, htmlId: string) => {
+    // Validate: no spaces allowed
+    if (/\s/.test(htmlId)) {
+      return;
+    }
+
+    // Validate: must be unique across layers (if not empty)
+    if (htmlId && layers.some((l) => l.id !== layerId && l.attributes.id === htmlId)) {
+      alert('This ID is already in use by another layer. Please choose a unique ID.');
+      return;
+    }
+
+    setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, attributes: { ...l.attributes, id: htmlId } } : l)));
+  };
+
   const handleContentChange = (layerId: string, content: string) => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, content } : l)));
   };
@@ -814,6 +829,7 @@ const App = () => {
             onOpacityChange={handleOpacityChange}
             onAspectRatioLockToggle={handleAspectRatioLockToggle}
             onCanvasBackgroundColorChange={handleCanvasBackgroundColorChange}
+            onHtmlIdChange={handleHtmlIdChange}
           />
         ) : null}
       </div>
