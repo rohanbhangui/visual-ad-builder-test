@@ -270,7 +270,7 @@ export const LayersPanel = ({
                   onSelectLayer(layer.id);
                 }}
               >
-                <div className="relative overflow-hidden max-w-[190px]">
+                <div className="relative overflow-hidden max-w-[195px]">
                   <div className='text-sm font-medium text-gray-900 whitespace-nowrap'>{layer.label}</div>
                   
                   {/* Gradient fades based on state - positioned below icons (z-10) */}
