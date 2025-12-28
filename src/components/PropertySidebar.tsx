@@ -11,6 +11,8 @@ import {
   UI_COLORS,
 } from '../consts';
 import EditIcon from '../assets/icons/edit.svg?react';
+import LockIcon from '../assets/icons/lock.svg?react';
+import UnlockIcon from '../assets/icons/unlock.svg?react';
 import AlignLeftIcon from '../assets/icons/align-left.svg?react';
 import AlignCenterHIcon from '../assets/icons/align-center-h.svg?react';
 import AlignRightIcon from '../assets/icons/align-right.svg?react';
@@ -57,6 +59,7 @@ interface PropertySidebarProps {
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
   ) => void;
   onOpacityChange: (layerId: string, opacity: number) => void;
+  onAspectRatioLockToggle: (layerId: string) => void;
   onCanvasNameChange: (name: string) => void;
   onCanvasBackgroundColorChange: (color: string) => void;
 }
@@ -85,6 +88,7 @@ export const PropertySidebar = ({
   onVideoPropertyChange,
   onAlignLayer,
   onOpacityChange,
+  onAspectRatioLockToggle,
   onCanvasNameChange,
   onCanvasBackgroundColorChange,
 }: PropertySidebarProps) => {
@@ -297,21 +301,37 @@ export const PropertySidebar = ({
           </div>
 
           {/* Width and Height */}
-          <div className="grid grid-cols-2 gap-2">
-            <PositionSizeInput
-              label="Width"
-              value={width.value}
-              unit={width.unit || 'px'}
-              onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
+          <div className="relative">
+            <div className="grid grid-cols-2 gap-2">
+              <PositionSizeInput
+                label="Width"
+                value={width.value}
+                unit={width.unit || 'px'}
+                onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
+                disabled={layer.locked}
+              />
+              <PositionSizeInput
+                label="Height"
+                value={height.value}
+                unit={height.unit || 'px'}
+                onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
+                disabled={layer.locked}
+              />
+            </div>
+            <button
+              onClick={() => onAspectRatioLockToggle(layer.id)}
               disabled={layer.locked}
-            />
-            <PositionSizeInput
-              label="Height"
-              value={height.value}
-              unit={height.unit || 'px'}
-              onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
-              disabled={layer.locked}
-            />
+              className={`absolute left-[calc(50%-12px)] bottom-[5px] -translate-x-1/2 p-0.5 rounded hover:bg-gray-100 transition-colors bg-white ${
+                layer.locked ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              title={layer.aspectRatioLocked ? 'Unlock aspect ratio' : 'Lock aspect ratio'}
+            >
+              {layer.aspectRatioLocked ? (
+                <LockIcon className="w-3.5 h-3.5 text-gray-600" />
+              ) : (
+                <UnlockIcon className="w-3.5 h-3.5 text-gray-400" />
+              )}
+            </button>
           </div>
 
           {/* Image Controls */}

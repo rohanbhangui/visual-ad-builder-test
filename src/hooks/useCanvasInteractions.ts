@@ -272,8 +272,13 @@ export const useCanvasInteractions = ({
           (direction.includes('n') || direction.includes('s')) &&
           (direction.includes('e') || direction.includes('w'));
 
+        // Aspect ratio should be locked if: layer has aspectRatioLocked OR shift is pressed (but not both)
+        const shouldLockAspectRatio = currentLayer.aspectRatioLocked
+          ? true
+          : isShiftPressed && !currentLayer.aspectRatioLocked;
+
         // Calculate initial resize based on modifiers
-        if (isAltPressed && !isShiftPressed) {
+        if (isAltPressed && !shouldLockAspectRatio) {
           // Alt only: Center resize (both edges move equally)
           if (direction.includes('e') || direction.includes('w')) {
             const multiplier = direction.includes('w') ? -1 : 1;
@@ -285,8 +290,8 @@ export const useCanvasInteractions = ({
             newHeight = Math.max(MIN_SIZE, height + dy * 2 * multiplier);
             newY = centerY - newHeight / 2;
           }
-        } else if (isShiftPressed && !isAltPressed) {
-          // Shift only: Aspect ratio locked
+        } else if (shouldLockAspectRatio && !isAltPressed) {
+          // Aspect ratio locked (either by toggle or Shift key)
           if (isCorner) {
             // Corner resize: scale proportionally from opposite corner
             const deltaX = direction.includes('e') ? dx : -dx;
@@ -337,8 +342,8 @@ export const useCanvasInteractions = ({
               newY = layerY + (height - newHeight);
             }
           }
-        } else if (isShiftPressed && isAltPressed) {
-          // Both: Aspect ratio locked + center resize
+        } else if (shouldLockAspectRatio && isAltPressed) {
+          // Aspect ratio locked + center resize
           if (isCorner) {
             const deltaX = direction.includes('e') ? dx : -dx;
             const deltaY = direction.includes('s') ? dy : -dy;
@@ -525,7 +530,7 @@ export const useCanvasInteractions = ({
           });
 
           // Handle snapping adjustments based on modifiers
-          if (isAltPressed && !isShiftPressed) {
+          if (isAltPressed && !shouldLockAspectRatio) {
             // Alt only: Maintain center when edge snaps
             if (direction.includes('e') && isRightSnapping) {
               const snappedRight = newX + newWidth;
@@ -533,6 +538,7 @@ export const useCanvasInteractions = ({
               newX = centerX - newWidth / 2;
             } else if (direction.includes('w') && isLeftSnapping) {
               newWidth = Math.max(MIN_SIZE, 2 * (centerX - newX));
+              newX = centerX - newWidth / 2;
             }
 
             if (direction.includes('s') && isBottomSnapping) {
@@ -541,9 +547,37 @@ export const useCanvasInteractions = ({
               newY = centerY - newHeight / 2;
             } else if (direction.includes('n') && isTopSnapping) {
               newHeight = Math.max(MIN_SIZE, 2 * (centerY - newY));
+              newY = centerY - newHeight / 2;
             }
-          } else if (isShiftPressed && !isAltPressed && !isCorner) {
-            // Shift only (edge resize): When edge snaps, recalculate to maintain aspect ratio from origin
+          } else if (isAltPressed && shouldLockAspectRatio && !isShiftPressed) {
+            // Alt + aspect ratio locked: Maintain center and aspect ratio when edge snaps (same as Shift + Alt)
+            if (direction.includes('e') && isRightSnapping) {
+              const snappedRight = newX + newWidth;
+              newWidth = Math.max(MIN_SIZE, 2 * Math.abs(snappedRight - centerX));
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            } else if (direction.includes('w') && isLeftSnapping) {
+              newWidth = Math.max(MIN_SIZE, 2 * Math.abs(centerX - newX));
+              newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            }
+
+            if (direction.includes('s') && isBottomSnapping) {
+              const snappedBottom = newY + newHeight;
+              newHeight = Math.max(MIN_SIZE, 2 * Math.abs(snappedBottom - centerY));
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            } else if (direction.includes('n') && isTopSnapping) {
+              newHeight = Math.max(MIN_SIZE, 2 * Math.abs(centerY - newY));
+              newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
+              newX = centerX - newWidth / 2;
+              newY = centerY - newHeight / 2;
+            }
+          } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && !isAltPressed && !isCorner) {
+            // Shift or aspect ratio locked (edge resize): When edge snaps, recalculate to maintain aspect ratio from origin
             if (direction.includes('e') && isRightSnapping) {
               // Right edge snapped - recalculate from left edge center
               const snappedWidth = newX + newWidth - layerX;
@@ -573,7 +607,7 @@ export const useCanvasInteractions = ({
               const bottomEdgeCenterX = layerX + width / 2;
               newX = bottomEdgeCenterX - newWidth / 2;
             }
-          } else if (isShiftPressed && !isAltPressed && isCorner) {
+          } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && !isAltPressed && isCorner) {
             // Shift only (corner resize): When edge snaps, freeze that dimension and adjust the other
             const oppositeCornerX = direction.includes('e') ? layerX : layerX + width;
             const oppositeCornerY = direction.includes('s') ? layerY : layerY + height;
@@ -607,16 +641,16 @@ export const useCanvasInteractions = ({
                 newY = oppositeCornerY - newHeight;
               }
             }
-          } else if (isShiftPressed && isAltPressed) {
-            // Both modifiers: Maintain center and aspect ratio when edge snaps
+          } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && isAltPressed) {
+            // Shift or aspect ratio locked + Alt: Maintain center and aspect ratio when edge snaps
             if (direction.includes('e') && isRightSnapping) {
               const snappedRight = newX + newWidth;
-              newWidth = Math.max(MIN_SIZE, 2 * (snappedRight - centerX));
+              newWidth = Math.max(MIN_SIZE, 2 * Math.abs(snappedRight - centerX));
               newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
               newX = centerX - newWidth / 2;
               newY = centerY - newHeight / 2;
             } else if (direction.includes('w') && isLeftSnapping) {
-              newWidth = Math.max(MIN_SIZE, 2 * (centerX - newX));
+              newWidth = Math.max(MIN_SIZE, 2 * Math.abs(centerX - newX));
               newHeight = Math.max(MIN_SIZE, newWidth / aspectRatio);
               newX = centerX - newWidth / 2;
               newY = centerY - newHeight / 2;
@@ -624,12 +658,12 @@ export const useCanvasInteractions = ({
 
             if (direction.includes('s') && isBottomSnapping) {
               const snappedBottom = newY + newHeight;
-              newHeight = Math.max(MIN_SIZE, 2 * (snappedBottom - centerY));
+              newHeight = Math.max(MIN_SIZE, 2 * Math.abs(snappedBottom - centerY));
               newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
               newX = centerX - newWidth / 2;
               newY = centerY - newHeight / 2;
             } else if (direction.includes('n') && isTopSnapping) {
-              newHeight = Math.max(MIN_SIZE, 2 * (centerY - newY));
+              newHeight = Math.max(MIN_SIZE, 2 * Math.abs(centerY - newY));
               newWidth = Math.max(MIN_SIZE, newHeight * aspectRatio);
               newX = centerX - newWidth / 2;
               newY = centerY - newHeight / 2;

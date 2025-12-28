@@ -24,6 +24,7 @@ export interface BaseLayer {
   id: string;
   label: string;
   locked: boolean;
+  aspectRatioLocked?: boolean;
   positionX: Partial<Record<AdSize, Size>>; // Keyed by ad size
   positionY: Partial<Record<AdSize, Size>>; // Keyed by ad size
   width: Partial<Record<AdSize, Size>>; // Keyed by ad size
@@ -119,6 +120,7 @@ export const sampleCanvas: Canvas = {
       label: 'Headline',
       type: 'richtext',
       locked: false,
+      aspectRatioLocked: false,
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 10, unit: 'px' },
@@ -157,6 +159,7 @@ export const sampleCanvas: Canvas = {
       label: 'Description',
       type: 'text',
       locked: false,
+      aspectRatioLocked: false,
       positionX: {
         '300x250': { value: 10, unit: 'px' },
         '336x280': { value: 21, unit: 'px' },
@@ -195,9 +198,10 @@ export const sampleCanvas: Canvas = {
       label: 'Demo Video',
       type: 'video',
       locked: false,
+      aspectRatioLocked: true,
       positionX: {
-        '300x250': { value: 10, unit: 'px' },
-        '336x280': { value: 10, unit: 'px' },
+        '300x250': { value: 68, unit: 'px' },
+        '336x280': { value: 69, unit: 'px' },
         '728x90': { value: 568, unit: 'px' },
         '160x600': { value: -100, unit: 'px' },
       },
@@ -208,8 +212,8 @@ export const sampleCanvas: Canvas = {
         '160x600': { value: 0, unit: 'px' },
       },
       width: {
-        '300x250': { value: 280, unit: 'px' },
-        '336x280': { value: 316, unit: 'px' },
+        '300x250': { value: 164, unit: 'px' },
+        '336x280': { value: 198, unit: 'px' },
         '728x90': { value: 160, unit: 'px' },
         '160x600': { value: 360.8, unit: 'px' },
       },
@@ -233,6 +237,7 @@ export const sampleCanvas: Canvas = {
       label: 'CTA Button',
       type: 'button',
       locked: false,
+      aspectRatioLocked: false,
       positionX: {
         '300x250': { value: 100, unit: 'px' },
         '336x280': { value: 120, unit: 'px' },
@@ -272,6 +277,7 @@ export const sampleCanvas: Canvas = {
       label: 'Background Image',
       type: 'image',
       locked: true,
+      aspectRatioLocked: false,
       positionX: {
         '300x250': { value: 0, unit: 'px' },
         '336x280': { value: 0, unit: 'px' },

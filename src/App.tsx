@@ -340,7 +340,7 @@ const App = () => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
-          return {
+          const updated = {
             ...l,
             [property]: {
               ...l[property],
@@ -350,6 +350,39 @@ const App = () => {
               },
             },
           };
+
+          // If aspect ratio is locked and we're changing width or height, update the other dimension
+          if (l.aspectRatioLocked && (property === 'width' || property === 'height')) {
+            const width = l.width[selectedSize];
+            const height = l.height[selectedSize];
+            if (width && height && width.value > 0 && height.value > 0) {
+              const aspectRatio = width.value / height.value;
+              
+              if (property === 'width') {
+                // Width changed, update height
+                const newHeight = value / aspectRatio;
+                updated.height = {
+                  ...l.height,
+                  [selectedSize]: {
+                    value: newHeight,
+                    unit: l.height[selectedSize]!.unit || 'px',
+                  },
+                };
+              } else if (property === 'height') {
+                // Height changed, update width
+                const newWidth = value * aspectRatio;
+                updated.width = {
+                  ...l.width,
+                  [selectedSize]: {
+                    value: newWidth,
+                    unit: l.width[selectedSize]!.unit || 'px',
+                  },
+                };
+              }
+            }
+          }
+
+          return updated;
         }
         return l;
       })
@@ -455,6 +488,12 @@ const App = () => {
         }
         return l;
       })
+    );
+  };
+
+  const handleAspectRatioLockToggle = (layerId: string) => {
+    setLayers((prev) =>
+      prev.map((l) => (l.id === layerId ? { ...l, aspectRatioLocked: !l.aspectRatioLocked } : l))
     );
   };
 
@@ -773,6 +812,7 @@ const App = () => {
             onVideoPropertyChange={handleVideoPropertyChange}
             onAlignLayer={handleAlignLayer}
             onOpacityChange={handleOpacityChange}
+            onAspectRatioLockToggle={handleAspectRatioLockToggle}
             onCanvasBackgroundColorChange={handleCanvasBackgroundColorChange}
           />
         ) : null}
