@@ -31,6 +31,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Can collapse to make more space
 - Canvas settings
 - Clip the edit mode to see what will be not visible in the final
+- Support for long layer labels
 
 ### Sidebar
 

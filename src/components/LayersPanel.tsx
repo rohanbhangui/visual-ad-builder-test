@@ -278,22 +278,22 @@ export const LayersPanel = ({
                   {/* Gradient fades based on state - positioned below icons (z-10) */}
                   {/* Not selected, not hovered */}
                   {selectedLayerId !== layer.id ? (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none group-hover/layer:opacity-0 transition-opacity" />
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none group-hover/layer:opacity-0" />
                   ): null}
                   
                   {/* Not selected, hovered */}
                   {selectedLayerId !== layer.id ? (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100 transition-opacity" />
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100" />
                   ): null}
                   
                   {/* Selected, not hovered */}
                   {selectedLayerId === layer.id ? (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-100 to-transparent pointer-events-none group-hover/layer:opacity-0 transition-opacity" />
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-100 to-transparent pointer-events-none group-hover/layer:opacity-0" />
                   ): null}
                   
                   {/* Selected, hovered */}
                   {selectedLayerId === layer.id ? (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-200 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100 transition-opacity" />
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-200 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100" />
                   ): null}
                 </div>
                 <div className="text-xs text-gray-500">{layer.type}</div>
