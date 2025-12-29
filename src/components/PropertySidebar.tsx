@@ -23,6 +23,16 @@ import AlignBottomIcon from '../assets/icons/align-bottom.svg?react';
 import TextAlignLeftIcon from '../assets/icons/text-align-left.svg?react';
 import TextAlignCenterIcon from '../assets/icons/text-align-center.svg?react';
 import TextAlignRightIcon from '../assets/icons/text-align-right.svg?react';
+import XIcon from '../assets/icons/x.svg?react';
+
+const ALIGNMENT_BUTTONS = [
+  { alignment: 'left' as const, icon: AlignLeftIcon, title: 'Align Left' },
+  { alignment: 'center-h' as const, icon: AlignCenterHIcon, title: 'Center Horizontally' },
+  { alignment: 'right' as const, icon: AlignRightIcon, title: 'Align Right' },
+  { alignment: 'top' as const, icon: AlignTopIcon, title: 'Align Top' },
+  { alignment: 'center-v' as const, icon: AlignCenterVIcon, title: 'Center Vertically' },
+  { alignment: 'bottom' as const, icon: AlignBottomIcon, title: 'Align Bottom' },
+];
 
 interface PropertySidebarProps {
   selectedLayerIds: string[];
@@ -160,9 +170,7 @@ export const PropertySidebar = ({
               className="text-gray-900 hover:text-gray-700 p-1 transition-colors cursor-pointer"
               title="Clear selection"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
+              <XIcon className="w-5 h-5" />
             </button>
           </div>
 
@@ -171,48 +179,16 @@ export const PropertySidebar = ({
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Alignment</label>
               <div className="flex gap-1">
-                <button
-                  onClick={() => onAlignLayer(selectedLayerIds[0], 'left')}
-                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
-                  title="Align Left"
-                >
-                  <AlignLeftIcon />
-                </button>
-                <button
-                  onClick={() => onAlignLayer(selectedLayerIds[0], 'center-h')}
-                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
-                  title="Center Horizontally"
-                >
-                  <AlignCenterHIcon />
-                </button>
-                <button
-                  onClick={() => onAlignLayer(selectedLayerIds[0], 'right')}
-                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
-                  title="Align Right"
-                >
-                  <AlignRightIcon />
-                </button>
-                <button
-                  onClick={() => onAlignLayer(selectedLayerIds[0], 'top')}
-                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
-                  title="Align Top"
-                >
-                  <AlignTopIcon />
-                </button>
-                <button
-                  onClick={() => onAlignLayer(selectedLayerIds[0], 'center-v')}
-                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
-                  title="Center Vertically"
-                >
-                  <AlignCenterVIcon />
-                </button>
-                <button
-                  onClick={() => onAlignLayer(selectedLayerIds[0], 'bottom')}
-                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
-                  title="Align Bottom"
-                >
-                  <AlignBottomIcon />
-                </button>
+                {ALIGNMENT_BUTTONS.map(({ alignment, icon: Icon, title }) => (
+                  <button
+                    key={alignment}
+                    onClick={() => onAlignLayer(selectedLayerIds[0], alignment)}
+                    className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+                    title={title}
+                  >
+                    <Icon />
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -406,54 +382,17 @@ export const PropertySidebar = ({
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Alignment</label>
             <div className="flex gap-1">
-              <button
-                onClick={() => onAlignLayer(layer.id, 'left')}
-                disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                title="Align Left"
-              >
-                <AlignLeftIcon />
-              </button>
-              <button
-                onClick={() => onAlignLayer(layer.id, 'center-h')}
-                disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                title="Center Horizontally"
-              >
-                <AlignCenterHIcon />
-              </button>
-              <button
-                onClick={() => onAlignLayer(layer.id, 'right')}
-                disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                title="Align Right"
-              >
-                <AlignRightIcon />
-              </button>
-              <button
-                onClick={() => onAlignLayer(layer.id, 'top')}
-                disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                title="Align Top"
-              >
-                <AlignTopIcon />
-              </button>
-              <button
-                onClick={() => onAlignLayer(layer.id, 'center-v')}
-                disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                title="Center Vertically"
-              >
-                <AlignCenterVIcon />
-              </button>
-              <button
-                onClick={() => onAlignLayer(layer.id, 'bottom')}
-                disabled={layer.locked}
-                className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                title="Align Bottom"
-              >
-                <AlignBottomIcon />
-              </button>
+              {ALIGNMENT_BUTTONS.map(({ alignment, icon: Icon, title }) => (
+                <button
+                  key={alignment}
+                  onClick={() => onAlignLayer(layer.id, alignment)}
+                  disabled={layer.locked}
+                  className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  title={title}
+                >
+                  <Icon />
+                </button>
+              ))}
             </div>
           </div>
 

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { HTML5_AD_SIZES, UI_LAYOUT } from '../consts';
 import { type AdSize } from '../data';
 import CheckIcon from '../assets/icons/check.svg?react';
+import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
 
 interface TopBarProps {
   mode: 'edit' | 'preview';
@@ -84,19 +85,9 @@ export const TopBar = ({
           >
             {getAspectRatioBox(selectedSize)}
             <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[selectedSize]}</span>
-            <svg
+            <ChevronDownIcon
               className={`w-4 h-4 text-gray-500 transition-transform ml-1 ${isDropdownOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            />
           </button>
 
           {isDropdownOpen ? (

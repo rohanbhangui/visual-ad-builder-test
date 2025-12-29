@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import XIcon from '../assets/icons/x.svg?react';
 
 interface ExportHTMLModalProps {
   isOpen: boolean;
@@ -43,17 +44,7 @@ export const ExportHTMLModal: React.FC<ExportHTMLModalProps> = ({
             className="text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
             aria-label="Close"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <XIcon className="w-6 h-6" />
           </button>
         </div>
 

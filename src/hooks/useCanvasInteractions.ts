@@ -10,6 +10,9 @@ interface UseCanvasInteractionsProps {
   isSnappingEnabled: boolean;
   isShiftPressed: boolean;
   isAltPressed: boolean;
+  zoom?: number;
+  pan?: { x: number; y: number };
+  isSpacePressed?: boolean;
   setLayers: React.Dispatch<React.SetStateAction<LayerContent[]>>;
   setSelectedLayerIds: React.Dispatch<React.SetStateAction<string[]>>;
 }
@@ -26,6 +29,9 @@ export const useCanvasInteractions = ({
   isSnappingEnabled,
   isShiftPressed,
   isAltPressed,
+  zoom = 1,
+  pan = { x: 0, y: 0 },
+  isSpacePressed = false,
   setLayers,
   setSelectedLayerIds,
 }: UseCanvasInteractionsProps) => {
@@ -66,6 +72,9 @@ export const useCanvasInteractions = ({
   /** Handler for starting a layer drag operation */
   const handleLayerMouseDown = (e: React.MouseEvent, layerId: string) => {
     if (mode !== 'edit') return;
+    
+    // Prevent layer interaction when space is pressed (panning mode)
+    if (isSpacePressed) return;
 
     const target = e.target as HTMLElement;
     if (target.style.cursor && target.style.cursor.includes('resize')) {
@@ -152,8 +161,9 @@ export const useCanvasInteractions = ({
   const handleMouseMove = useCallback(
     (e: React.MouseEvent | MouseEvent) => {
       if (isDragging && selectedLayerIds.length > 0) {
-        const dx = e.clientX - dragStartRef.current.x;
-        const dy = e.clientY - dragStartRef.current.y;
+        // Convert screen coordinates to canvas coordinates accounting for zoom
+        const dx = (e.clientX - dragStartRef.current.x) / zoom;
+        const dy = (e.clientY - dragStartRef.current.y) / zoom;
 
         // Calculate bounding box of all selected layers for snapping
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -314,8 +324,9 @@ export const useCanvasInteractions = ({
         );
       } else if (isResizing && selectedLayerIds.length === 1) {
         // -------------------- RESIZE LOGIC --------------------
-        const dx = e.clientX - resizeStartRef.current.x;
-        const dy = e.clientY - resizeStartRef.current.y;
+        // Convert screen coordinates to canvas coordinates accounting for zoom
+        const dx = (e.clientX - resizeStartRef.current.x) / zoom;
+        const dy = (e.clientY - resizeStartRef.current.y) / zoom;
         const { direction, width, height, layerX, layerY } = resizeStartRef.current;
 
         const currentLayer = layers.find((l) => l.id === selectedLayerIds[0]);

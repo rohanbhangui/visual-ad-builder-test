@@ -2,6 +2,7 @@ import React from 'react';
 import { type LayerContent, type AdSize } from '../data';
 import { COLORS } from '../consts';
 import { getGoogleFontsLink } from '../utils/googleFonts';
+import SettingsIcon from '../assets/icons/settings.svg?react';
 
 interface CanvasProps {
   mode: 'edit' | 'preview';
@@ -18,6 +19,11 @@ interface CanvasProps {
   onMouseUp: () => void;
   onMouseLeave: () => void;
   onCanvasClick: (e: React.MouseEvent) => void;
+  zoom?: number;
+  pan?: { x: number; y: number };
+  onCanvasSettingsClick?: () => void;
+  isSpacePressed?: boolean;
+  isPanning?: boolean;
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -35,6 +41,11 @@ export const Canvas: React.FC<CanvasProps> = ({
   onMouseUp,
   onMouseLeave,
   onCanvasClick,
+  zoom = 1,
+  pan = { x: 0, y: 0 },
+  onCanvasSettingsClick,
+  isSpacePressed = false,
+  isPanning = false,
 }) => {
   const generatePreviewHTML = (): string => {
     const layerElements = layers
@@ -242,7 +253,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         key={layer.id}
         style={style}
         onMouseDown={(e) => {
-          if (!layer.locked) {
+          if (!layer.locked && !isSpacePressed && !isPanning) {
             // Clear any hover states from all elements before handling click
             document.querySelectorAll('[data-layer-hover]').forEach((el) => {
               (el as HTMLElement).style.outline = '';
@@ -252,19 +263,19 @@ export const Canvas: React.FC<CanvasProps> = ({
           }
         }}
         className={
-          !layer.locked && !isSelected
+          !layer.locked && !isSelected && !isSpacePressed && !isPanning
             ? 'group hover:outline hover:outline-2 hover:outline-blue-400'
             : ''
         }
-        data-layer-hover={!layer.locked && !isSelected ? 'true' : undefined}
+        data-layer-hover={!layer.locked && !isSelected && !isSpacePressed && !isPanning ? 'true' : undefined}
         onMouseEnter={(e) => {
-          if (!layer.locked && !isSelected) {
+          if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
             (e.currentTarget as HTMLElement).style.outline = '2px solid rgba(59, 130, 246, 0.5)';
             (e.currentTarget as HTMLElement).style.outlineOffset = '-2px';
           }
         }}
         onMouseLeave={(e) => {
-          if (!layer.locked && !isSelected) {
+          if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
             (e.currentTarget as HTMLElement).style.outline = '';
             (e.currentTarget as HTMLElement).style.outlineOffset = '';
           }
@@ -276,25 +287,60 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center w-full">
+    <div 
+      className="flex-1 flex items-center justify-center w-full" 
+      data-canvas-container
+      style={{ 
+        cursor: isPanning ? 'grabbing' : isSpacePressed ? 'grab' : 'default',
+      }}
+    >
       {mode === 'edit' ? (
         <div
-          className="canvas-reset"
           style={{
-            width: `${dimensions.width}px`,
-            height: `${dimensions.height}px`,
-            position: 'relative',
-            background: canvasBackgroundColor || 'white',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            overflow: isClippingEnabled ? 'hidden' : 'visible',
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: 'center center',
+            transition: 'none',
           }}
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          onMouseLeave={onMouseLeave}
-          onClick={onCanvasClick}
         >
+          <div
+            className="canvas-reset"
+            style={{
+              width: `${dimensions.width}px`,
+              height: `${dimensions.height}px`,
+              position: 'relative',
+              background: canvasBackgroundColor || 'white',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              overflow: isClippingEnabled ? 'hidden' : 'visible',
+            }}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseLeave}
+            onClick={onCanvasClick}
+          >
+          {mode === 'edit' && onCanvasSettingsClick ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCanvasSettingsClick();
+              }}
+              className="absolute flex items-center gap-1 text-gray-400 hover:text-gray-900 hover:underline cursor-pointer bg-transparent"
+              style={{
+                top: `${-23/zoom}px`,
+                right: `${-5/zoom}px`,
+                padding: '2px 4px',
+                fontSize: '12px',
+                transform: `scale(${1/zoom})`,
+                transformOrigin: 'top right',
+                border: 'none'
+              }}
+              title="Canvas Settings"
+            >
+              <SettingsIcon style={{ width: '14px', height: '14px' }} />
+              <span>Canvas</span>
+            </button>
+          ) : null}
           {snapLines.map((line, idx) => (
             <div
               key={idx}
@@ -302,8 +348,8 @@ export const Canvas: React.FC<CanvasProps> = ({
               style={{
                 backgroundColor: COLORS.RED_GUIDELINE,
                 ...(line.type === 'vertical'
-                  ? { left: `${line.position}px`, top: 0, width: '1px', height: '100%' }
-                  : { top: `${line.position}px`, left: 0, height: '1px', width: '100%' }),
+                  ? { left: `${line.position}px`, top: 0, width: `${1/zoom}px`, height: '100%' }
+                  : { top: `${line.position}px`, left: 0, height: `${1/zoom}px`, width: '100%' }),
               }}
             />
           ))}
@@ -355,8 +401,8 @@ export const Canvas: React.FC<CanvasProps> = ({
                       top: `${minY}px`,
                       width: `${boundingWidth}px`,
                       height: `${boundingHeight}px`,
-                      outline: `2px solid ${COLORS.BLUE_SELECTED}`,
-                      outlineOffset: '-2px',
+                      outline: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
+                      outlineOffset: `${-2/zoom}px`,
                       zIndex: 999,
                     }}
                   />
@@ -375,56 +421,96 @@ export const Canvas: React.FC<CanvasProps> = ({
                     >
                       {/* Corner handles */}
                       <div
-                        className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-nw-resize"
+                        className="absolute bg-white rounded-full cursor-nw-resize"
                         style={{
-                          border: `2px solid ${COLORS.BLUE_SELECTED}`,
+                          top: `${-6/zoom}px`,
+                          left: `${-6/zoom}px`,
+                          width: `${12/zoom}px`,
+                          height: `${12/zoom}px`,
+                          border: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
                           pointerEvents: 'auto',
                         }}
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'nw')}
                       />
                       <div
-                        className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-ne-resize"
+                        className="absolute bg-white rounded-full cursor-ne-resize"
                         style={{
-                          border: `2px solid ${COLORS.BLUE_SELECTED}`,
+                          top: `${-6/zoom}px`,
+                          right: `${-6/zoom}px`,
+                          width: `${12/zoom}px`,
+                          height: `${12/zoom}px`,
+                          border: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
                           pointerEvents: 'auto',
                         }}
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'ne')}
                       />
                       <div
-                        className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-sw-resize"
+                        className="absolute bg-white rounded-full cursor-sw-resize"
                         style={{
-                          border: `2px solid ${COLORS.BLUE_SELECTED}`,
+                          bottom: `${-6/zoom}px`,
+                          left: `${-6/zoom}px`,
+                          width: `${12/zoom}px`,
+                          height: `${12/zoom}px`,
+                          border: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
                           pointerEvents: 'auto',
                         }}
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'sw')}
                       />
                       <div
-                        className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-se-resize"
+                        className="absolute bg-white rounded-full cursor-se-resize"
                         style={{
-                          border: `2px solid ${COLORS.BLUE_SELECTED}`,
+                          bottom: `${-6/zoom}px`,
+                          right: `${-6/zoom}px`,
+                          width: `${12/zoom}px`,
+                          height: `${12/zoom}px`,
+                          border: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
                           pointerEvents: 'auto',
                         }}
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'se')}
                       />
                       {/* Edge resize areas (invisible) */}
                       <div
-                        className="absolute -top-1 left-3 right-3 h-2 cursor-n-resize"
-                        style={{ pointerEvents: 'auto' }}
+                        className="absolute cursor-n-resize"
+                        style={{
+                          top: `${-4/zoom}px`,
+                          left: `${12/zoom}px`,
+                          right: `${12/zoom}px`,
+                          height: `${8/zoom}px`,
+                          pointerEvents: 'auto',
+                        }}
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'n')}
                       />
                       <div
-                        className="absolute -right-1 top-3 bottom-3 w-2 cursor-e-resize"
-                        style={{ pointerEvents: 'auto' }}
+                        className="absolute cursor-e-resize"
+                        style={{
+                          right: `${-4/zoom}px`,
+                          top: `${12/zoom}px`,
+                          bottom: `${12/zoom}px`,
+                          width: `${8/zoom}px`,
+                          pointerEvents: 'auto',
+                        }}
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'e')}
                       />
                       <div
-                        className="absolute -bottom-1 left-3 right-3 h-2 cursor-s-resize"
-                        style={{ pointerEvents: 'auto' }}
+                        className="absolute cursor-s-resize"
+                        style={{
+                          bottom: `${-4/zoom}px`,
+                          left: `${12/zoom}px`,
+                          right: `${12/zoom}px`,
+                          height: `${8/zoom}px`,
+                          pointerEvents: 'auto',
+                        }}
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 's')}
                       />
                       <div
-                        className="absolute -left-1 top-3 bottom-3 w-2 cursor-w-resize"
-                        style={{ pointerEvents: 'auto' }}
+                        className="absolute cursor-w-resize"
+                        style={{
+                          left: `${-4/zoom}px`,
+                          top: `${12/zoom}px`,
+                          bottom: `${12/zoom}px`,
+                          width: `${8/zoom}px`,
+                          pointerEvents: 'auto',
+                        }}
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'w')}
                       />
                     </div>
@@ -432,6 +518,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                 </>
               );
             })() : null}
+        </div>
         </div>
       ) : (
         <iframe

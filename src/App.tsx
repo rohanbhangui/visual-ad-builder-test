@@ -6,16 +6,16 @@ import { LayersPanel } from './components/LayersPanel';
 import { PropertySidebar } from './components/PropertySidebar';
 import { Canvas } from './components/Canvas';
 import { ExportHTMLModal } from './components/ExportHTMLModal';
+import { ZoomControls } from './components/ZoomControls';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
-import SettingsIcon from './assets/icons/settings.svg?react';
 
+// UI Layout Constant (moved inside component)
 const App = () => {
-  // UI Layout Constants
-  const LAYERS_PANEL_BOTTOM_GAP = 75; // Minimum space from bottom for layers panel
+  const LAYERS_PANEL_BOTTOM_GAP = 75;
 
   const [mode, setMode] = useState<'edit' | 'preview'>('edit');
   const [layers, setLayers] = useState<LayerContent[]>(sampleCanvas.layers);
@@ -23,23 +23,42 @@ const App = () => {
   const [canvasBackgroundColor, setCanvasBackgroundColor] = useState<string>(
     sampleCanvas.styles?.backgroundColor || '#ffffff'
   );
+
   const [selectedLayerIds, setSelectedLayerIds] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
+
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isAltPressed, setIsAltPressed] = useState(false);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+
   const [isSnappingEnabled, setIsSnappingEnabled] = useState(true);
   const [isClippingEnabled, setIsClippingEnabled] = useState(false);
+
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+
   const [layersPanelSide, setLayersPanelSide] = useState<'left' | 'right'>('right');
   const [isLayersPanelDragging, setIsLayersPanelDragging] = useState(false);
   const [layersPanelPos, setLayersPanelPos] = useState({ x: -1, y: 10 });
   const [isLayersPanelCollapsed, setIsLayersPanelCollapsed] = useState(false);
+
   const [draggedLayerIndex, setDraggedLayerIndex] = useState<number | null>(null);
   const [dragOverLayerIndex, setDragOverLayerIndex] = useState<number | null>(null);
-  const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
+
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportedHTML, setExportedHTML] = useState('');
 
+  const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
+  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });    
+
   const dimensions = HTML5_AD_SIZES[selectedSize];
+
+  // Reset zoom and pan when ad size changes
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [selectedSize]);
 
   // Load Google Fonts when layers change
   useEffect(() => {
@@ -108,6 +127,9 @@ const App = () => {
     isSnappingEnabled,
     isShiftPressed,
     isAltPressed,
+    zoom,
+    pan,
+    isSpacePressed,
     setLayers,
     setSelectedLayerIds,
   });
@@ -205,6 +227,123 @@ const App = () => {
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [selectedLayerIds, layers, selectedSize]);
+
+  // Zoom and Pan handlers
+  const handleZoomChange = (newZoom: number, cursorX?: number, cursorY?: number) => {
+    if (cursorX !== undefined && cursorY !== undefined) {
+      // Zoom toward cursor position
+      const canvasRect = document.querySelector('[data-canvas-container]')?.getBoundingClientRect();
+      if (canvasRect) {
+        // Calculate cursor position relative to canvas center
+        const centerX = canvasRect.left + canvasRect.width / 2;
+        const centerY = canvasRect.top + canvasRect.height / 2;
+        const offsetX = cursorX - centerX;
+        const offsetY = cursorY - centerY;
+
+        // Adjust pan to maintain cursor position
+        const zoomDelta = newZoom - zoom;
+        setPan((prev) => ({
+          x: prev.x - (offsetX * zoomDelta) / zoom,
+          y: prev.y - (offsetY * zoomDelta) / zoom,
+        }));
+      }
+    }
+    setZoom(newZoom);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !isSpacePressed) {
+        // Check if user is typing
+        const activeElement = document.activeElement;
+        const isTyping =
+          activeElement &&
+          (activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            (activeElement as HTMLElement).isContentEditable);
+        
+        if (!isTyping) {
+          e.preventDefault();
+          setIsSpacePressed(true);
+        }
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        setIsSpacePressed(false);
+        setIsPanning(false);
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      // Check if we're over the canvas area
+      const target = e.target as HTMLElement;
+      const canvasContainer = document.querySelector('[data-canvas-container]');
+      if (!canvasContainer?.contains(target)) return;
+
+      if (e.shiftKey) {
+        // Shift + scroll = zoom
+        e.preventDefault();
+        const delta = -e.deltaY * 0.01;
+        const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
+        handleZoomChange(newZoom, e.clientX, e.clientY);
+      } else if (e.ctrlKey || e.metaKey) {
+        // Trackpad pinch = zoom (browser sends ctrl+wheel)
+        e.preventDefault();
+        const delta = -e.deltaY * 0.01;
+        const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
+        handleZoomChange(newZoom, e.clientX, e.clientY);
+      } else {
+        // Two-finger swipe = pan (regular scroll over canvas)
+        e.preventDefault();
+        setPan((prev) => ({
+          x: prev.x - e.deltaX,
+          y: prev.y - e.deltaY,
+        }));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('wheel', handleWheel);
+    };
+  }, [isSpacePressed, zoom, pan]);
+
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    if (isSpacePressed) {
+      e.preventDefault();
+      setIsPanning(true);
+      panStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        panX: pan.x,
+        panY: pan.y,
+      };
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (isPanning && isSpacePressed) {
+      const dx = e.clientX - panStartRef.current.x;
+      const dy = e.clientY - panStartRef.current.y;
+      setPan({
+        x: panStartRef.current.panX + dx,
+        y: panStartRef.current.panY + dy,
+      });
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    if (isPanning) {
+      setIsPanning(false);
+    }
+  };
 
   // Handle window resize to reposition layers panel
   useEffect(() => {
@@ -879,6 +1018,10 @@ const App = () => {
         <div
           className="flex-1 bg-[#d4d4d4] overflow-hidden flex flex-col items-center justify-center relative"
           onClick={() => setSelectedLayerIds([])}
+          onMouseDown={handleCanvasMouseDown}
+          onMouseMove={handleCanvasMouseMove}
+          onMouseUp={handleCanvasMouseUp}
+          style={{ cursor: isPanning ? 'grabbing' : isSpacePressed ? 'grab' : 'default' }}
         >
           {/* Floating Layers Panel */}
           {mode === 'edit' ? (
@@ -903,25 +1046,6 @@ const App = () => {
             />
           ) : null}
 
-          {/* Canvas Settings Button */}
-          {mode === 'edit' ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedLayerIds([]);
-              }}
-              className="absolute flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-900 hover:underline cursor-pointer"
-              style={{
-                top: `calc(50% - ${dimensions.height / 2}px - 26px)`,
-                left: `calc(50% + ${dimensions.width / 2}px - 70px)`,
-              }}
-              title="Canvas Settings"
-            >
-              <SettingsIcon className="w-3.5 h-3.5" />
-              <span>Canvas</span>
-            </button>
-          ) : null}
-
           <Canvas
             mode={mode}
             layers={layers}
@@ -931,10 +1055,20 @@ const App = () => {
             canvasBackgroundColor={canvasBackgroundColor}
             isClippingEnabled={isClippingEnabled}
             snapLines={snapLines}
+            zoom={zoom}
+            pan={pan}
+            isSpacePressed={isSpacePressed}
+            isPanning={isPanning}
             onLayerMouseDown={handleLayerMouseDown}
             onResizeMouseDown={handleResizeMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+            onMouseMove={(e) => {
+              handleCanvasMouseMove(e);
+              handleMouseMove(e);
+            }}
+            onMouseUp={() => {
+              handleCanvasMouseUp();
+              handleMouseUp();
+            }}
             onMouseLeave={handleMouseLeave}
             onCanvasClick={(e) => {
               e.stopPropagation();
@@ -942,6 +1076,7 @@ const App = () => {
                 setSelectedLayerIds([]);
               }
             }}
+            onCanvasSettingsClick={() => setSelectedLayerIds([])}
           />
 
           {/* Snapping Toggle */}
@@ -961,6 +1096,18 @@ const App = () => {
             />
             <span className="text-sm font-medium">{isSnappingEnabled ? 'Snap' : 'Free'}</span>
           </button>
+
+          {/* Zoom Controls */}
+          {mode === 'edit' ? (
+            <ZoomControls 
+              zoom={zoom} 
+              onZoomChange={handleZoomChange}
+              onResetPan={() => {
+                setPan({ x: 0, y: 0 });
+                setZoom(1);
+              }}
+            />
+          ) : null}
         </div>
 
         {mode === 'edit' ? (
