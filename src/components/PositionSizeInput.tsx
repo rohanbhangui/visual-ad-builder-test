@@ -7,6 +7,7 @@ interface PositionSizeInputProps {
   onChange: (value: number, unit?: 'px' | '%') => void;
   disabled?: boolean;
   placeholder?: string;
+  isPerSize?: boolean; // If true, applies amber background to label
 }
 
 export const PositionSizeInput = ({
@@ -16,6 +17,7 @@ export const PositionSizeInput = ({
   onChange,
   disabled,
   placeholder,
+  isPerSize = false,
 }: PositionSizeInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>(placeholder || value.toString());
@@ -93,7 +95,9 @@ export const PositionSizeInput = ({
 
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-gray-600 mb-1">
+        <span className={isPerSize ? "px-0.5 bg-amber-100 text-amber-900" : ""}>{label}</span>
+      </label>
       <div className="flex gap-1">
         <input
           type="text"

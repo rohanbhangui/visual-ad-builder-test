@@ -41,11 +41,11 @@ export const generateResponsiveHTML = (
             content = `<img id="${layerId}" src="${layer.url}" style="${baseStyle} ${additionalStyles}" alt="${layer.label}">`;
             break;
           case 'text':
-            additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'}; white-space: pre-wrap;`;
+            additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'}; white-space: pre-wrap;`;
             content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
             break;
           case 'richtext':
-            additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};`;
+            additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};`;
             content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
             break;
           case 'video':
@@ -54,7 +54,7 @@ export const generateResponsiveHTML = (
             content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
             break;
           case 'button':
-            additionalStyles = `display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;`;
+            additionalStyles = `display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;`;
             content = `<a id="${layerId}" href="${layer.url}" target="_blank" style="${baseStyle} ${additionalStyles}">${layer.text}</a>`;
             break;
         }
@@ -85,13 +85,19 @@ export const generateResponsiveHTML = (
         const posY = config.positionY;
         const width = config.width;
         const height = config.height;
+        
+        // Add fontSize for text, richtext, and button layers
+        let fontSizeRule = '';
+        if ((layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') && config.fontSize) {
+          fontSizeRule = `\n        font-size: ${config.fontSize};`;
+        }
 
         return `      #${layerId} {
         display: block;
         left: ${posX.value}${posX.unit || 'px'};
         top: ${posY.value}${posY.unit || 'px'};
         width: ${width.value}${width.unit};
-        height: ${height.value}${height.unit};
+        height: ${height.value}${height.unit};${fontSizeRule}
       }`;
       })
       .join('\n');
@@ -116,13 +122,19 @@ export const generateResponsiveHTML = (
             const posY = config.positionY;
             const width = config.width;
             const height = config.height;
+            
+            // Add fontSize for text, richtext, and button layers
+            let fontSizeRule = '';
+            if ((layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') && config.fontSize) {
+              fontSizeRule = `\n          font-size: ${config.fontSize};`;
+            }
 
             return `        #${layerId} {
           display: block;
           left: ${posX.value}${posX.unit || 'px'};
           top: ${posY.value}${posY.unit || 'px'};
           width: ${width.value}${width.unit};
-          height: ${height.value}${height.unit};
+          height: ${height.value}${height.unit};${fontSizeRule}
         }`;
           })
           .join('\n');

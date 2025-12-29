@@ -473,11 +473,20 @@ const App = () => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
+          const currentConfig = l.sizeConfig[selectedSize];
+          if (!currentConfig) return l;
+          
           return {
             ...l,
+            sizeConfig: {
+              ...l.sizeConfig,
+              [selectedSize]: {
+                ...currentConfig,
+                fontSize: fontSize,
+              },
+            },
             styles: {
               ...l.styles,
-              fontSize,
             },
           };
         }
@@ -798,24 +807,27 @@ const App = () => {
           positionY: { value: 10, unit: 'px' },
           width: { value: type === 'image' ? 300 : 200, unit: 'px' },
           height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+          ...(type === 'text' || type === 'richtext' || type === 'button' ? { fontSize: '14px' } : {}),
         },
         '336x280': {
           positionX: { value: 10, unit: 'px' },
           positionY: { value: 10, unit: 'px' },
           width: { value: type === 'image' ? 300 : 200, unit: 'px' },
           height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+          ...(type === 'text' || type === 'richtext' || type === 'button' ? { fontSize: '14px' } : {}),
         },
         '728x90': {
           positionX: { value: 10, unit: 'px' },
           positionY: { value: 10, unit: 'px' },
           width: { value: type === 'image' ? 300 : 200, unit: 'px' },
           height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+          ...(type === 'text' || type === 'richtext' || type === 'button' ? { fontSize: '14px' } : {}),
         },
       },
       ...(type === 'text' || type === 'richtext'
         ? {
             content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            styles: { color: '#000000', fontSize: '14px', opacity: 1 },
+            styles: { color: '#000000', opacity: 1 },
           }
         : {}),
       ...(type === 'image'
@@ -834,7 +846,7 @@ const App = () => {
         ? {
             text: 'Click Here',
             url: '#',
-            styles: { backgroundColor: '#333333', color: '#ffffff', fontSize: '14px', opacity: 1 },
+            styles: { backgroundColor: '#333333', color: '#ffffff', opacity: 1 },
           }
         : {}),
     } as LayerContent;

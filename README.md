@@ -49,3 +49,4 @@ Url: https://visual-ad-builder-test.vercel.app/
 - Edit/Update layer label
 - Opacity support
 - Lock aspect ratio (width vs. height without `shift`)
+- Indicators for controls that are local to the size

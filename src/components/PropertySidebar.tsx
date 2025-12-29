@@ -102,14 +102,17 @@ export const PropertySidebar = ({
   const [videoLoadError, setVideoLoadError] = useState(false);
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
-  // Update contentEditable when layer selection changes
+  // Update contentEditable when layer selection changes (not when content changes)
   useEffect(() => {
     const el = contentEditableRef.current;
     if (!el || selectedLayerIds.length !== 1) return;
 
     const layer = layers.find((l) => l.id === selectedLayerIds[0]);
     if (layer && layer.type === 'richtext') {
-      el.innerHTML = layer.content;
+      // Only update if the element is not focused (user is not typing)
+      if (document.activeElement !== el) {
+        el.innerHTML = layer.content;
+      }
     }
   }, [selectedLayerIds, layers]);
 
@@ -461,6 +464,7 @@ export const PropertySidebar = ({
               unit={posX.unit || 'px'}
               onChange={(value, unit) => onPropertyChange(layer.id, 'positionX', value, unit)}
               disabled={layer.locked}
+              isPerSize={true}
             />
             <PositionSizeInput
               label="Y"
@@ -468,6 +472,7 @@ export const PropertySidebar = ({
               unit={posY.unit || 'px'}
               onChange={(value, unit) => onPropertyChange(layer.id, 'positionY', value, unit)}
               disabled={layer.locked}
+              isPerSize={true}
             />
           </div>
 
@@ -480,6 +485,7 @@ export const PropertySidebar = ({
                 unit={width.unit || 'px'}
                 onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
                 disabled={layer.locked}
+                isPerSize={true}
               />
               <PositionSizeInput
                 label="Height"
@@ -487,6 +493,7 @@ export const PropertySidebar = ({
                 unit={height.unit || 'px'}
                 onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
                 disabled={layer.locked}
+                isPerSize={true}
               />
             </div>
             <button
@@ -686,9 +693,9 @@ export const PropertySidebar = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1"><span className="px-0.5 bg-amber-100 text-amber-900">Font Size</span></label>
                   <select
-                    value={layer.styles?.fontSize || '14px'}
+                    value={config.fontSize || '14px'}
                     onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                     disabled={layer.locked}
                     className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -741,30 +748,38 @@ export const PropertySidebar = ({
                   <>
                     {/* Font Family and Font Size */}
                     <div className="flex gap-2 mb-1">
-                      <select
-                        value={layer.styles?.fontFamily || 'Arial'}
-                        onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
-                        disabled={layer.locked}
-                        className={`flex-1 h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        {GOOGLE_FONTS.map((font) => (
-                          <option key={font} value={font}>
-                            {font}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        value={layer.styles?.fontSize || '14px'}
-                        onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
-                        disabled={layer.locked}
-                        className={`h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
-                      >
-                        {FONT_SIZE_OPTIONS.map((size) => (
-                          <option key={size} value={size}>
-                            {size}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex-1">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Font Family
+                        </label>
+                        <select
+                          value={layer.styles?.fontFamily || 'Arial'}
+                          onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
+                          disabled={layer.locked}
+                          className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          {GOOGLE_FONTS.map((font) => (
+                            <option key={font} value={font}>
+                              {font}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1"><span className="px-0.5 bg-amber-100 text-amber-900">Font Size</span></label>
+                        <select
+                          value={config.fontSize || '14px'}
+                          onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
+                          disabled={layer.locked}
+                          className={`h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}
+                        >
+                          {FONT_SIZE_OPTIONS.map((size) => (
+                            <option key={size} value={size}>
+                              {size}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     {/* Rich Text Formatting and Alignment Buttons */}
@@ -851,7 +866,7 @@ export const PropertySidebar = ({
                       className={`w-full px-2 py-2 text-sm border border-gray-300 rounded min-h-[80px] max-h-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                       style={{
                         color: layer.styles?.color || '#000000',
-                        fontSize: layer.styles?.fontSize || '14px',
+                        fontSize: config.fontSize || '14px',
                         fontFamily: layer.styles?.fontFamily || 'Arial',
                       }}
                     />
@@ -937,11 +952,9 @@ export const PropertySidebar = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Font Size
-                      </label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1"><span className="px-0.5 bg-amber-100 text-amber-900">Font Size</span></label>
                       <select
-                        value={layer.styles?.fontSize || '14px'}
+                        value={config.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
                         disabled={layer.locked}
                         className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'}`}

@@ -61,10 +61,10 @@ export const Canvas: React.FC<CanvasProps> = ({
             content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" alt="${layer.label}">`;
             break;
           case 'text':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
             break;
           case 'richtext':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
@@ -74,7 +74,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             }
             break;
           case 'button':
-            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${layer.styles?.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;">${layer.text}</a>`;
+            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;">${layer.text}</a>`;
             break;
         }
 
@@ -188,7 +188,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             className="pointer-events-none whitespace-pre-wrap"
             style={{
               color: layer.styles?.color || '#000000',
-              fontSize: layer.styles?.fontSize || '14px',
+              fontSize: config.fontSize || '14px',
               fontFamily: layer.styles?.fontFamily || 'Arial',
               textAlign: layer.styles?.textAlign || 'left',
             }}
@@ -227,7 +227,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             style={{
               backgroundColor: layer.styles?.backgroundColor || '#333333',
               color: layer.styles?.color || '#ffffff',
-              fontSize: layer.styles?.fontSize || '14px',
+              fontSize: config.fontSize || '14px',
               fontFamily: layer.styles?.fontFamily || 'Arial',
             }}
           >

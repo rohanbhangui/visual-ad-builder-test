@@ -22,6 +22,7 @@ export interface SizeConfig {
   positionY: Size;
   width: Size;
   height: Size;
+  fontSize?: string; // Font size specific to this ad size (e.g., '14px')
 }
 
 // Union type for layer content based on type
@@ -135,30 +136,33 @@ export const sampleCanvas: Canvas = {
           positionY: { value: 121, unit: 'px' },
           width: { value: 280, unit: 'px' },
           height: { value: 35, unit: 'px' },
+          fontSize: '20px',
         },
         '336x280': {
           positionX: { value: 10, unit: 'px' },
-          positionY: { value: 142, unit: 'px' },
+          positionY: { value: 137, unit: 'px' },
           width: { value: 316, unit: 'px' },
           height: { value: 35, unit: 'px' },
+          fontSize: '24px',
         },
         '728x90': {
           positionX: { value: 124, unit: 'px' },
           positionY: { value: 17, unit: 'px' },
           width: { value: 234, unit: 'px' },
           height: { value: 30, unit: 'px' },
+          fontSize: '20px',
         },
         '160x600': {
           positionX: { value: 10, unit: 'px' },
           positionY: { value: 244, unit: 'px' },
           width: { value: 140, unit: 'px' },
           height: { value: 40, unit: 'px' },
+          fontSize: '20px',
         },
       },
       content: '<strong>Holiday Sale!</strong>',
       styles: {
         color: '#ff0000',
-        fontSize: '20px',
         fontFamily: 'Playfair Display',
         textAlign: 'center',
         opacity: 1,
@@ -177,30 +181,33 @@ export const sampleCanvas: Canvas = {
           positionY: { value: 156, unit: 'px' },
           width: { value: 280, unit: 'px' },
           height: { value: 39, unit: 'px' },
+          fontSize: '14px',
         },
         '336x280': {
           positionX: { value: 21, unit: 'px' },
           positionY: { value: 177, unit: 'px' },
           width: { value: 294, unit: 'px' },
           height: { value: 36, unit: 'px' },
+          fontSize: '14px',
         },
         '728x90': {
           positionX: { value: 98, unit: 'px' },
           positionY: { value: 45, unit: 'px' },
           width: { value: 284, unit: 'px' },
           height: { value: 36, unit: 'px' },
+          fontSize: '14px',
         },
         '160x600': {
           positionX: { value: 10, unit: 'px' },
           positionY: { value: 284, unit: 'px' },
           width: { value: 140, unit: 'px' },
           height: { value: 53, unit: 'px' },
+          fontSize: '14px',
         },
       },
       content: 'Get 50% off on your first purchase.\nLimited time offer!',
       styles: {
         color: '#000000',
-        fontSize: '14px',
         fontFamily: 'Arial',
         textAlign: 'center',
         opacity: 1,
@@ -261,24 +268,28 @@ export const sampleCanvas: Canvas = {
           positionY: { value: 206, unit: 'px' },
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
+          fontSize: '14px',
         },
         '336x280': {
           positionX: { value: 120, unit: 'px' },
           positionY: { value: 230, unit: 'px' },
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
+          fontSize: '14px',
         },
         '728x90': {
           positionX: { value: 421, unit: 'px' },
           positionY: { value: 29, unit: 'px' },
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
+          fontSize: '14px',
         },
         '160x600': {
           positionX: { value: 30, unit: 'px' },
           positionY: { value: 364, unit: 'px' },
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
+          fontSize: '14px',
         },
       },
       text: 'Shop Now',
@@ -286,7 +297,6 @@ export const sampleCanvas: Canvas = {
       styles: {
         backgroundColor: '#0d821b',
         color: '#ffffff',
-        fontSize: '14px',
         fontFamily: 'Arial',
         opacity: 1,
       },
