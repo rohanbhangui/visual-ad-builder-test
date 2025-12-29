@@ -5,13 +5,13 @@ import { HTML5_AD_SIZES } from '../consts';
 interface UseCanvasInteractionsProps {
   mode: 'edit' | 'preview';
   layers: LayerContent[];
-  selectedLayerId: string | null;
+  selectedLayerIds: string[];
   selectedSize: AdSize;
   isSnappingEnabled: boolean;
   isShiftPressed: boolean;
   isAltPressed: boolean;
   setLayers: React.Dispatch<React.SetStateAction<LayerContent[]>>;
-  setSelectedLayerId: React.Dispatch<React.SetStateAction<string | null>>;
+  setSelectedLayerIds: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 /**
@@ -21,13 +21,13 @@ interface UseCanvasInteractionsProps {
 export const useCanvasInteractions = ({
   mode,
   layers,
-  selectedLayerId,
+  selectedLayerIds,
   selectedSize,
   isSnappingEnabled,
   isShiftPressed,
   isAltPressed,
   setLayers,
-  setSelectedLayerId,
+  setSelectedLayerIds,
 }: UseCanvasInteractionsProps) => {
   // ============================================
   // STATE & REFS
@@ -37,7 +37,11 @@ export const useCanvasInteractions = ({
   const [snapLines, setSnapLines] = useState<
     Array<{ type: 'vertical' | 'horizontal'; position: number }>
   >([]);
-  const dragStartRef = useRef({ x: 0, y: 0, layerX: 0, layerY: 0 });
+  const dragStartRef = useRef<{ x: number; y: number; layerPositions: Record<string, { x: number; y: number }> }>({
+    x: 0,
+    y: 0,
+    layerPositions: {},
+  });
   const resizeStartRef = useRef({
     x: 0,
     y: 0,
@@ -69,20 +73,44 @@ export const useCanvasInteractions = ({
     }
 
     e.stopPropagation();
-    setSelectedLayerId(layerId);
+    
+    // Handle multi-select with Shift key
+    if (e.shiftKey) {
+      // Toggle this layer in the selection
+      setSelectedLayerIds(prev => 
+        prev.includes(layerId) 
+          ? prev.filter(id => id !== layerId)
+          : [...prev, layerId]
+      );
+    } else if (!selectedLayerIds.includes(layerId)) {
+      // If clicking a non-selected layer without Shift, replace selection
+      setSelectedLayerIds([layerId]);
+    }
+    // If clicking an already-selected layer without Shift, keep current selection
 
-    const layer = layers.find((l) => l.id === layerId);
-    if (!layer) return;
-
-    const posX = layer.positionX[selectedSize]!;
-    const posY = layer.positionY[selectedSize]!;
+    // Store initial positions for all selected layers
+    const layerPositions: Record<string, { x: number; y: number }> = {};
+    const layersToMove = selectedLayerIds.includes(layerId) ? selectedLayerIds : [layerId];
+    
+    layersToMove.forEach(id => {
+      const layer = layers.find((l) => l.id === id);
+      if (layer) {
+        const posX = layer.positionX[selectedSize];
+        const posY = layer.positionY[selectedSize];
+        if (posX && posY) {
+          // Convert % to px for uniform movement
+          const xInPx = posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
+          const yInPx = posY.unit === '%' ? (posY.value / 100) * dimensions.height : posY.value;
+          layerPositions[id] = { x: xInPx, y: yInPx };
+        }
+      }
+    });
 
     setIsDragging(true);
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
-      layerX: posX.value,
-      layerY: posY.value,
+      layerPositions,
     };
   };
 
@@ -92,7 +120,10 @@ export const useCanvasInteractions = ({
     e.preventDefault();
     e.stopPropagation();
 
-    setSelectedLayerId(layerId);
+    // Resizing only works for single selection
+    if (selectedLayerIds.length !== 1) return;
+    
+    setSelectedLayerIds([layerId]);
 
     const layer = layers.find((l) => l.id === layerId);
     if (!layer) return;
@@ -116,74 +147,84 @@ export const useCanvasInteractions = ({
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent | MouseEvent) => {
-      if (isDragging && selectedLayerId) {
+      if (isDragging && selectedLayerIds.length > 0) {
         const dx = e.clientX - dragStartRef.current.x;
         const dy = e.clientY - dragStartRef.current.y;
 
-        const currentLayer = layers.find((l) => l.id === selectedLayerId);
-        if (!currentLayer) return;
+        // Calculate bounding box of all selected layers for snapping
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id));
+        
+        selectedLayers.forEach(layer => {
+          const initialPos = dragStartRef.current.layerPositions[layer.id];
+          if (!initialPos) return;
+          
+          const newX = initialPos.x + dx;
+          const newY = initialPos.y + dy;
+          // Convert width/height % to px for bounding box calculation
+          const widthData = layer.width[selectedSize];
+          const heightData = layer.height[selectedSize];
+          const width = widthData ? (widthData.unit === '%' ? (widthData.value / 100) * dimensions.width : widthData.value) : 0;
+          const height = heightData ? (heightData.unit === '%' ? (heightData.value / 100) * dimensions.height : heightData.value) : 0;
+          
+          minX = Math.min(minX, newX);
+          minY = Math.min(minY, newY);
+          maxX = Math.max(maxX, newX + width);
+          maxY = Math.max(maxY, newY + height);
+        });
 
-        const currentWidth = currentLayer.width[selectedSize]!.value;
-        const currentHeight = currentLayer.height[selectedSize]!.value;
-
-        let newX = dragStartRef.current.layerX + dx;
-        let newY = dragStartRef.current.layerY + dy;
-
+        const boundingWidth = maxX - minX;
+        const boundingHeight = maxY - minY;
+        const boundingCenterX = minX + boundingWidth / 2;
+        const boundingCenterY = minY + boundingHeight / 2;
+        
+        let snapDx = 0;
+        let snapDy = 0;
         const guides: Array<{ type: 'vertical' | 'horizontal'; position: number }> = [];
 
-        const canvasEdges = {
-          left: 0,
-          right: dimensions.width,
-          top: 0,
-          bottom: dimensions.height,
-          centerX: dimensions.width / 2,
-          centerY: dimensions.height / 2,
-        };
-
-        const currentRight = newX + currentWidth;
-        const currentBottom = newY + currentHeight;
-        const currentCenterX = newX + currentWidth / 2;
-        const currentCenterY = newY + currentHeight / 2;
-
-        // Apply snapping to canvas and other layers if enabled
+        // Apply snapping based on bounding box if enabled
         if (isSnappingEnabled) {
-          // Check and apply snapping to canvas edges (left, right, center-x, top, bottom, center-y)
-          if (Math.abs(newX - canvasEdges.left) < SNAP_THRESHOLD) {
-            newX = canvasEdges.left;
+          const canvasEdges = {
+            left: 0,
+            right: dimensions.width,
+            top: 0,
+            bottom: dimensions.height,
+            centerX: dimensions.width / 2,
+            centerY: dimensions.height / 2,
+          };
+
+          // Check snapping for bounding box edges
+          if (Math.abs(minX - canvasEdges.left) < SNAP_THRESHOLD) {
+            snapDx = canvasEdges.left - minX;
             guides.push({ type: 'vertical', position: canvasEdges.left });
-          }
-          if (Math.abs(currentRight - canvasEdges.right) < SNAP_THRESHOLD) {
-            newX = canvasEdges.right - currentWidth;
+          } else if (Math.abs(maxX - canvasEdges.right) < SNAP_THRESHOLD) {
+            snapDx = canvasEdges.right - maxX;
             guides.push({ type: 'vertical', position: canvasEdges.right });
-          }
-          if (Math.abs(currentCenterX - canvasEdges.centerX) < SNAP_THRESHOLD) {
-            newX = canvasEdges.centerX - currentWidth / 2;
+          } else if (Math.abs(boundingCenterX - canvasEdges.centerX) < SNAP_THRESHOLD) {
+            snapDx = canvasEdges.centerX - boundingCenterX;
             guides.push({ type: 'vertical', position: canvasEdges.centerX });
           }
 
-          if (Math.abs(newY - canvasEdges.top) < SNAP_THRESHOLD) {
-            newY = canvasEdges.top;
+          if (Math.abs(minY - canvasEdges.top) < SNAP_THRESHOLD) {
+            snapDy = canvasEdges.top - minY;
             guides.push({ type: 'horizontal', position: canvasEdges.top });
-          }
-          if (Math.abs(currentBottom - canvasEdges.bottom) < SNAP_THRESHOLD) {
-            newY = canvasEdges.bottom - currentHeight;
+          } else if (Math.abs(maxY - canvasEdges.bottom) < SNAP_THRESHOLD) {
+            snapDy = canvasEdges.bottom - maxY;
             guides.push({ type: 'horizontal', position: canvasEdges.bottom });
-          }
-          if (Math.abs(currentCenterY - canvasEdges.centerY) < SNAP_THRESHOLD) {
-            newY = canvasEdges.centerY - currentHeight / 2;
+          } else if (Math.abs(boundingCenterY - canvasEdges.centerY) < SNAP_THRESHOLD) {
+            snapDy = canvasEdges.centerY - boundingCenterY;
             guides.push({ type: 'horizontal', position: canvasEdges.centerY });
           }
 
-          // Check and apply snapping to other layers' edges and centers
+          // Check snapping to other layers
           layers.forEach((layer) => {
-            if (layer.id === selectedLayerId) return;
+            if (selectedLayerIds.includes(layer.id)) return;
 
             const otherPosX = layer.positionX[selectedSize];
             const otherPosY = layer.positionY[selectedSize];
             const otherWidth = layer.width[selectedSize];
             const otherHeight = layer.height[selectedSize];
 
-            // Skip if layer doesn't have data for selected size
             if (!otherPosX || !otherPosY || !otherWidth || !otherHeight) return;
 
             const otherX = otherPosX.value;
@@ -193,83 +234,85 @@ export const useCanvasInteractions = ({
             const otherCenterX = otherX + otherWidth.value / 2;
             const otherCenterY = otherY + otherHeight.value / 2;
 
-            if (Math.abs(newX - otherX) < SNAP_THRESHOLD) {
-              newX = otherX;
-              guides.push({ type: 'vertical', position: otherX });
-            }
-            if (Math.abs(currentRight - otherRight) < SNAP_THRESHOLD) {
-              newX = otherRight - currentWidth;
-              guides.push({ type: 'vertical', position: otherRight });
-            }
-            if (Math.abs(newX - otherRight) < SNAP_THRESHOLD) {
-              newX = otherRight;
-              guides.push({ type: 'vertical', position: otherRight });
-            }
-            if (Math.abs(currentRight - otherX) < SNAP_THRESHOLD) {
-              newX = otherX - currentWidth;
-              guides.push({ type: 'vertical', position: otherX });
-            }
-            if (Math.abs(currentCenterX - otherCenterX) < SNAP_THRESHOLD) {
-              newX = otherCenterX - currentWidth / 2;
-              guides.push({ type: 'vertical', position: otherCenterX });
+            // Vertical snapping
+            if (snapDx === 0) {
+              if (Math.abs(minX - otherX) < SNAP_THRESHOLD) {
+                snapDx = otherX - minX;
+                guides.push({ type: 'vertical', position: otherX });
+              } else if (Math.abs(maxX - otherRight) < SNAP_THRESHOLD) {
+                snapDx = otherRight - maxX;
+                guides.push({ type: 'vertical', position: otherRight });
+              } else if (Math.abs(minX - otherRight) < SNAP_THRESHOLD) {
+                snapDx = otherRight - minX;
+                guides.push({ type: 'vertical', position: otherRight });
+              } else if (Math.abs(maxX - otherX) < SNAP_THRESHOLD) {
+                snapDx = otherX - maxX;
+                guides.push({ type: 'vertical', position: otherX });
+              } else if (Math.abs(boundingCenterX - otherCenterX) < SNAP_THRESHOLD) {
+                snapDx = otherCenterX - boundingCenterX;
+                guides.push({ type: 'vertical', position: otherCenterX });
+              }
             }
 
-            if (Math.abs(newY - otherY) < SNAP_THRESHOLD) {
-              newY = otherY;
-              guides.push({ type: 'horizontal', position: otherY });
-            }
-            if (Math.abs(currentBottom - otherBottom) < SNAP_THRESHOLD) {
-              newY = otherBottom - currentHeight;
-              guides.push({ type: 'horizontal', position: otherBottom });
-            }
-            if (Math.abs(newY - otherBottom) < SNAP_THRESHOLD) {
-              newY = otherBottom;
-              guides.push({ type: 'horizontal', position: otherBottom });
-            }
-            if (Math.abs(currentBottom - otherY) < SNAP_THRESHOLD) {
-              newY = otherY - currentHeight;
-              guides.push({ type: 'horizontal', position: otherY });
-            }
-            if (Math.abs(currentCenterY - otherCenterY) < SNAP_THRESHOLD) {
-              newY = otherCenterY - currentHeight / 2;
-              guides.push({ type: 'horizontal', position: otherCenterY });
+            // Horizontal snapping
+            if (snapDy === 0) {
+              if (Math.abs(minY - otherY) < SNAP_THRESHOLD) {
+                snapDy = otherY - minY;
+                guides.push({ type: 'horizontal', position: otherY });
+              } else if (Math.abs(maxY - otherBottom) < SNAP_THRESHOLD) {
+                snapDy = otherBottom - maxY;
+                guides.push({ type: 'horizontal', position: otherBottom });
+              } else if (Math.abs(minY - otherBottom) < SNAP_THRESHOLD) {
+                snapDy = otherBottom - minY;
+                guides.push({ type: 'horizontal', position: otherBottom });
+              } else if (Math.abs(maxY - otherY) < SNAP_THRESHOLD) {
+                snapDy = otherY - maxY;
+                guides.push({ type: 'horizontal', position: otherY });
+              } else if (Math.abs(boundingCenterY - otherCenterY) < SNAP_THRESHOLD) {
+                snapDy = otherCenterY - boundingCenterY;
+                guides.push({ type: 'horizontal', position: otherCenterY });
+              }
             }
           });
         }
 
         setSnapLines(guides);
 
+        // Apply movement with snapping
         setLayers((prev) =>
           prev.map((layer) => {
-            if (layer.id === selectedLayerId) {
-              return {
-                ...layer,
-                positionX: {
-                  ...layer.positionX,
-                  [selectedSize]: {
-                    value: newX,
-                    unit: 'px',
-                  },
+            const initialPos = dragStartRef.current.layerPositions[layer.id];
+            if (!initialPos) return layer;
+
+            const newX = initialPos.x + dx + snapDx;
+            const newY = initialPos.y + dy + snapDy;
+
+            return {
+              ...layer,
+              positionX: {
+                ...layer.positionX,
+                [selectedSize]: {
+                  value: newX,
+                  unit: 'px',
                 },
-                positionY: {
-                  ...layer.positionY,
-                  [selectedSize]: {
-                    value: newY,
-                    unit: 'px',
-                  },
+              },
+              positionY: {
+                ...layer.positionY,
+                [selectedSize]: {
+                  value: newY,
+                  unit: 'px',
                 },
-              };
-            }
-            return layer;
+              },
+            };
           })
         );
-      } else if (isResizing && selectedLayerId) {
+      } else if (isResizing && selectedLayerIds.length === 1) {
         // -------------------- RESIZE LOGIC --------------------
         const dx = e.clientX - resizeStartRef.current.x;
         const dy = e.clientY - resizeStartRef.current.y;
         const { direction, width, height, layerX, layerY } = resizeStartRef.current;
 
-        const currentLayer = layers.find((l) => l.id === selectedLayerId);
+        const currentLayer = layers.find((l) => l.id === selectedLayerIds[0]);
         if (!currentLayer) return;
 
         const MIN_SIZE = 30;
@@ -490,7 +533,7 @@ export const useCanvasInteractions = ({
 
           // Snap to other elements
           layers.forEach((layer) => {
-            if (layer.id === selectedLayerId) return;
+            if (layer.id === selectedLayerIds[0]) return;
 
             const otherPosX = layer.positionX[selectedSize];
             const otherPosY = layer.positionY[selectedSize];
@@ -706,7 +749,7 @@ export const useCanvasInteractions = ({
 
         setLayers((prev) =>
           prev.map((layer) => {
-            if (layer.id === selectedLayerId) {
+            if (layer.id === selectedLayerIds[0]) {
               return {
                 ...layer,
                 positionX: {
@@ -740,7 +783,7 @@ export const useCanvasInteractions = ({
     [
       isDragging,
       isResizing,
-      selectedLayerId,
+      selectedLayerIds,
       layers,
       selectedSize,
       isSnappingEnabled,

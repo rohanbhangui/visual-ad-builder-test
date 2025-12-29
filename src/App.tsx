@@ -22,7 +22,7 @@ const App = () => {
   const [canvasBackgroundColor, setCanvasBackgroundColor] = useState<string>(
     sampleCanvas.styles?.backgroundColor || '#ffffff'
   );
-  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
+  const [selectedLayerIds, setSelectedLayerIds] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isAltPressed, setIsAltPressed] = useState(false);
@@ -58,12 +58,37 @@ const App = () => {
     const layer = layers.find((l) => l.id === layerId);
     if (layer && window.confirm(`Are you sure you want to delete "${layer.label}"?`)) {
       setLayers((prev) => prev.filter((l) => l.id !== layerId));
-      setSelectedLayerId(null);
+      setSelectedLayerIds([]);
+    }
+  };
+
+  const handleDeleteSelectedLayers = () => {
+    if (selectedLayerIds.length === 0) return;
+    const message = selectedLayerIds.length === 1 
+      ? `Are you sure you want to delete "${layers.find(l => l.id === selectedLayerIds[0])?.label}"?`
+      : `Are you sure you want to delete ${selectedLayerIds.length} layers?`;
+    if (window.confirm(message)) {
+      setLayers((prev) => prev.filter((l) => !selectedLayerIds.includes(l.id)));
+      setSelectedLayerIds([]);
     }
   };
 
   const handleToggleLock = (layerId: string) => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, locked: !l.locked } : l)));
+  };
+
+  const handleSelectLayer = (layerId: string, isShiftPressed: boolean) => {
+    if (isShiftPressed) {
+      // Toggle selection
+      setSelectedLayerIds(prev => 
+        prev.includes(layerId) 
+          ? prev.filter(id => id !== layerId)
+          : [...prev, layerId]
+      );
+    } else {
+      // Single select (replace selection)
+      setSelectedLayerIds([layerId]);
+    }
   };
 
   // Use the canvas interactions hook
@@ -77,13 +102,13 @@ const App = () => {
   } = useCanvasInteractions({
     mode,
     layers,
-    selectedLayerId,
+    selectedLayerIds,
     selectedSize,
     isSnappingEnabled,
     isShiftPressed,
     isAltPressed,
     setLayers,
-    setSelectedLayerId,
+    setSelectedLayerIds,
   });
 
   useEffect(() => {
@@ -103,16 +128,16 @@ const App = () => {
           activeElement.tagName === 'TEXTAREA' ||
           (activeElement as HTMLElement).isContentEditable);
 
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerId) {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerIds.length > 0) {
         if (isTyping) {
           return;
         }
         e.preventDefault();
-        handleDeleteLayer(selectedLayerId);
+        handleDeleteSelectedLayers();
       }
 
       // Arrow key navigation for moving layers
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && selectedLayerId) {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && selectedLayerIds.length > 0) {
         if (isTyping) {
           return;
         }
@@ -122,15 +147,16 @@ const App = () => {
 
         setLayers((prev) =>
           prev.map((layer) => {
-            if (layer.id !== selectedLayerId) return layer;
+            if (!selectedLayerIds.includes(layer.id)) return layer;
 
             const posX = layer.positionX[selectedSize];
             const posY = layer.positionY[selectedSize];
 
             if (!posX || !posY) return layer;
 
-            let newX = posX.value;
-            let newY = posY.value;
+            // Convert % to px before applying movement
+            let newX = posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
+            let newY = posY.unit === '%' ? (posY.value / 100) * dimensions.height : posY.value;
 
             switch (e.key) {
               case 'ArrowLeft':
@@ -151,11 +177,11 @@ const App = () => {
               ...layer,
               positionX: {
                 ...layer.positionX,
-                [selectedSize]: { value: newX, unit: posX.unit },
+                [selectedSize]: { value: newX, unit: 'px' },
               },
               positionY: {
                 ...layer.positionY,
-                [selectedSize]: { value: newY, unit: posY.unit },
+                [selectedSize]: { value: newY, unit: 'px' },
               },
             };
           })
@@ -176,7 +202,7 @@ const App = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedLayerId, layers, selectedSize]);
+  }, [selectedLayerIds, layers, selectedSize]);
 
   // Handle window resize to reposition layers panel
   useEffect(() => {
@@ -597,6 +623,13 @@ const App = () => {
     layerId: string,
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
   ) => {
+    // If multiple layers are selected, align relative to selection bounds
+    if (selectedLayerIds.length > 1) {
+      handleAlignMultipleLayers(alignment);
+      return;
+    }
+
+    // Single layer alignment (relative to canvas)
     setLayers((prev) =>
       prev.map((layer) => {
         if (layer.id !== layerId) return layer;
@@ -651,8 +684,79 @@ const App = () => {
     );
   };
 
+  const handleAlignMultipleLayers = (
+    alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
+  ) => {
+    // Calculate selection bounds
+    const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id));
+    if (selectedLayers.length === 0) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    selectedLayers.forEach(layer => {
+      const posX = layer.positionX[selectedSize]?.value ?? 0;
+      const posY = layer.positionY[selectedSize]?.value ?? 0;
+      const width = layer.width[selectedSize]?.value ?? 0;
+      const height = layer.height[selectedSize]?.value ?? 0;
+
+      minX = Math.min(minX, posX);
+      minY = Math.min(minY, posY);
+      maxX = Math.max(maxX, posX + width);
+      maxY = Math.max(maxY, posY + height);
+    });
+
+    const selectionWidth = maxX - minX;
+    const selectionHeight = maxY - minY;
+    const selectionCenterX = minX + selectionWidth / 2;
+    const selectionCenterY = minY + selectionHeight / 2;
+
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (!selectedLayerIds.includes(layer.id)) return layer;
+
+        const width = layer.width[selectedSize]?.value ?? 0;
+        const height = layer.height[selectedSize]?.value ?? 0;
+        let newPosX = layer.positionX[selectedSize]?.value ?? 0;
+        let newPosY = layer.positionY[selectedSize]?.value ?? 0;
+
+        switch (alignment) {
+          case 'left':
+            newPosX = minX;
+            break;
+          case 'right':
+            newPosX = maxX - width;
+            break;
+          case 'center-h':
+            newPosX = selectionCenterX - width / 2;
+            break;
+          case 'top':
+            newPosY = minY;
+            break;
+          case 'bottom':
+            newPosY = maxY - height;
+            break;
+          case 'center-v':
+            newPosY = selectionCenterY - height / 2;
+            break;
+        }
+
+        return {
+          ...layer,
+          positionX: {
+            ...layer.positionX,
+            [selectedSize]: { value: Math.round(newPosX), unit: 'px' },
+          },
+          positionY: {
+            ...layer.positionY,
+            [selectedSize]: { value: Math.round(newPosY), unit: 'px' },
+          },
+        };
+      })
+    );
+  };
+
   const handleExportHTML = () => {
-    setSelectedLayerId(null);
+    setSelectedLayerIds([]);
     const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor);
     setExportedHTML(html);
     setIsExportModalOpen(true);
@@ -708,7 +812,7 @@ const App = () => {
     } as LayerContent;
 
     setLayers((prev) => [newLayer, ...prev]);
-    setSelectedLayerId(newLayer.id);
+    setSelectedLayerIds([newLayer.id]);
   };
 
   return (
@@ -734,14 +838,14 @@ const App = () => {
       >
         <div
           className="flex-1 bg-[#d4d4d4] overflow-hidden flex flex-col items-center justify-center relative"
-          onClick={() => setSelectedLayerId(null)}
+          onClick={() => setSelectedLayerIds([])}
         >
           {/* Floating Layers Panel */}
           {mode === 'edit' ? (
             <LayersPanel
               layers={layers}
-              selectedLayerId={selectedLayerId}
-              onSelectLayer={setSelectedLayerId}
+              selectedLayerIds={selectedLayerIds}
+              onSelectLayer={handleSelectLayer}
               panelPos={layersPanelPos}
               panelSide={layersPanelSide}
               isDragging={isLayersPanelDragging}
@@ -756,14 +860,14 @@ const App = () => {
               onLayerDragEnd={handleLayerDragEnd}
               onAddLayer={handleAddLayer}
               onToggleLock={handleToggleLock}
-              onCanvasSettings={() => setSelectedLayerId(null)}
+              onCanvasSettings={() => setSelectedLayerIds([])}
             />
           ) : null}
 
           <Canvas
             mode={mode}
             layers={layers}
-            selectedLayerId={selectedLayerId}
+            selectedLayerIds={selectedLayerIds}
             selectedSize={selectedSize}
             dimensions={dimensions}
             canvasBackgroundColor={canvasBackgroundColor}
@@ -777,7 +881,7 @@ const App = () => {
             onCanvasClick={(e) => {
               e.stopPropagation();
               if (e.target === e.currentTarget) {
-                setSelectedLayerId(null);
+                setSelectedLayerIds([]);
               }
             }}
           />
@@ -803,7 +907,7 @@ const App = () => {
 
         {mode === 'edit' ? (
           <PropertySidebar
-            selectedLayerId={selectedLayerId}
+            selectedLayerIds={selectedLayerIds}
             layers={layers}
             selectedSize={selectedSize}
             canvasName={canvasName}
@@ -813,6 +917,8 @@ const App = () => {
             onCanvasNameChange={setCanvasName}
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}
+            onDeleteSelected={handleDeleteSelectedLayers}
+            onClearSelection={() => setSelectedLayerIds([])}
             onLabelChange={handleLabelChange}
             onContentChange={handleContentChange}
             onColorChange={handleColorChange}

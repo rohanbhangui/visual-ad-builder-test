@@ -16,8 +16,8 @@ import LayerRichtextIcon from '../assets/icons/layer-richtext.svg?react';
 
 interface LayersPanelProps {
   layers: LayerContent[];
-  selectedLayerId: string | null;
-  onSelectLayer: (layerId: string) => void;
+  selectedLayerIds: string[];
+  onSelectLayer: (layerId: string, isOptionPressed: boolean) => void;
   panelPos: { x: number; y: number };
   panelSide: 'left' | 'right';
   isDragging: boolean;
@@ -37,7 +37,7 @@ interface LayersPanelProps {
 
 export const LayersPanel = ({
   layers,
-  selectedLayerId,
+  selectedLayerIds,
   onSelectLayer,
   panelPos,
   panelSide,
@@ -202,13 +202,15 @@ export const LayersPanel = ({
           }}
           onClick={() => setShowDropdown(false)}
         >
-          {layers.map((layer, index) => (
+          {layers.map((layer, index) => {
+            const isSelected = selectedLayerIds.includes(layer.id);
+            return (
             <div
               key={layer.id}
               onDragOver={(e) => onLayerDragOver(e, index)}
               onDrop={(e) => onLayerDrop(e, index)}
               className={`layer-item group/layer relative flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
-                selectedLayerId === layer.id
+                isSelected
                   ? `${UI_COLORS.SELECTED_LAYER_BG} hover:bg-blue-200`
                   : 'hover:bg-gray-50'
               }`}
@@ -227,7 +229,7 @@ export const LayersPanel = ({
               }}
             >
               {/* Selected indicator - solid line on left edge */}
-              {selectedLayerId === layer.id ? (
+              {isSelected ? (
                 <div className={`absolute left-0 top-0 bottom-0 w-1 z-10 ${UI_COLORS.SELECTED_INDICATOR}`} />
               ) : null}
               <div
@@ -271,7 +273,7 @@ export const LayersPanel = ({
                 className="flex-1 cursor-pointer -my-2 py-2 pr-2 -mr-[72px] rounded-r"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onSelectLayer(layer.id);
+                  onSelectLayer(layer.id, e.shiftKey);
                 }}
               >
                 <div className="relative overflow-hidden max-w-[205px]">
@@ -279,22 +281,22 @@ export const LayersPanel = ({
                   
                   {/* Gradient fades based on state - positioned below icons (z-10) */}
                   {/* Not selected, not hovered */}
-                  {selectedLayerId !== layer.id ? (
+                  {!isSelected ? (
                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none group-hover/layer:opacity-0" />
                   ): null}
                   
                   {/* Not selected, hovered */}
-                  {selectedLayerId !== layer.id ? (
+                  {!isSelected ? (
                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100" />
                   ): null}
                   
                   {/* Selected, not hovered */}
-                  {selectedLayerId === layer.id ? (
+                  {isSelected ? (
                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-100 to-transparent pointer-events-none group-hover/layer:opacity-0" />
                   ): null}
                   
                   {/* Selected, hovered */}
-                  {selectedLayerId === layer.id ? (
+                  {isSelected ? (
                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-200 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100" />
                   ): null}
                 </div>
@@ -315,7 +317,8 @@ export const LayersPanel = ({
                 {layer.locked ? <LockIcon /> : <UnlockIcon />}
               </button>
             </div>
-          ))}
+            );
+          })}
           {/* Drop zone for end of list */}
           <div
             onDragOver={(e) => onLayerDragOver(e, layers.length)}

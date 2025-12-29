@@ -24,7 +24,7 @@ import TextAlignCenterIcon from '../assets/icons/text-align-center.svg?react';
 import TextAlignRightIcon from '../assets/icons/text-align-right.svg?react';
 
 interface PropertySidebarProps {
-  selectedLayerId: string | null;
+  selectedLayerIds: string[];
   layers: LayerContent[];
   selectedSize: AdSize;
   canvasName?: string;
@@ -38,6 +38,8 @@ interface PropertySidebarProps {
     unit?: 'px' | '%'
   ) => void;
   onDelete: (layerId: string) => void;
+  onDeleteSelected: () => void;
+  onClearSelection: () => void;
   onLabelChange: (layerId: string, newLabel: string) => void;
   onContentChange: (layerId: string, content: string) => void;
   onColorChange: (layerId: string, color: string) => void;
@@ -66,7 +68,7 @@ interface PropertySidebarProps {
 }
 
 export const PropertySidebar = ({
-  selectedLayerId,
+  selectedLayerIds,
   layers,
   selectedSize,
   canvasName,
@@ -75,6 +77,8 @@ export const PropertySidebar = ({
   onClippingEnabledChange,
   onPropertyChange,
   onDelete,
+  onDeleteSelected,
+  onClearSelection,
   onLabelChange,
   onContentChange,
   onColorChange,
@@ -103,21 +107,167 @@ export const PropertySidebar = ({
   // Update contentEditable when layer selection changes
   useEffect(() => {
     const el = contentEditableRef.current;
-    if (!el || !selectedLayerId) return;
+    if (!el || selectedLayerIds.length !== 1) return;
 
-    const layer = layers.find((l) => l.id === selectedLayerId);
+    const layer = layers.find((l) => l.id === selectedLayerIds[0]);
     if (layer && layer.type === 'richtext') {
       el.innerHTML = layer.content;
     }
-  }, [selectedLayerId]);
+  }, [selectedLayerIds, layers]);
 
   // Reset media load errors when layer changes or URL changes
   useEffect(() => {
     setImageLoadError(false);
     setVideoLoadError(false);
-  }, [selectedLayerId, layers]);
+  }, [selectedLayerIds, layers]);
 
-  if (!selectedLayerId) {
+  // Multi-select mode
+  if (selectedLayerIds.length > 1) {
+    const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id));
+    
+    // Helper to get common value or "-" if values differ
+    const getCommonValue = (property: 'positionX' | 'positionY' | 'width' | 'height') => {
+      const values = selectedLayers.map(l => l[property][selectedSize]?.value);
+      const allSame = values.every(v => v === values[0]);
+      return allSame ? values[0] : undefined;
+    };
+
+    const getCommonUnit = (property: 'positionX' | 'positionY' | 'width' | 'height') => {
+      const units = selectedLayers.map(l => l[property][selectedSize]?.unit || 'px');
+      const allSame = units.every(u => u === units[0]);
+      return allSame ? units[0] : undefined;
+    };
+
+    const commonX = getCommonValue('positionX');
+    const commonY = getCommonValue('positionY');
+    const commonWidth = getCommonValue('width');
+    const commonHeight = getCommonValue('height');
+    const commonXUnit = getCommonUnit('positionX');
+    const commonYUnit = getCommonUnit('positionY');
+    const commonWidthUnit = getCommonUnit('width');
+    const commonHeightUnit = getCommonUnit('height');
+
+    return (
+      <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
+        <div className="p-4">
+          {/* Multi-select header */}
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">{selectedLayerIds.length} items selected</h2>
+            <button
+              onClick={onClearSelection}
+              className="text-gray-900 hover:text-gray-700 p-1 transition-colors cursor-pointer"
+              title="Clear selection"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {/* Alignment Buttons */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Alignment</label>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => onAlignLayer(selectedLayerIds[0], 'left')}
+                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+                  title="Align Left"
+                >
+                  <AlignLeftIcon />
+                </button>
+                <button
+                  onClick={() => onAlignLayer(selectedLayerIds[0], 'center-h')}
+                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+                  title="Center Horizontally"
+                >
+                  <AlignCenterHIcon />
+                </button>
+                <button
+                  onClick={() => onAlignLayer(selectedLayerIds[0], 'right')}
+                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+                  title="Align Right"
+                >
+                  <AlignRightIcon />
+                </button>
+                <button
+                  onClick={() => onAlignLayer(selectedLayerIds[0], 'top')}
+                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+                  title="Align Top"
+                >
+                  <AlignTopIcon />
+                </button>
+                <button
+                  onClick={() => onAlignLayer(selectedLayerIds[0], 'center-v')}
+                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+                  title="Center Vertically"
+                >
+                  <AlignCenterVIcon />
+                </button>
+                <button
+                  onClick={() => onAlignLayer(selectedLayerIds[0], 'bottom')}
+                  className="p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+                  title="Align Bottom"
+                >
+                  <AlignBottomIcon />
+                </button>
+              </div>
+            </div>
+
+            {/* Position X and Y */}
+            <div className="grid grid-cols-2 gap-2">
+              <PositionSizeInput
+                label="X"
+                value={commonX !== undefined ? commonX : 0}
+                unit={commonXUnit}
+                onChange={(value, unit) => {
+                  selectedLayerIds.forEach(id => onPropertyChange(id, 'positionX', value, unit));
+                }}
+                disabled={false}
+                placeholder={commonX === undefined ? '-' : undefined}
+              />
+              <PositionSizeInput
+                label="Y"
+                value={commonY !== undefined ? commonY : 0}
+                unit={commonYUnit}
+                onChange={(value, unit) => {
+                  selectedLayerIds.forEach(id => onPropertyChange(id, 'positionY', value, unit));
+                }}
+                disabled={false}
+                placeholder={commonY === undefined ? '-' : undefined}
+              />
+            </div>
+
+            {/* Width and Height */}
+            <div className="grid grid-cols-2 gap-2">
+              <PositionSizeInput
+                label="Width"
+                value={commonWidth !== undefined ? commonWidth : 0}
+                unit={commonWidthUnit}
+                onChange={(value, unit) => {
+                  selectedLayerIds.forEach(id => onPropertyChange(id, 'width', value, unit));
+                }}
+                disabled={false}
+                placeholder={commonWidth === undefined ? '-' : undefined}
+              />
+              <PositionSizeInput
+                label="Height"
+                value={commonHeight !== undefined ? commonHeight : 0}
+                unit={commonHeightUnit}
+                onChange={(value, unit) => {
+                  selectedLayerIds.forEach(id => onPropertyChange(id, 'height', value, unit));
+                }}
+                disabled={false}
+                placeholder={commonHeight === undefined ? '-' : undefined}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedLayerIds.length === 0) {
     return (
       <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
         <div className="p-4">
@@ -166,7 +316,7 @@ export const PropertySidebar = ({
     );
   }
 
-  const layer = layers.find((l) => l.id === selectedLayerId);
+  const layer = layers.find((l) => l.id === selectedLayerIds[0]);
   if (!layer) return null;
 
   const posX = layer.positionX[selectedSize]!;

@@ -14,7 +14,7 @@ export interface Position {
 // Size type for width and height
 export interface Size {
   value: number;
-  unit?: 'px'; // Primarily px for ad dimensions
+  unit?: 'px' | '%'; // Primarily px for ad dimensions
 }
 
 // Union type for layer content based on type
@@ -213,7 +213,7 @@ export const sampleCanvas: Canvas = {
       },
       positionY: {
         '300x250': { value: 19, unit: 'px' },
-        '336x280': { value: 21, unit: 'px' },
+        '336x280': { value: 5, unit: '%' },
         '728x90': { value: 0, unit: 'px' },
         '160x600': { value: 0, unit: 'px' },
       },

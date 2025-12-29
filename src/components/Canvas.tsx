@@ -6,7 +6,7 @@ import { getGoogleFontsLink } from '../utils/googleFonts';
 interface CanvasProps {
   mode: 'edit' | 'preview';
   layers: LayerContent[];
-  selectedLayerId: string | null;
+  selectedLayerIds: string[];
   selectedSize: AdSize;
   dimensions: { width: number; height: number };
   canvasBackgroundColor?: string;
@@ -23,7 +23,7 @@ interface CanvasProps {
 export const Canvas: React.FC<CanvasProps> = ({
   mode,
   layers,
-  selectedLayerId,
+  selectedLayerIds,
   selectedSize,
   dimensions,
   canvasBackgroundColor,
@@ -147,7 +147,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       return null;
     }
 
-    const isSelected = selectedLayerId === layer.id;
+    const isSelected = selectedLayerIds.includes(layer.id);
 
     const style: React.CSSProperties = {
       position: 'absolute',
@@ -310,99 +310,125 @@ export const Canvas: React.FC<CanvasProps> = ({
           ))}
           {layers.map((layer, index) => renderLayer(layer, index))}
           {/* Selection outline overlay - rendered on top of all layers */}
-          {selectedLayerId &&
+          {selectedLayerIds.length > 0 &&
             (() => {
-              const selectedLayer = layers.find((l) => l.id === selectedLayerId);
-              if (!selectedLayer || selectedLayer.locked) return null;
+              // Calculate unified bounding box for all selected layers
+              const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id) && !l.locked);
+              if (selectedLayers.length === 0) return null;
 
-              const posX = selectedLayer.positionX[selectedSize];
-              const posY = selectedLayer.positionY[selectedSize];
-              const width = selectedLayer.width[selectedSize];
-              const height = selectedLayer.height[selectedSize];
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
-              if (!posX || !posY || !width || !height) return null;
+              selectedLayers.forEach(layer => {
+                const posX = layer.positionX[selectedSize];
+                const posY = layer.positionY[selectedSize];
+                const width = layer.width[selectedSize];
+                const height = layer.height[selectedSize];
+
+                if (!posX || !posY || !width || !height) return;
+
+                // Convert to pixels if using percentage
+                const x = posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
+                const y = posY.unit === '%' ? (posY.value / 100) * dimensions.height : posY.value;
+                const w = width.unit === '%' ? (width.value / 100) * dimensions.width : width.value;
+                const h = height.unit === '%' ? (height.value / 100) * dimensions.height : height.value;
+
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x + w);
+                maxY = Math.max(maxY, y + h);
+              });
+
+              if (minX === Infinity) return null;
+
+              const boundingWidth = maxX - minX;
+              const boundingHeight = maxY - minY;
+
+              // For single selection, show resize handles. For multi-select, just the bounding box
+              const showResizeHandles = selectedLayerIds.length === 1;
 
               return (
                 <>
                   <div
                     className="absolute pointer-events-none"
                     style={{
-                      left: `${posX.value}${posX.unit || 'px'}`,
-                      top: `${posY.value}${posY.unit || 'px'}`,
-                      width: `${width.value}${width.unit}`,
-                      height: `${height.value}${height.unit}`,
+                      left: `${minX}px`,
+                      top: `${minY}px`,
+                      width: `${boundingWidth}px`,
+                      height: `${boundingHeight}px`,
                       outline: `2px solid ${COLORS.BLUE_SELECTED}`,
                       outlineOffset: '-2px',
-                      zIndex: 10000,
+                      zIndex: 999,
                     }}
                   />
-                  {/* Resize handles */}
-                  <div
-                    className="absolute"
-                    style={{
-                      left: `${posX.value}${posX.unit || 'px'}`,
-                      top: `${posY.value}${posY.unit || 'px'}`,
-                      width: `${width.value}${width.unit}`,
-                      height: `${height.value}${height.unit}`,
-                      zIndex: 10001,
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    {/* Corner handles */}
+                  {/* Resize handles - only for single selection */}
+                  {showResizeHandles && (
                     <div
-                      className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-nw-resize"
+                      className="absolute"
                       style={{
-                        border: `2px solid ${COLORS.BLUE_SELECTED}`,
-                        pointerEvents: 'auto',
+                        left: `${minX}px`,
+                        top: `${minY}px`,
+                        width: `${boundingWidth}px`,
+                        height: `${boundingHeight}px`,
+                        zIndex: 999,
+                        pointerEvents: 'none',
                       }}
-                      onMouseDown={(e) => onResizeMouseDown(e, selectedLayer.id, 'nw')}
-                    />
-                    <div
-                      className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-ne-resize"
-                      style={{
-                        border: `2px solid ${COLORS.BLUE_SELECTED}`,
-                        pointerEvents: 'auto',
-                      }}
-                      onMouseDown={(e) => onResizeMouseDown(e, selectedLayer.id, 'ne')}
-                    />
-                    <div
-                      className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-sw-resize"
-                      style={{
-                        border: `2px solid ${COLORS.BLUE_SELECTED}`,
-                        pointerEvents: 'auto',
-                      }}
-                      onMouseDown={(e) => onResizeMouseDown(e, selectedLayer.id, 'sw')}
-                    />
-                    <div
-                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-se-resize"
-                      style={{
-                        border: `2px solid ${COLORS.BLUE_SELECTED}`,
-                        pointerEvents: 'auto',
-                      }}
-                      onMouseDown={(e) => onResizeMouseDown(e, selectedLayer.id, 'se')}
-                    />
-                    {/* Edge resize areas (invisible) */}
-                    <div
-                      className="absolute -top-1 left-3 right-3 h-2 cursor-n-resize"
-                      style={{ pointerEvents: 'auto' }}
-                      onMouseDown={(e) => onResizeMouseDown(e, selectedLayer.id, 'n')}
-                    />
-                    <div
-                      className="absolute -right-1 top-3 bottom-3 w-2 cursor-e-resize"
-                      style={{ pointerEvents: 'auto' }}
-                      onMouseDown={(e) => onResizeMouseDown(e, selectedLayer.id, 'e')}
-                    />
-                    <div
-                      className="absolute -bottom-1 left-3 right-3 h-2 cursor-s-resize"
-                      style={{ pointerEvents: 'auto' }}
-                      onMouseDown={(e) => onResizeMouseDown(e, selectedLayer.id, 's')}
-                    />
-                    <div
-                      className="absolute -left-1 top-3 bottom-3 w-2 cursor-w-resize"
-                      style={{ pointerEvents: 'auto' }}
-                      onMouseDown={(e) => onResizeMouseDown(e, selectedLayer.id, 'w')}
-                    />
-                  </div>
+                    >
+                      {/* Corner handles */}
+                      <div
+                        className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-nw-resize"
+                        style={{
+                          border: `2px solid ${COLORS.BLUE_SELECTED}`,
+                          pointerEvents: 'auto',
+                        }}
+                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'nw')}
+                      />
+                      <div
+                        className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-ne-resize"
+                        style={{
+                          border: `2px solid ${COLORS.BLUE_SELECTED}`,
+                          pointerEvents: 'auto',
+                        }}
+                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'ne')}
+                      />
+                      <div
+                        className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white rounded-full cursor-sw-resize"
+                        style={{
+                          border: `2px solid ${COLORS.BLUE_SELECTED}`,
+                          pointerEvents: 'auto',
+                        }}
+                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'sw')}
+                      />
+                      <div
+                        className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white rounded-full cursor-se-resize"
+                        style={{
+                          border: `2px solid ${COLORS.BLUE_SELECTED}`,
+                          pointerEvents: 'auto',
+                        }}
+                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'se')}
+                      />
+                      {/* Edge resize areas (invisible) */}
+                      <div
+                        className="absolute -top-1 left-3 right-3 h-2 cursor-n-resize"
+                        style={{ pointerEvents: 'auto' }}
+                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'n')}
+                      />
+                      <div
+                        className="absolute -right-1 top-3 bottom-3 w-2 cursor-e-resize"
+                        style={{ pointerEvents: 'auto' }}
+                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'e')}
+                      />
+                      <div
+                        className="absolute -bottom-1 left-3 right-3 h-2 cursor-s-resize"
+                        style={{ pointerEvents: 'auto' }}
+                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 's')}
+                      />
+                      <div
+                        className="absolute -left-1 top-3 bottom-3 w-2 cursor-w-resize"
+                        style={{ pointerEvents: 'auto' }}
+                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'w')}
+                      />
+                    </div>
+                  )}
                 </>
               );
             })()}
