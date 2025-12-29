@@ -917,7 +917,6 @@ const App = () => {
             onCanvasNameChange={setCanvasName}
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}
-            onDeleteSelected={handleDeleteSelectedLayers}
             onClearSelection={() => setSelectedLayerIds([])}
             onLabelChange={handleLabelChange}
             onContentChange={handleContentChange}

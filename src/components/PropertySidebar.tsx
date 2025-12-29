@@ -38,7 +38,6 @@ interface PropertySidebarProps {
     unit?: 'px' | '%'
   ) => void;
   onDelete: (layerId: string) => void;
-  onDeleteSelected: () => void;
   onClearSelection: () => void;
   onLabelChange: (layerId: string, newLabel: string) => void;
   onContentChange: (layerId: string, content: string) => void;
@@ -77,7 +76,6 @@ export const PropertySidebar = ({
   onClippingEnabledChange,
   onPropertyChange,
   onDelete,
-  onDeleteSelected,
   onClearSelection,
   onLabelChange,
   onContentChange,
