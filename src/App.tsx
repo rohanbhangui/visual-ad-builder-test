@@ -150,10 +150,11 @@ const App = () => {
           prev.map((layer) => {
             if (!selectedLayerIds.includes(layer.id)) return layer;
 
-            const posX = layer.positionX[selectedSize];
-            const posY = layer.positionY[selectedSize];
+            const config = layer.sizeConfig[selectedSize];
+            if (!config) return layer;
 
-            if (!posX || !posY) return layer;
+            const posX = config.positionX;
+            const posY = config.positionY;
 
             // Convert % to px before applying movement
             let newX = posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
@@ -176,13 +177,13 @@ const App = () => {
 
             return {
               ...layer,
-              positionX: {
-                ...layer.positionX,
-                [selectedSize]: { value: newX, unit: 'px' },
-              },
-              positionY: {
-                ...layer.positionY,
-                [selectedSize]: { value: newY, unit: 'px' },
+              sizeConfig: {
+                ...layer.sizeConfig,
+                [selectedSize]: {
+                  ...config,
+                  positionX: { value: newX, unit: 'px' },
+                  positionY: { value: newY, unit: 'px' },
+                },
               },
             };
           })
@@ -367,42 +368,54 @@ const App = () => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
+          const config = l.sizeConfig[selectedSize];
+          if (!config) return l;
+
           const updated = {
             ...l,
-            [property]: {
-              ...l[property],
+            sizeConfig: {
+              ...l.sizeConfig,
               [selectedSize]: {
-                value,
-                unit: unit || l[property][selectedSize]!.unit || 'px',
+                ...config,
+                [property]: {
+                  value,
+                  unit: unit || config[property].unit || 'px',
+                },
               },
             },
           };
 
           // If aspect ratio is locked and we're changing width or height, update the other dimension
           if (l.aspectRatioLocked && (property === 'width' || property === 'height')) {
-            const width = l.width[selectedSize];
-            const height = l.height[selectedSize];
+            const width = config.width;
+            const height = config.height;
             if (width && height && width.value > 0 && height.value > 0) {
               const aspectRatio = width.value / height.value;
               
               if (property === 'width') {
                 // Width changed, update height
                 const newHeight = value / aspectRatio;
-                updated.height = {
-                  ...l.height,
+                updated.sizeConfig = {
+                  ...updated.sizeConfig,
                   [selectedSize]: {
-                    value: newHeight,
-                    unit: l.height[selectedSize]!.unit || 'px',
+                    ...updated.sizeConfig[selectedSize]!,
+                    height: {
+                      value: newHeight,
+                      unit: height.unit || 'px',
+                    },
                   },
                 };
               } else if (property === 'height') {
                 // Height changed, update width
                 const newWidth = value * aspectRatio;
-                updated.width = {
-                  ...l.width,
+                updated.sizeConfig = {
+                  ...updated.sizeConfig,
                   [selectedSize]: {
-                    value: newWidth,
-                    unit: l.width[selectedSize]!.unit || 'px',
+                    ...updated.sizeConfig[selectedSize]!,
+                    width: {
+                      value: newWidth,
+                      unit: width.unit || 'px',
+                    },
                   },
                 };
               }
@@ -635,19 +648,22 @@ const App = () => {
       prev.map((layer) => {
         if (layer.id !== layerId) return layer;
 
+        const config = layer.sizeConfig[selectedSize];
+        if (!config) return layer;
+
         const canvasWidth = dimensions.width;
         const canvasHeight = dimensions.height;
         const layerWidth =
-          layer.width[selectedSize]!.unit === 'px'
-            ? layer.width[selectedSize]!.value
-            : (canvasWidth * layer.width[selectedSize]!.value) / 100;
+          config.width.unit === 'px'
+            ? config.width.value
+            : (canvasWidth * config.width.value) / 100;
         const layerHeight =
-          layer.height[selectedSize]!.unit === 'px'
-            ? layer.height[selectedSize]!.value
-            : (canvasHeight * layer.height[selectedSize]!.value) / 100;
+          config.height.unit === 'px'
+            ? config.height.value
+            : (canvasHeight * config.height.value) / 100;
 
-        let newPosX = layer.positionX[selectedSize]!.value;
-        let newPosY = layer.positionY[selectedSize]!.value;
+        let newPosX = config.positionX.value;
+        let newPosY = config.positionY.value;
 
         switch (alignment) {
           case 'left':
@@ -672,13 +688,13 @@ const App = () => {
 
         return {
           ...layer,
-          positionX: {
-            ...layer.positionX,
-            [selectedSize]: { value: Math.round(newPosX), unit: 'px' },
-          },
-          positionY: {
-            ...layer.positionY,
-            [selectedSize]: { value: Math.round(newPosY), unit: 'px' },
+          sizeConfig: {
+            ...layer.sizeConfig,
+            [selectedSize]: {
+              ...config,
+              positionX: { value: Math.round(newPosX), unit: 'px' },
+              positionY: { value: Math.round(newPosY), unit: 'px' },
+            },
           },
         };
       })
@@ -695,10 +711,13 @@ const App = () => {
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
     selectedLayers.forEach(layer => {
-      const posX = layer.positionX[selectedSize]?.value ?? 0;
-      const posY = layer.positionY[selectedSize]?.value ?? 0;
-      const width = layer.width[selectedSize]?.value ?? 0;
-      const height = layer.height[selectedSize]?.value ?? 0;
+      const config = layer.sizeConfig[selectedSize];
+      if (!config) return;
+
+      const posX = config.positionX.value;
+      const posY = config.positionY.value;
+      const width = config.width.value;
+      const height = config.height.value;
 
       minX = Math.min(minX, posX);
       minY = Math.min(minY, posY);
@@ -715,10 +734,13 @@ const App = () => {
       prev.map((layer) => {
         if (!selectedLayerIds.includes(layer.id)) return layer;
 
-        const width = layer.width[selectedSize]?.value ?? 0;
-        const height = layer.height[selectedSize]?.value ?? 0;
-        let newPosX = layer.positionX[selectedSize]?.value ?? 0;
-        let newPosY = layer.positionY[selectedSize]?.value ?? 0;
+        const config = layer.sizeConfig[selectedSize];
+        if (!config) return layer;
+
+        const width = config.width.value;
+        const height = config.height.value;
+        let newPosX = config.positionX.value;
+        let newPosY = config.positionY.value;
 
         switch (alignment) {
           case 'left':
@@ -743,13 +765,13 @@ const App = () => {
 
         return {
           ...layer,
-          positionX: {
-            ...layer.positionX,
-            [selectedSize]: { value: Math.round(newPosX), unit: 'px' },
-          },
-          positionY: {
-            ...layer.positionY,
-            [selectedSize]: { value: Math.round(newPosY), unit: 'px' },
+          sizeConfig: {
+            ...layer.sizeConfig,
+            [selectedSize]: {
+              ...config,
+              positionX: { value: Math.round(newPosX), unit: 'px' },
+              positionY: { value: Math.round(newPosY), unit: 'px' },
+            },
           },
         };
       })
@@ -769,45 +791,50 @@ const App = () => {
       label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
       type,
       locked: false,
-      positionX: {
-        '300x250': { value: 10, unit: 'px' },
-        '336x280': { value: 10, unit: 'px' },
-        '728x90': { value: 10, unit: 'px' },
-      },
-      positionY: {
-        '300x250': { value: 10, unit: 'px' },
-        '336x280': { value: 10, unit: 'px' },
-        '728x90': { value: 10, unit: 'px' },
-      },
-      width: {
-        '300x250': { value: type === 'image' ? 300 : 200, unit: 'px' },
-        '336x280': { value: type === 'image' ? 300 : 200, unit: 'px' },
-        '728x90': { value: type === 'image' ? 300 : 200, unit: 'px' },
-      },
-      height: {
-        '300x250': { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-        '336x280': { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-        '728x90': { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+      attributes: { id: '' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 10, unit: 'px' },
+          width: { value: type === 'image' ? 300 : 200, unit: 'px' },
+          height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+        },
+        '336x280': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 10, unit: 'px' },
+          width: { value: type === 'image' ? 300 : 200, unit: 'px' },
+          height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+        },
+        '728x90': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 10, unit: 'px' },
+          width: { value: type === 'image' ? 300 : 200, unit: 'px' },
+          height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+        },
       },
       ...(type === 'text' || type === 'richtext'
         ? {
             content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            styles: { color: '#000000', fontSize: '14px' },
+            styles: { color: '#000000', fontSize: '14px', opacity: 1 },
           }
         : {}),
       ...(type === 'image'
-        ? { url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg' }
+        ? { 
+            url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg',
+            styles: { opacity: 1 },
+          }
         : {}),
       ...(type === 'video'
         ? {
             url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4',
+            styles: { opacity: 1 },
           }
         : {}),
       ...(type === 'button'
         ? {
             text: 'Click Here',
             url: '#',
-            styles: { backgroundColor: '#333333', color: '#ffffff', fontSize: '14px' },
+            styles: { backgroundColor: '#333333', color: '#ffffff', fontSize: '14px', opacity: 1 },
           }
         : {}),
     } as LayerContent;

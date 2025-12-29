@@ -95,9 +95,10 @@ export const useCanvasInteractions = ({
     layersToMove.forEach(id => {
       const layer = layers.find((l) => l.id === id);
       if (layer) {
-        const posX = layer.positionX[selectedSize];
-        const posY = layer.positionY[selectedSize];
-        if (posX && posY) {
+        const config = layer.sizeConfig[selectedSize];
+        if (config) {
+          const posX = config.positionX;
+          const posY = config.positionY;
           // Convert % to px for uniform movement
           const xInPx = posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
           const yInPx = posY.unit === '%' ? (posY.value / 100) * dimensions.height : posY.value;
@@ -128,10 +129,13 @@ export const useCanvasInteractions = ({
     const layer = layers.find((l) => l.id === layerId);
     if (!layer) return;
 
-    const posX = layer.positionX[selectedSize]!;
-    const posY = layer.positionY[selectedSize]!;
-    const width = layer.width[selectedSize]!;
-    const height = layer.height[selectedSize]!;
+    const config = layer.sizeConfig[selectedSize];
+    if (!config) return;
+
+    const posX = config.positionX;
+    const posY = config.positionY;
+    const width = config.width;
+    const height = config.height;
 
     setIsResizing(true);
     resizeStartRef.current = {
@@ -162,10 +166,13 @@ export const useCanvasInteractions = ({
           const newX = initialPos.x + dx;
           const newY = initialPos.y + dy;
           // Convert width/height % to px for bounding box calculation
-          const widthData = layer.width[selectedSize];
-          const heightData = layer.height[selectedSize];
-          const width = widthData ? (widthData.unit === '%' ? (widthData.value / 100) * dimensions.width : widthData.value) : 0;
-          const height = heightData ? (heightData.unit === '%' ? (heightData.value / 100) * dimensions.height : heightData.value) : 0;
+          const config = layer.sizeConfig[selectedSize];
+          if (!config) return;
+          
+          const widthData = config.width;
+          const heightData = config.height;
+          const width = widthData.unit === '%' ? (widthData.value / 100) * dimensions.width : widthData.value;
+          const height = heightData.unit === '%' ? (heightData.value / 100) * dimensions.height : heightData.value;
           
           minX = Math.min(minX, newX);
           minY = Math.min(minY, newY);
@@ -220,19 +227,15 @@ export const useCanvasInteractions = ({
           layers.forEach((layer) => {
             if (selectedLayerIds.includes(layer.id)) return;
 
-            const otherPosX = layer.positionX[selectedSize];
-            const otherPosY = layer.positionY[selectedSize];
-            const otherWidth = layer.width[selectedSize];
-            const otherHeight = layer.height[selectedSize];
+            const otherConfig = layer.sizeConfig[selectedSize];
+            if (!otherConfig) return;
 
-            if (!otherPosX || !otherPosY || !otherWidth || !otherHeight) return;
-
-            const otherX = otherPosX.value;
-            const otherY = otherPosY.value;
-            const otherRight = otherX + otherWidth.value;
-            const otherBottom = otherY + otherHeight.value;
-            const otherCenterX = otherX + otherWidth.value / 2;
-            const otherCenterY = otherY + otherHeight.value / 2;
+            const otherX = otherConfig.positionX.value;
+            const otherY = otherConfig.positionY.value;
+            const otherRight = otherX + otherConfig.width.value;
+            const otherBottom = otherY + otherConfig.height.value;
+            const otherCenterX = otherX + otherConfig.width.value / 2;
+            const otherCenterY = otherY + otherConfig.height.value / 2;
 
             // Vertical snapping
             if (snapDx === 0) {
@@ -284,23 +287,26 @@ export const useCanvasInteractions = ({
             const initialPos = dragStartRef.current.layerPositions[layer.id];
             if (!initialPos) return layer;
 
+            const config = layer.sizeConfig[selectedSize];
+            if (!config) return layer;
+
             const newX = initialPos.x + dx + snapDx;
             const newY = initialPos.y + dy + snapDy;
 
             return {
               ...layer,
-              positionX: {
-                ...layer.positionX,
+              sizeConfig: {
+                ...layer.sizeConfig,
                 [selectedSize]: {
-                  value: newX,
-                  unit: 'px',
-                },
-              },
-              positionY: {
-                ...layer.positionY,
-                [selectedSize]: {
-                  value: newY,
-                  unit: 'px',
+                  ...config,
+                  positionX: {
+                    value: newX,
+                    unit: 'px',
+                  },
+                  positionY: {
+                    value: newY,
+                    unit: 'px',
+                  },
                 },
               },
             };
@@ -535,19 +541,15 @@ export const useCanvasInteractions = ({
           layers.forEach((layer) => {
             if (layer.id === selectedLayerIds[0]) return;
 
-            const otherPosX = layer.positionX[selectedSize];
-            const otherPosY = layer.positionY[selectedSize];
-            const otherWidth = layer.width[selectedSize];
-            const otherHeight = layer.height[selectedSize];
+            const otherConfig = layer.sizeConfig[selectedSize];
+            if (!otherConfig) return;
 
-            if (!otherPosX || !otherPosY || !otherWidth || !otherHeight) return;
-
-            const otherX = otherPosX.value;
-            const otherY = otherPosY.value;
-            const otherRight = otherX + otherWidth.value;
-            const otherBottom = otherY + otherHeight.value;
-            const otherCenterX = otherX + otherWidth.value / 2;
-            const otherCenterY = otherY + otherHeight.value / 2;
+            const otherX = otherConfig.positionX.value;
+            const otherY = otherConfig.positionY.value;
+            const otherRight = otherX + otherConfig.width.value;
+            const otherBottom = otherY + otherConfig.height.value;
+            const otherCenterX = otherX + otherConfig.width.value / 2;
+            const otherCenterY = otherY + otherConfig.height.value / 2;
 
             // Vertical snapping (left and right edges)
             if (snapToEdge(newX, otherX, 'left') || snapToEdge(newX, otherRight, 'left')) {
@@ -750,23 +752,20 @@ export const useCanvasInteractions = ({
         setLayers((prev) =>
           prev.map((layer) => {
             if (layer.id === selectedLayerIds[0]) {
+              const config = layer.sizeConfig[selectedSize];
+              if (!config) return layer;
+
               return {
                 ...layer,
-                positionX: {
-                  ...layer.positionX,
-                  [selectedSize]: { value: newX, unit: 'px' },
-                },
-                positionY: {
-                  ...layer.positionY,
-                  [selectedSize]: { value: newY, unit: 'px' },
-                },
-                width: {
-                  ...layer.width,
-                  [selectedSize]: { value: newWidth, unit: 'px' },
-                },
-                height: {
-                  ...layer.height,
-                  [selectedSize]: { value: newHeight, unit: 'px' },
+                sizeConfig: {
+                  ...layer.sizeConfig,
+                  [selectedSize]: {
+                    ...config,
+                    positionX: { value: newX, unit: 'px' },
+                    positionY: { value: newY, unit: 'px' },
+                    width: { value: newWidth, unit: 'px' },
+                    height: { value: newHeight, unit: 'px' },
+                  },
                 },
               };
             }

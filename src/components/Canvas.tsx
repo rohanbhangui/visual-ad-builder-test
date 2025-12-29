@@ -40,18 +40,15 @@ export const Canvas: React.FC<CanvasProps> = ({
     const layerElements = layers
       .filter((layer) => {
         // Only render layers that have data for the selected size
-        return (
-          layer.positionX[selectedSize] &&
-          layer.positionY[selectedSize] &&
-          layer.width[selectedSize] &&
-          layer.height[selectedSize]
-        );
+        const config = layer.sizeConfig[selectedSize];
+        return !!config;
       })
       .map((layer, index) => {
-        const posX = layer.positionX[selectedSize]!;
-        const posY = layer.positionY[selectedSize]!;
-        const width = layer.width[selectedSize]!;
-        const height = layer.height[selectedSize]!;
+        const config = layer.sizeConfig[selectedSize]!;
+        const posX = config.positionX;
+        const posY = config.positionY;
+        const width = config.width;
+        const height = config.height;
         const zIndex = layers.length - index;
         const opacity = layer.styles.opacity;
 
@@ -137,15 +134,17 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   const renderLayer = (layer: LayerContent, index: number) => {
-    const posX = layer.positionX[selectedSize];
-    const posY = layer.positionY[selectedSize];
-    const width = layer.width[selectedSize];
-    const height = layer.height[selectedSize];
+    const config = layer.sizeConfig[selectedSize];
 
     // Skip rendering if layer doesn't have data for selected size
-    if (!posX || !posY || !width || !height) {
+    if (!config) {
       return null;
     }
+
+    const posX = config.positionX;
+    const posY = config.positionY;
+    const width = config.width;
+    const height = config.height;
 
     const isSelected = selectedLayerIds.includes(layer.id);
 
@@ -319,12 +318,13 @@ export const Canvas: React.FC<CanvasProps> = ({
               let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
               selectedLayers.forEach(layer => {
-                const posX = layer.positionX[selectedSize];
-                const posY = layer.positionY[selectedSize];
-                const width = layer.width[selectedSize];
-                const height = layer.height[selectedSize];
+                const config = layer.sizeConfig[selectedSize];
+                if (!config) return;
 
-                if (!posX || !posY || !width || !height) return;
+                const posX = config.positionX;
+                const posY = config.positionY;
+                const width = config.width;
+                const height = config.height;
 
                 // Convert to pixels if using percentage
                 const x = posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;

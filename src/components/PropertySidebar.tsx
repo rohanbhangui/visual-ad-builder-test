@@ -125,13 +125,13 @@ export const PropertySidebar = ({
     
     // Helper to get common value or "-" if values differ
     const getCommonValue = (property: 'positionX' | 'positionY' | 'width' | 'height') => {
-      const values = selectedLayers.map(l => l[property][selectedSize]?.value);
+      const values = selectedLayers.map(l => l.sizeConfig[selectedSize]?.[property]?.value);
       const allSame = values.every(v => v === values[0]);
       return allSame ? values[0] : undefined;
     };
 
     const getCommonUnit = (property: 'positionX' | 'positionY' | 'width' | 'height') => {
-      const units = selectedLayers.map(l => l[property][selectedSize]?.unit || 'px');
+      const units = selectedLayers.map(l => l.sizeConfig[selectedSize]?.[property]?.unit || 'px');
       const allSame = units.every(u => u === units[0]);
       return allSame ? units[0] : undefined;
     };
@@ -317,10 +317,13 @@ export const PropertySidebar = ({
   const layer = layers.find((l) => l.id === selectedLayerIds[0]);
   if (!layer) return null;
 
-  const posX = layer.positionX[selectedSize]!;
-  const posY = layer.positionY[selectedSize]!;
-  const width = layer.width[selectedSize]!;
-  const height = layer.height[selectedSize]!;
+  const config = layer.sizeConfig[selectedSize];
+  if (!config) return null;
+
+  const posX = config.positionX;
+  const posY = config.positionY;
+  const width = config.width;
+  const height = config.height;
 
   return (
     <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">

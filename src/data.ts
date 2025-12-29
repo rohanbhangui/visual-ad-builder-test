@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { GOOGLE_FONTS, HTML5_AD_SIZES } from './consts';
 
 export type FontFamily = (typeof GOOGLE_FONTS)[number];
@@ -17,6 +16,14 @@ export interface Size {
   unit?: 'px' | '%'; // Primarily px for ad dimensions
 }
 
+// Size-specific configuration for a layer
+export interface SizeConfig {
+  positionX: Size;
+  positionY: Size;
+  width: Size;
+  height: Size;
+}
+
 // Union type for layer content based on type
 export type LayerContent = TextLayer | RichtextLayer | ImageLayer | VideoLayer | ButtonLayer;
 
@@ -28,10 +35,7 @@ export interface BaseLayer {
   attributes: {
     id?: string; // HTML id attribute for the element
   };
-  positionX: Partial<Record<AdSize, Size>>; // Keyed by ad size
-  positionY: Partial<Record<AdSize, Size>>; // Keyed by ad size
-  width: Partial<Record<AdSize, Size>>; // Keyed by ad size
-  height: Partial<Record<AdSize, Size>>; // Keyed by ad size
+  sizeConfig: Partial<Record<AdSize, SizeConfig>>; // All size-specific properties grouped together
 }
 
 export interface TextLayer extends BaseLayer {
@@ -111,7 +115,7 @@ export interface Canvas {
 
 // Sample data with 4-5 layers
 export const sampleCanvas: Canvas = {
-  id: uuidv4(),
+  id: crypto.randomUUID(),
   name: 'Sample HTML5 Ad',
   allowedSizes: ['300x250', '336x280', '728x90', '160x600'],
   styles: {
@@ -119,35 +123,37 @@ export const sampleCanvas: Canvas = {
   },
   layers: [
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       label: 'Headline',
       type: 'richtext',
       locked: false,
       aspectRatioLocked: false,
       attributes: { id: 'headline' },
-      positionX: {
-        '300x250': { value: 10, unit: 'px' },
-        '336x280': { value: 10, unit: 'px' },
-        '728x90': { value: 124, unit: 'px' },
-        '160x600': { value: 10, unit: 'px' },
-      },
-      positionY: {
-        '300x250': { value: 121, unit: 'px' },
-        '336x280': { value: 142, unit: 'px' },
-        '728x90': { value: 17, unit: 'px' },
-        '160x600': { value: 244, unit: 'px' },
-      },
-      width: {
-        '300x250': { value: 280, unit: 'px' },
-        '336x280': { value: 316, unit: 'px' },
-        '728x90': { value: 234, unit: 'px' },
-        '160x600': { value: 140, unit: 'px' },
-      },
-      height: {
-        '300x250': { value: 35, unit: 'px' },
-        '336x280': { value: 35, unit: 'px' },
-        '728x90': { value: 30, unit: 'px' },
-        '160x600': { value: 40, unit: 'px' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 121, unit: 'px' },
+          width: { value: 280, unit: 'px' },
+          height: { value: 35, unit: 'px' },
+        },
+        '336x280': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 142, unit: 'px' },
+          width: { value: 316, unit: 'px' },
+          height: { value: 35, unit: 'px' },
+        },
+        '728x90': {
+          positionX: { value: 124, unit: 'px' },
+          positionY: { value: 17, unit: 'px' },
+          width: { value: 234, unit: 'px' },
+          height: { value: 30, unit: 'px' },
+        },
+        '160x600': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 244, unit: 'px' },
+          width: { value: 140, unit: 'px' },
+          height: { value: 40, unit: 'px' },
+        },
       },
       content: '<strong>Holiday Sale!</strong>',
       styles: {
@@ -159,35 +165,37 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       label: 'Get 50% off on your first purchase. Limited time offer!',
       type: 'text',
       locked: false,
       aspectRatioLocked: false,
       attributes: { id: 'description' },
-      positionX: {
-        '300x250': { value: 10, unit: 'px' },
-        '336x280': { value: 21, unit: 'px' },
-        '728x90': { value: 98, unit: 'px' },
-        '160x600': { value: 10, unit: 'px' },
-      },
-      positionY: {
-        '300x250': { value: 156, unit: 'px' },
-        '336x280': { value: 177, unit: 'px' },
-        '728x90': { value: 45, unit: 'px' },
-        '160x600': { value: 284, unit: 'px' },
-      },
-      width: {
-        '300x250': { value: 280, unit: 'px' },
-        '336x280': { value: 294, unit: 'px' },
-        '728x90': { value: 284, unit: 'px' },
-        '160x600': { value: 140, unit: 'px' },
-      },
-      height: {
-        '300x250': { value: 50, unit: 'px' },
-        '336x280': { value: 53, unit: 'px' },
-        '728x90': { value: 40, unit: 'px' },
-        '160x600': { value: 70, unit: 'px' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 156, unit: 'px' },
+          width: { value: 280, unit: 'px' },
+          height: { value: 39, unit: 'px' },
+        },
+        '336x280': {
+          positionX: { value: 21, unit: 'px' },
+          positionY: { value: 177, unit: 'px' },
+          width: { value: 294, unit: 'px' },
+          height: { value: 36, unit: 'px' },
+        },
+        '728x90': {
+          positionX: { value: 98, unit: 'px' },
+          positionY: { value: 45, unit: 'px' },
+          width: { value: 284, unit: 'px' },
+          height: { value: 36, unit: 'px' },
+        },
+        '160x600': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 284, unit: 'px' },
+          width: { value: 140, unit: 'px' },
+          height: { value: 53, unit: 'px' },
+        },
       },
       content: 'Get 50% off on your first purchase.\nLimited time offer!',
       styles: {
@@ -199,35 +207,37 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       label: 'Demo Video',
       type: 'video',
       locked: false,
       aspectRatioLocked: true,
       attributes: { id: 'demo-video' },
-      positionX: {
-        '300x250': { value: 68, unit: 'px' },
-        '336x280': { value: 69, unit: 'px' },
-        '728x90': { value: 568, unit: 'px' },
-        '160x600': { value: -100, unit: 'px' },
-      },
-      positionY: {
-        '300x250': { value: 19, unit: 'px' },
-        '336x280': { value: 5, unit: '%' },
-        '728x90': { value: 0, unit: 'px' },
-        '160x600': { value: 0, unit: 'px' },
-      },
-      width: {
-        '300x250': { value: 164, unit: 'px' },
-        '336x280': { value: 198, unit: 'px' },
-        '728x90': { value: 160, unit: 'px' },
-        '160x600': { value: 360.8, unit: 'px' },
-      },
-      height: {
-        '300x250': { value: 92, unit: 'px' },
-        '336x280': { value: 111, unit: 'px' },
-        '728x90': { value: 90, unit: 'px' },
-        '160x600': { value: 201, unit: 'px' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 68, unit: 'px' },
+          positionY: { value: 19, unit: 'px' },
+          width: { value: 164, unit: 'px' },
+          height: { value: 92, unit: 'px' },
+        },
+        '336x280': {
+          positionX: { value: 69, unit: 'px' },
+          positionY: { value: 5, unit: '%' },
+          width: { value: 198, unit: 'px' },
+          height: { value: 111, unit: 'px' },
+        },
+        '728x90': {
+          positionX: { value: 568, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 160, unit: 'px' },
+          height: { value: 90, unit: 'px' },
+        },
+        '160x600': {
+          positionX: { value: -100, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 360.8, unit: 'px' },
+          height: { value: 201, unit: 'px' },
+        },
       },
       url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
       properties: {
@@ -239,35 +249,37 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       label: 'CTA Button',
       type: 'button',
       locked: false,
       aspectRatioLocked: false,
       attributes: { id: 'cta' },
-      positionX: {
-        '300x250': { value: 100, unit: 'px' },
-        '336x280': { value: 120, unit: 'px' },
-        '728x90': { value: 421, unit: 'px' },
-        '160x600': { value: 30, unit: 'px' },
-      },
-      positionY: {
-        '300x250': { value: 206, unit: 'px' },
-        '336x280': { value: 230, unit: 'px' },
-        '728x90': { value: 29, unit: 'px' },
-        '160x600': { value: 364, unit: 'px' },
-      },
-      width: {
-        '300x250': { value: 100, unit: 'px' },
-        '336x280': { value: 100, unit: 'px' },
-        '728x90': { value: 100, unit: 'px' },
-        '160x600': { value: 100, unit: 'px' },
-      },
-      height: {
-        '300x250': { value: 32, unit: 'px' },
-        '336x280': { value: 32, unit: 'px' },
-        '728x90': { value: 32, unit: 'px' },
-        '160x600': { value: 32, unit: 'px' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 100, unit: 'px' },
+          positionY: { value: 206, unit: 'px' },
+          width: { value: 100, unit: 'px' },
+          height: { value: 32, unit: 'px' },
+        },
+        '336x280': {
+          positionX: { value: 120, unit: 'px' },
+          positionY: { value: 230, unit: 'px' },
+          width: { value: 100, unit: 'px' },
+          height: { value: 32, unit: 'px' },
+        },
+        '728x90': {
+          positionX: { value: 421, unit: 'px' },
+          positionY: { value: 29, unit: 'px' },
+          width: { value: 100, unit: 'px' },
+          height: { value: 32, unit: 'px' },
+        },
+        '160x600': {
+          positionX: { value: 30, unit: 'px' },
+          positionY: { value: 364, unit: 'px' },
+          width: { value: 100, unit: 'px' },
+          height: { value: 32, unit: 'px' },
+        },
       },
       text: 'Shop Now',
       url: 'https://www.google.com',
@@ -280,35 +292,37 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       label: 'Background Image',
       type: 'image',
       locked: true,
       aspectRatioLocked: false,
       attributes: { id: '' },
-      positionX: {
-        '300x250': { value: 0, unit: 'px' },
-        '336x280': { value: 0, unit: 'px' },
-        '728x90': { value: 0, unit: 'px' },
-        '160x600': { value: 0, unit: 'px' },
-      },
-      positionY: {
-        '300x250': { value: 0, unit: 'px' },
-        '336x280': { value: 0, unit: 'px' },
-        '728x90': { value: 0, unit: 'px' },
-        '160x600': { value: 0, unit: 'px' },
-      },
-      width: {
-        '300x250': { value: 300, unit: 'px' },
-        '336x280': { value: 336, unit: 'px' },
-        '728x90': { value: 728, unit: 'px' },
-        '160x600': { value: 160, unit: 'px' },
-      },
-      height: {
-        '300x250': { value: 250, unit: 'px' },
-        '336x280': { value: 280, unit: 'px' },
-        '728x90': { value: 90, unit: 'px' },
-        '160x600': { value: 600, unit: 'px' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 300, unit: 'px' },
+          height: { value: 250, unit: 'px' },
+        },
+        '336x280': {
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 336, unit: 'px' },
+          height: { value: 280, unit: 'px' },
+        },
+        '728x90': {
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 728, unit: 'px' },
+          height: { value: 90, unit: 'px' },
+        },
+        '160x600': {
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 160, unit: 'px' },
+          height: { value: 600, unit: 'px' },
+        },
       },
       url: 'https://images.pexels.com/photos/1303098/pexels-photo-1303098.jpeg',
       styles: {

@@ -75,14 +75,16 @@ export const generateResponsiveHTML = (
       .map((layer) => {
         // Use attributes.id if set, otherwise fall back to UUID
         const layerId = layer.attributes.id || layer.id;
-        const posX = layer.positionX[firstSize];
-        const posY = layer.positionY[firstSize];
-        const width = layer.width[firstSize];
-        const height = layer.height[firstSize];
+        const config = layer.sizeConfig[firstSize];
 
-        if (!posX || !posY || !width || !height) {
+        if (!config) {
           return `      #${layerId} { display: none; }`;
         }
+
+        const posX = config.positionX;
+        const posY = config.positionY;
+        const width = config.width;
+        const height = config.height;
 
         return `      #${layerId} {
         display: block;
@@ -104,14 +106,16 @@ export const generateResponsiveHTML = (
           .map((layer) => {
             // Use attributes.id if set, otherwise fall back to UUID
             const layerId = layer.attributes.id || layer.id;
-            const posX = layer.positionX[size];
-            const posY = layer.positionY[size];
-            const width = layer.width[size];
-            const height = layer.height[size];
+            const config = layer.sizeConfig[size];
 
-            if (!posX || !posY || !width || !height) {
+            if (!config) {
               return `        #${layerId} { display: none; }`;
             }
+
+            const posX = config.positionX;
+            const posY = config.positionY;
+            const width = config.width;
+            const height = config.height;
 
             return `        #${layerId} {
           display: block;
