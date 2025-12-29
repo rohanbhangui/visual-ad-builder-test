@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { HTML5_AD_SIZES, UI_LAYOUT } from '../consts';
 import { type AdSize } from '../data';
+import CheckIcon from '../assets/icons/check.svg?react';
 
 interface TopBarProps {
   mode: 'edit' | 'preview';
@@ -119,7 +120,7 @@ export const TopBar = ({
                     <span className="font-mono text-[11px] text-gray-600">{size}</span>
                   </div>
                   {size === selectedSize ? (
-                    <div className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />
+                    <CheckIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
                   ) : null}
                 </button>
               ))}
