@@ -4,7 +4,7 @@
 
 Quick test to build a visual ad builder app for multiple sizes
 
-Url: https://visual-ad-builder-test.vercel.app/
+Demo: https://visual-ad-builder-test.vercel.app/
 
 ## Key Features
 
