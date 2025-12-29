@@ -24,9 +24,9 @@ export const Label = ({ children, isPerSize = false, selectedSize, htmlFor }: La
         >
           {children}
           {showTooltip && tooltipText ? (
-            <div className="absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap -top-7 left-1/2 -translate-x-1/2 pointer-events-none">
+            <div className="absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap -top-8 -left-1 pointer-events-none">
               {tooltipText}
-              <div className="absolute w-2 h-2 bg-gray-900 transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+              <div className="absolute w-2 h-2 bg-gray-900 transform rotate-45 -bottom-1 left-2"></div>
             </div>
           ) : null}
         </span>
