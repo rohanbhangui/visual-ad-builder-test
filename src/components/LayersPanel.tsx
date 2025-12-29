@@ -4,7 +4,6 @@ import { COLORS, UI_COLORS, UI_LAYOUT } from '../consts';
 import PlusIcon from '../assets/icons/plus.svg?react';
 import ExpandIcon from '../assets/icons/expand.svg?react';
 import CollapseIcon from '../assets/icons/collapse.svg?react';
-import SettingsIcon from '../assets/icons/settings.svg?react';
 import DragHandleIcon from '../assets/icons/drag-handle.svg?react';
 import LockIcon from '../assets/icons/lock.svg?react';
 import UnlockIcon from '../assets/icons/unlock.svg?react';
@@ -32,7 +31,6 @@ interface LayersPanelProps {
   onLayerDragEnd: () => void;
   onAddLayer: (type: 'text' | 'richtext' | 'image' | 'video' | 'button') => void;
   onToggleLock: (layerId: string) => void;
-  onCanvasSettings: () => void;
 }
 
 export const LayersPanel = ({
@@ -53,7 +51,6 @@ export const LayersPanel = ({
   onLayerDragEnd,
   onAddLayer,
   onToggleLock,
-  onCanvasSettings,
 }: LayersPanelProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -127,16 +124,6 @@ export const LayersPanel = ({
           Layers
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onCanvasSettings();
-            }}
-            className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors cursor-pointer"
-            title="Canvas Settings"
-          >
-            <SettingsIcon />
-          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();

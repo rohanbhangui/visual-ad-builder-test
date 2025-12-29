@@ -98,7 +98,7 @@ export const TopBar = ({
             </svg>
           </button>
 
-          {isDropdownOpen && (
+          {isDropdownOpen ? (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[200] min-w-[240px]">
               {allowedSizes.map((size) => (
                 <button
@@ -118,13 +118,13 @@ export const TopBar = ({
                     <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[size]}</span>
                     <span className="font-mono text-[11px] text-gray-600">{size}</span>
                   </div>
-                  {size === selectedSize && (
+                  {size === selectedSize ? (
                     <div className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />
-                  )}
+                  ) : null}
                 </button>
               ))}
             </div>
-          )}
+          ): null}
         </div>
       </div>
 

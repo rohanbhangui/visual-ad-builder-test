@@ -11,6 +11,7 @@ import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
+import SettingsIcon from './assets/icons/settings.svg?react';
 
 const App = () => {
   // UI Layout Constants
@@ -860,8 +861,26 @@ const App = () => {
               onLayerDragEnd={handleLayerDragEnd}
               onAddLayer={handleAddLayer}
               onToggleLock={handleToggleLock}
-              onCanvasSettings={() => setSelectedLayerIds([])}
             />
+          ) : null}
+
+          {/* Canvas Settings Button */}
+          {mode === 'edit' ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedLayerIds([]);
+              }}
+              className="absolute flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-gray-900 hover:underline cursor-pointer"
+              style={{
+                top: `calc(50% - ${dimensions.height / 2}px - 26px)`,
+                left: `calc(50% + ${dimensions.width / 2}px - 70px)`,
+              }}
+              title="Canvas Settings"
+            >
+              <SettingsIcon className="w-3.5 h-3.5" />
+              <span>Canvas</span>
+            </button>
           ) : null}
 
           <Canvas

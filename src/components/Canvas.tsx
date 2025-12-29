@@ -361,7 +361,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                     }}
                   />
                   {/* Resize handles - only for single selection */}
-                  {showResizeHandles && (
+                  {showResizeHandles ? (
                     <div
                       className="absolute"
                       style={{
@@ -428,7 +428,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                         onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'w')}
                       />
                     </div>
-                  )}
+                  ): null}
                 </>
               );
             })()}
