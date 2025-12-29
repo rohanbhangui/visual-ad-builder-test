@@ -18,9 +18,11 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Ad size selector with independent styles and position
 - Preview mode toggle (renders html with css into iframe)
 - `delete/backspace` key to delete a selected layer (with confirmation)
-- arrow keys move elements (hold `shift` to move by 10px at a time)
+- Arrow keys move elements (hold `shift` to move by 10px at a time)
 - 1 click export HTML for all relevant sizes with id overrides
-- multiple layer select (click layers with `shift`)
+- Multiple layer select (click layers with `shift`)
+- Zoom and pan support (`Ctrl/Cmd + scroll` to zoom scroll / `spacebar + mouse drag` is pan)
+- Trackpad support for 2 finger pan and pinch to zoom in/out
 
 ### Layers Panel
 

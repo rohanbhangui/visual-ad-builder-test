@@ -128,7 +128,6 @@ const App = () => {
     isShiftPressed,
     isAltPressed,
     zoom,
-    pan,
     isSpacePressed,
     setLayers,
     setSelectedLayerIds,

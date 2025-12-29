@@ -11,7 +11,6 @@ interface UseCanvasInteractionsProps {
   isShiftPressed: boolean;
   isAltPressed: boolean;
   zoom?: number;
-  pan?: { x: number; y: number };
   isSpacePressed?: boolean;
   setLayers: React.Dispatch<React.SetStateAction<LayerContent[]>>;
   setSelectedLayerIds: React.Dispatch<React.SetStateAction<string[]>>;
@@ -30,7 +29,6 @@ export const useCanvasInteractions = ({
   isShiftPressed,
   isAltPressed,
   zoom = 1,
-  pan = { x: 0, y: 0 },
   isSpacePressed = false,
   setLayers,
   setSelectedLayerIds,
