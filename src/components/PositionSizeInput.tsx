@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Label } from './Label';
 
 interface PositionSizeInputProps {
   label: string;
@@ -7,7 +8,8 @@ interface PositionSizeInputProps {
   onChange: (value: number, unit?: 'px' | '%') => void;
   disabled?: boolean;
   placeholder?: string;
-  isPerSize?: boolean; // If true, applies amber background to label
+  isPerSize?: boolean;
+  selectedSize?: string;
 }
 
 export const PositionSizeInput = ({
@@ -18,6 +20,7 @@ export const PositionSizeInput = ({
   disabled,
   placeholder,
   isPerSize = false,
+  selectedSize,
 }: PositionSizeInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>(placeholder || value.toString());
@@ -95,9 +98,9 @@ export const PositionSizeInput = ({
 
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">
-        <span className={isPerSize ? "px-0.5 bg-amber-100 text-amber-900" : ""}>{label}</span>
-      </label>
+      <Label isPerSize={isPerSize} selectedSize={selectedSize}>
+        {label}
+      </Label>
       <div className="flex gap-1">
         <input
           type="text"
@@ -121,7 +124,7 @@ export const PositionSizeInput = ({
           disabled={disabled}
           className={`px-1 py-1 text-sm border border-gray-300 rounded ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
         >
-          {unit === undefined && <option value="">-</option>}
+          {unit === undefined ? <option value="">-</option> : null}
           <option value="px">px</option>
           <option value="%">%</option>
         </select>

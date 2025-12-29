@@ -3,6 +3,7 @@ import { type LayerContent, type AdSize } from '../data';
 import { ColorInput } from './ColorInput';
 import { PositionSizeInput } from './PositionSizeInput';
 import { UrlInput } from './UrlInput';
+import { Label } from './Label';
 import {
   FONT_SIZE_OPTIONS,
   MAX_TEXT_CONTENT_LENGTH,
@@ -465,6 +466,7 @@ export const PropertySidebar = ({
               onChange={(value, unit) => onPropertyChange(layer.id, 'positionX', value, unit)}
               disabled={layer.locked}
               isPerSize={true}
+              selectedSize={selectedSize}
             />
             <PositionSizeInput
               label="Y"
@@ -473,6 +475,7 @@ export const PropertySidebar = ({
               onChange={(value, unit) => onPropertyChange(layer.id, 'positionY', value, unit)}
               disabled={layer.locked}
               isPerSize={true}
+              selectedSize={selectedSize}
             />
           </div>
 
@@ -486,6 +489,7 @@ export const PropertySidebar = ({
                 onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
                 disabled={layer.locked}
                 isPerSize={true}
+                selectedSize={selectedSize}
               />
               <PositionSizeInput
                 label="Height"
@@ -494,6 +498,7 @@ export const PropertySidebar = ({
                 onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
                 disabled={layer.locked}
                 isPerSize={true}
+                selectedSize={selectedSize}
               />
             </div>
             <button
@@ -693,7 +698,7 @@ export const PropertySidebar = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1"><span className="px-0.5 bg-amber-100 text-amber-900">Font Size</span></label>
+                  <Label isPerSize={true} selectedSize={selectedSize}>Font Size</Label>
                   <select
                     value={config.fontSize || '14px'}
                     onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
@@ -721,21 +726,21 @@ export const PropertySidebar = ({
           {/* Text Content Editor */}
           {layer.type === 'text' || layer.type === 'richtext' ? (
             <>
-              <div>
+              {layer.type === 'text' && (
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-medium text-gray-600">Content</label>
-                  {layer.type === 'text' ? (
-                    <span
-                      className={`text-xs ${
-                        layer.content.length > MAX_TEXT_CONTENT_LENGTH
-                          ? 'text-red-500'
-                          : 'text-gray-500'
-                      }`}
-                    >
-                      {layer.content.length}/{MAX_TEXT_CONTENT_LENGTH}
-                    </span>
-                  ) : null}
+                  <span
+                    className={`text-xs ${
+                      layer.content.length > MAX_TEXT_CONTENT_LENGTH
+                        ? 'text-red-500'
+                        : 'text-gray-500'
+                    }`}
+                  >
+                    {layer.content.length}/{MAX_TEXT_CONTENT_LENGTH}
+                  </span>
                 </div>
+              )}
+              <div>
                 {layer.type === 'text' ? (
                   <textarea
                     value={layer.content}
@@ -766,7 +771,7 @@ export const PropertySidebar = ({
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1"><span className="px-0.5 bg-amber-100 text-amber-900">Font Size</span></label>
+                        <Label isPerSize={true} selectedSize={selectedSize}>Font Size</Label>
                         <select
                           value={config.fontSize || '14px'}
                           onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
@@ -952,7 +957,7 @@ export const PropertySidebar = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1"><span className="px-0.5 bg-amber-100 text-amber-900">Font Size</span></label>
+                      <Label isPerSize={true} selectedSize={selectedSize}>Font Size</Label>
                       <select
                         value={config.fontSize || '14px'}
                         onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
