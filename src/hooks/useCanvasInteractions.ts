@@ -774,9 +774,7 @@ export const useCanvasInteractions = ({
         );
       } else {
         // Clear snap lines when not dragging or resizing
-        if (snapLines.length > 0) {
-          setSnapLines([]);
-        }
+        setSnapLines([]);
       }
     },
     [

@@ -309,7 +309,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           ))}
           {layers.map((layer, index) => renderLayer(layer, index))}
           {/* Selection outline overlay - rendered on top of all layers */}
-          {selectedLayerIds.length > 0 &&
+          {selectedLayerIds.length > 0 ?
             (() => {
               // Calculate unified bounding box for all selected layers
               const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id) && !l.locked);
@@ -431,7 +431,7 @@ export const Canvas: React.FC<CanvasProps> = ({
                   ): null}
                 </>
               );
-            })()}
+            })() : null}
         </div>
       ) : (
         <iframe
