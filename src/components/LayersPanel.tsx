@@ -120,10 +120,8 @@ export const LayersPanel = ({
           !isCollapsed ? 'border-b border-gray-200' : ''
         }`}
       >
-        <div onMouseDown={onMouseDown} className="flex-1 cursor-grab active:cursor-grabbing">
-          Layers
-        </div>
-        <div className="flex items-center gap-1">
+        <div onMouseDown={onMouseDown} className="flex items-center gap-2 flex-1 cursor-grab active:cursor-grabbing">
+          <span>Layers</span>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -135,6 +133,8 @@ export const LayersPanel = ({
           >
             {isCollapsed ? <ExpandIcon /> : <CollapseIcon />}
           </button>
+        </div>
+        <div className="flex items-center gap-1">
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={(e) => {
