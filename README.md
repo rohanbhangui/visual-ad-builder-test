@@ -20,7 +20,7 @@ Url: https://visual-ad-builder-test.vercel.app/
 - `delete/backspace` key to delete a selected layer (with confirmation)
 - arrow keys move elements (hold `shift` to move by 10px at a time)
 - 1 click export HTML for all relavent sizes with id overrides
-- multiple layer select (click layers wtih `shift`)
+- multiple layer select (click layers with `shift`)
 
 ### Layers Panel
 

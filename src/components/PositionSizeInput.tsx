@@ -40,6 +40,12 @@ export const PositionSizeInput = ({
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputVal = e.target.value;
+    
+    // Allow only numbers, minus sign, and decimal point
+    if (inputVal !== '' && inputVal !== '-' && !/^-?\d*\.?\d*$/.test(inputVal)) {
+      return;
+    }
+    
     setInputValue(inputVal);
 
     if (inputVal === '' || inputVal === '-') {
