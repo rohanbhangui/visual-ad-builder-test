@@ -589,7 +589,7 @@ const App = () => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, attributes: { ...l.attributes, id: htmlId } } : l)));
   };
 
-  const handleAnimationChange = (layerId: string, size: AdSize, animation: import('./data').Animation | null) => {
+  const handleAnimationChange = (layerId: string, size: AdSize, animations: import('./data').Animation[]) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id !== layerId) return l;
@@ -598,7 +598,7 @@ const App = () => {
         if (updatedSizeConfig[size]) {
           updatedSizeConfig[size] = {
             ...updatedSizeConfig[size],
-            animations: animation ? [animation] : undefined,
+            animations: animations.length > 0 ? animations : undefined,
           };
         }
         

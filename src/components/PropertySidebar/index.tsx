@@ -71,7 +71,7 @@ interface PropertySidebarProps {
   onCanvasBackgroundColorChange: (color: string) => void;
   onAnimationLoopChange?: (loop: number) => void;
   onHtmlIdChange: (layerId: string, htmlId: string) => void;
-  onAnimationChange: (layerId: string, size: AdSize, animation: Animation | null) => void;
+  onAnimationChange: (layerId: string, size: AdSize, animations: Animation[]) => void;
 }
 
 export const PropertySidebar = ({
@@ -315,7 +315,7 @@ export const PropertySidebar = ({
     <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto flex flex-col">
       <div className="px-4 pt-4 pb-3 flex-shrink-0">
         {/* Editable Label */}
-        <div className="mb-3 h-9 flex items-center">
+        <div className="h-9 flex items-center">
           {isEditingLabel ? (
             <input
               type="text"

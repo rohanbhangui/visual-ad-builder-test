@@ -25,8 +25,9 @@ export interface TimeValue {
 // Animation configuration
 export interface Animation {
   id: string; // Unique ID for React keys
+  name: string; // User-visible name like "Animation 1"
   type: 'fadeIn' | 'slideLeft' | 'slideRight' | 'slideUp' | 'slideDown' | 'scale' | 'custom';
-  property?: 'opacity' | 'x' | 'y' | 'width' | 'height' | 'scale' | 'color'; // Only for custom
+  property?: 'opacity' | 'x' | 'y' | 'width' | 'height' | 'scale' | 'color' | 'backgroundColor'; // Only for custom
   from?: string | number; // Start value
   to?: string | number; // End value
   duration: TimeValue;
@@ -63,6 +64,7 @@ export interface TextLayer extends BaseLayer {
   type: 'text';
   content: string;
   styles: {
+    backgroundColor?: string;
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
@@ -75,6 +77,7 @@ export interface RichtextLayer extends BaseLayer {
   type: 'richtext';
   content: string; // HTML content
   styles: {
+    backgroundColor?: string;
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
@@ -87,6 +90,7 @@ export interface ImageLayer extends BaseLayer {
   type: 'image';
   url: string;
   styles: {
+    backgroundColor?: string;
     color?: string;
     fontSize?: string;
     objectFit?: string;
@@ -102,6 +106,7 @@ export interface VideoLayer extends BaseLayer {
     controls?: boolean;
   };
   styles: {
+    backgroundColor?: string;
     color?: string;
     fontSize?: string;
     opacity: number;
@@ -160,6 +165,7 @@ export const sampleCanvas: Canvas = {
           animations: [
             {
               id: crypto.randomUUID(),
+              name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
               to: 1,
@@ -178,6 +184,7 @@ export const sampleCanvas: Canvas = {
           animations: [
             {
               id: crypto.randomUUID(),
+              name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
               to: 1,
@@ -227,6 +234,7 @@ export const sampleCanvas: Canvas = {
           animations: [
             {
               id: crypto.randomUUID(),
+              name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
               to: 1,
@@ -245,6 +253,7 @@ export const sampleCanvas: Canvas = {
           animations: [
             {
               id: crypto.randomUUID(),
+              name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
               to: 1,
@@ -293,6 +302,7 @@ export const sampleCanvas: Canvas = {
           animations: [
             {
               id: crypto.randomUUID(),
+              name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
               to: 1,
@@ -310,6 +320,7 @@ export const sampleCanvas: Canvas = {
           animations: [
             {
               id: crypto.randomUUID(),
+              name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
               to: 1,
@@ -358,6 +369,7 @@ export const sampleCanvas: Canvas = {
           animations: [
             {
               id: crypto.randomUUID(),
+              name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
               to: 1,
@@ -376,6 +388,7 @@ export const sampleCanvas: Canvas = {
           animations: [
             {
               id: crypto.randomUUID(),
+              name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
               to: 1,

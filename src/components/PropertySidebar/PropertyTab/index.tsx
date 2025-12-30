@@ -10,6 +10,7 @@ import {
 } from '../../../data';
 import { PositionSizeInput } from '../../PositionSizeInput';
 import { Label } from '../../Label';
+import { ColorInput } from '../../ColorInput';
 import LockIcon from '../../../assets/icons/lock.svg?react';
 import UnlockIcon from '../../../assets/icons/unlock.svg?react';
 import AlignLeftIcon from '../../../assets/icons/align-left.svg?react';
@@ -251,6 +252,17 @@ export const PropertyTab = ({
           contentEditableRef={contentEditableRef}
         />
       ) : null}
+
+      {/* Background Color */}
+      <div className="mt-4">
+        <ColorInput
+          label="Background Color"
+          value={layer.styles?.backgroundColor || 'transparent'}
+          onChange={(color) => onBackgroundColorChange(layer.id, color)}
+          disabled={layer.locked}
+          isGlobal={true}
+        />
+      </div>
 
       {/* Layer Opacity */}
       <div className="mt-4">

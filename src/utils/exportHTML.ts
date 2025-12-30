@@ -68,65 +68,71 @@ export const generateResponsiveHTML = (
 
   // Generate CSS keyframes for animations per size
   const generateAnimationKeyframes = (size: AdSize): string => {
-    return layers
-      .filter((layer) => layer.sizeConfig[size]?.animations?.[0])
-      .map((layer) => {
-        const layerId = layer.attributes.id || layer.id;
-        const config = layer.sizeConfig[size]!;
-        const animation = config.animations![0];
-        
+    const allKeyframes: string[] = [];
+    
+    layers.forEach((layer) => {
+      const layerId = layer.attributes.id || layer.id;
+      const config = layer.sizeConfig[size];
+      const animations = config?.animations;
+      
+      if (!animations || animations.length === 0) return;
+      
+      animations.forEach((animation) => {
         let keyframes = '';
         
         switch (animation.type) {
           case 'fadeIn':
-            keyframes = `@keyframes anim-${layerId}-${size} {
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
               from { opacity: ${animation.from ?? 0}; }
               to { opacity: ${animation.to ?? 1}; }
             }`;
             break;
           case 'slideLeft':
-            keyframes = `@keyframes anim-${layerId}-${size} {
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
               from { transform: translateX(${animation.from ?? '100%'}); }
               to { transform: translateX(${animation.to ?? '0%'}); }
             }`;
             break;
           case 'slideRight':
-            keyframes = `@keyframes anim-${layerId}-${size} {
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
               from { transform: translateX(${animation.from ?? '-100%'}); }
               to { transform: translateX(${animation.to ?? '0%'}); }
             }`;
             break;
           case 'slideUp':
-            keyframes = `@keyframes anim-${layerId}-${size} {
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
               from { transform: translateY(${animation.from ?? '100%'}); }
               to { transform: translateY(${animation.to ?? '0%'}); }
             }`;
             break;
           case 'slideDown':
-            keyframes = `@keyframes anim-${layerId}-${size} {
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
               from { transform: translateY(${animation.from ?? '-100%'}); }
               to { transform: translateY(${animation.to ?? '0%'}); }
             }`;
             break;
           case 'scale':
-            keyframes = `@keyframes anim-${layerId}-${size} {
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
               from { transform: scale(${animation.from ?? 0}); }
               to { transform: scale(${animation.to ?? 1}); }
             }`;
             break;
           case 'custom':
             const prop = animation.property || 'opacity';
-            keyframes = `@keyframes anim-${layerId}-${size} {
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
               from { ${prop}: ${animation.from ?? 0}; }
               to { ${prop}: ${animation.to ?? 1}; }
             }`;
             break;
         }
         
-        return keyframes;
-      })
-      .filter(Boolean)
-      .join('\n        ');
+        if (keyframes) {
+          allKeyframes.push(keyframes);
+        }
+      });
+    });
+    
+    return allKeyframes.join('\n        ');
   };
 
   // Generate CSS with media queries for each size
@@ -158,10 +164,13 @@ export const generateResponsiveHTML = (
 
         // Add animation styles
         let animationRule = '';
-        const animation = config.animations?.[0];
-        if (animation) {
+        const animations = config.animations;
+        if (animations && animations.length > 0) {
           const animationIterationCount = animationLoop === -1 ? 'infinite' : animationLoop > 0 ? animationLoop.toString() : '1';
-          animationRule = `\n        animation: anim-${layerId}-${firstSize} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards;`;
+          const animationStrings = animations.map(animation => 
+            `anim-${layerId}-${animation.id}-${firstSize} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards`
+          );
+          animationRule = `\n        animation: ${animationStrings.join(', ')};`;
         }
 
         return `      #${layerId} {
@@ -203,10 +212,13 @@ export const generateResponsiveHTML = (
 
             // Add animation styles
             let animationRule = '';
-            const animation = config.animations?.[0];
-            if (animation) {
+            const animations = config.animations;
+            if (animations && animations.length > 0) {
               const animationIterationCount = animationLoop === -1 ? 'infinite' : animationLoop > 0 ? animationLoop.toString() : '1';
-              animationRule = `\n          animation: anim-${layerId}-${size} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards;`;
+              const animationStrings = animations.map(animation => 
+                `anim-${layerId}-${animation.id}-${size} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards`
+              );
+              animationRule = `\n          animation: ${animationStrings.join(', ')};`;
             }
 
             return `        #${layerId} {
