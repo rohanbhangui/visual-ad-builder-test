@@ -185,7 +185,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             src={layer.url}
             className="w-full h-full pointer-events-none"
             style={{
-              objectFit: (layer.styles?.objectFit as any) || 'cover',
+              objectFit: (layer.styles?.objectFit || 'cover') as React.CSSProperties['objectFit'],
             }}
             alt={layer.label}
           />

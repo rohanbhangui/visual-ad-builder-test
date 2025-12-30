@@ -60,8 +60,14 @@ export const useCanvasInteractions = ({
   const SNAP_THRESHOLD = 8;
 
   // Store latest values in refs so event handlers always have current state
+  const zoomRef = useRef(zoom);
   const handleMouseMoveRef = useRef<((e: MouseEvent | React.MouseEvent) => void) | null>(null);
   const handleMouseUpRef = useRef<(() => void) | null>(null);
+
+  // Keep zoom ref in sync with prop
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
 
   // ============================================
   // EVENT HANDLERS - INITIATION
@@ -160,8 +166,8 @@ export const useCanvasInteractions = ({
     (e: React.MouseEvent | MouseEvent) => {
       if (isDragging && selectedLayerIds.length > 0) {
         // Convert screen coordinates to canvas coordinates accounting for zoom
-        const dx = (e.clientX - dragStartRef.current.x) / zoom;
-        const dy = (e.clientY - dragStartRef.current.y) / zoom;
+        const dx = (e.clientX - dragStartRef.current.x) / zoomRef.current;
+        const dy = (e.clientY - dragStartRef.current.y) / zoomRef.current;
 
         // Calculate bounding box of all selected layers for snapping
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -323,8 +329,8 @@ export const useCanvasInteractions = ({
       } else if (isResizing && selectedLayerIds.length === 1) {
         // -------------------- RESIZE LOGIC --------------------
         // Convert screen coordinates to canvas coordinates accounting for zoom
-        const dx = (e.clientX - resizeStartRef.current.x) / zoom;
-        const dy = (e.clientY - resizeStartRef.current.y) / zoom;
+        const dx = (e.clientX - resizeStartRef.current.x) / zoomRef.current;
+        const dy = (e.clientY - resizeStartRef.current.y) / zoomRef.current;
         const { direction, width, height, layerX, layerY } = resizeStartRef.current;
 
         const currentLayer = layers.find((l) => l.id === selectedLayerIds[0]);
@@ -825,8 +831,10 @@ export const useCanvasInteractions = ({
   // ============================================
   
   // Update refs with latest handlers to avoid stale closures
-  handleMouseMoveRef.current = handleMouseMove;
-  handleMouseUpRef.current = handleMouseUp;
+  useEffect(() => {
+    handleMouseMoveRef.current = handleMouseMove;
+    handleMouseUpRef.current = handleMouseUp;
+  }, [handleMouseMove, handleMouseUp]);
 
   // Add global mouse listeners during drag/resize to handle fast mouse movements
   // that might escape the canvas bounds
