@@ -452,7 +452,7 @@ export const PropertySidebar = ({
           {/* Image Controls */}
           {layer.type === 'image' ? (
             <ImageLayerFields
-              layer={layer as ImageLayer}
+              layer={layer satisfies ImageLayer}
               onImageUrlChange={onImageUrlChange}
               onObjectFitChange={onObjectFitChange}
             />
@@ -461,7 +461,7 @@ export const PropertySidebar = ({
           {/* Video Controls */}
           {layer.type === 'video' ? (
             <VideoLayerFields
-              layer={layer as VideoLayer}
+              layer={layer satisfies VideoLayer}
               onVideoUrlChange={onVideoUrlChange}
               onVideoPropertyChange={onVideoPropertyChange}
             />
@@ -470,7 +470,7 @@ export const PropertySidebar = ({
           {/* Button Controls */}
           {layer.type === 'button' ? (
             <ButtonLayerFields
-              layer={layer as ButtonLayer}
+              layer={layer satisfies ButtonLayer}
               selectedSize={selectedSize}
               onImageUrlChange={onImageUrlChange}
               onTextChange={onTextChange}
@@ -484,7 +484,7 @@ export const PropertySidebar = ({
           {/* Text Content Editor */}
           {layer.type === 'text' ? (
             <TextLayerFields
-              layer={layer as TextLayer}
+              layer={layer satisfies TextLayer}
               selectedSize={selectedSize}
               onContentChange={onContentChange}
               onColorChange={onColorChange}
@@ -496,7 +496,7 @@ export const PropertySidebar = ({
 
           {layer.type === 'richtext' ? (
             <RichtextLayerFields
-              layer={layer as RichtextLayer}
+              layer={layer satisfies RichtextLayer}
               selectedSize={selectedSize}
               onContentChange={onContentChange}
               onColorChange={onColorChange}
