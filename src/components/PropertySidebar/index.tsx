@@ -14,8 +14,8 @@ import AlignRightIcon from '../../assets/icons/align-right.svg?react';
 import AlignTopIcon from '../../assets/icons/align-top.svg?react';
 import AlignCenterVIcon from '../../assets/icons/align-center-v.svg?react';
 import AlignBottomIcon from '../../assets/icons/align-bottom.svg?react';
-import { PropertyTab } from './PropertyTab';
-import { AnimationTab } from './AnimationTab';
+import { PropertyTab } from './PropertyTab/PropertyTab';
+import { AnimationTab } from './AnimationTab/AnimationTab';
 
 const ALIGNMENT_BUTTONS = [
   { alignment: 'left' as const, icon: AlignLeftIcon, title: 'Align Left' },
