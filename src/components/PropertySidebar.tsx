@@ -665,7 +665,7 @@ export const PropertySidebar = ({
           {/* Text Content Editor */}
           {layer.type === 'text' || layer.type === 'richtext' ? (
             <>
-              {layer.type === 'text' && (
+              {layer.type === 'text' ? (
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-medium text-gray-600">Content</label>
                   <span
@@ -678,7 +678,7 @@ export const PropertySidebar = ({
                     {layer.content.length}/{MAX_TEXT_CONTENT_LENGTH}
                   </span>
                 </div>
-              )}
+              ) : null}
               <div>
                 {layer.type === 'text' ? (
                   <textarea
