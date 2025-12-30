@@ -2,35 +2,50 @@ import { useState } from 'react';
 
 interface LabelProps {
   children: React.ReactNode;
-  isPerSize?: boolean;
-  selectedSize?: string;
+  isGlobal?: boolean;
   htmlFor?: string;
 }
 
-export const Label = ({ children, isPerSize = false, selectedSize, htmlFor }: LabelProps) => {
+export const Label = ({ children, isGlobal = false, htmlFor }: LabelProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const tooltipText = isPerSize && selectedSize ? `${selectedSize} only` : undefined;
+  const tooltipText = isGlobal ? 'All sizes' : undefined;
 
   return (
-    <div>
+    <div className="relative">
       <label
         htmlFor={htmlFor}
         className="block text-xs font-medium text-gray-600 mb-1"
       >
         <span
-          className={`relative inline-block ${isPerSize ? 'px-0.5 bg-amber-100 text-amber-900 cursor-help' : ''}`}
-          onMouseEnter={() => isPerSize && setShowTooltip(true)}
+          className={`relative inline-block ${isGlobal ? 'px-0.5 bg-amber-100 text-amber-900 cursor-help' : ''}`}
+          onMouseEnter={() => isGlobal && setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
           {children}
-          {showTooltip && tooltipText ? (
-            <div className="absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap -top-8 -left-1 pointer-events-none">
-              {tooltipText}
-              <div className="absolute w-2 h-2 bg-gray-900 transform rotate-45 -bottom-1 left-2"></div>
-            </div>
-          ) : null}
         </span>
       </label>
+      {showTooltip && tooltipText ? (
+        <div className="fixed z-[9999] px-2 py-1 text-xs text-white bg-gray-900 rounded whitespace-nowrap pointer-events-none"
+             style={{ 
+               transform: 'translateY(-100%)',
+               marginTop: '-8px',
+               left: 'var(--tooltip-x)',
+               top: 'var(--tooltip-y)'
+             }}
+             ref={(el) => {
+               if (el) {
+                 const span = el.parentElement?.querySelector('span');
+                 if (span) {
+                   const rect = span.getBoundingClientRect();
+                   el.style.setProperty('--tooltip-x', `${rect.left}px`);
+                   el.style.setProperty('--tooltip-y', `${rect.top}px`);
+                 }
+               }
+             }}>
+          {tooltipText}
+          <div className="absolute w-2 h-2 bg-gray-900 transform rotate-45 bottom-0 left-2 translate-y-1"></div>
+        </div>
+      ) : null}
     </div>
   );
 };

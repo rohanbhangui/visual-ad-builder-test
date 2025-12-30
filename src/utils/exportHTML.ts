@@ -5,7 +5,8 @@ import { getGoogleFontsLink } from './googleFonts';
 export const generateResponsiveHTML = (
   layers: LayerContent[],
   allowedSizes: AdSize[],
-  backgroundColor: string = '#ffffff'
+  backgroundColor: string = '#ffffff',
+  animationLoop: number = 0
 ): string => {
   // Collect all font families used in layers
   const fontFamilies = layers.flatMap((layer) => {
@@ -65,6 +66,69 @@ export const generateResponsiveHTML = (
       .join('\n');
   };
 
+  // Generate CSS keyframes for animations per size
+  const generateAnimationKeyframes = (size: AdSize): string => {
+    return layers
+      .filter((layer) => layer.sizeConfig[size]?.animations?.[0])
+      .map((layer) => {
+        const layerId = layer.attributes.id || layer.id;
+        const config = layer.sizeConfig[size]!;
+        const animation = config.animations![0];
+        
+        let keyframes = '';
+        
+        switch (animation.type) {
+          case 'fadeIn':
+            keyframes = `@keyframes anim-${layerId}-${size} {
+              from { opacity: ${animation.from ?? 0}; }
+              to { opacity: ${animation.to ?? 1}; }
+            }`;
+            break;
+          case 'slideLeft':
+            keyframes = `@keyframes anim-${layerId}-${size} {
+              from { transform: translateX(${animation.from ?? '100%'}); }
+              to { transform: translateX(${animation.to ?? '0%'}); }
+            }`;
+            break;
+          case 'slideRight':
+            keyframes = `@keyframes anim-${layerId}-${size} {
+              from { transform: translateX(${animation.from ?? '-100%'}); }
+              to { transform: translateX(${animation.to ?? '0%'}); }
+            }`;
+            break;
+          case 'slideUp':
+            keyframes = `@keyframes anim-${layerId}-${size} {
+              from { transform: translateY(${animation.from ?? '100%'}); }
+              to { transform: translateY(${animation.to ?? '0%'}); }
+            }`;
+            break;
+          case 'slideDown':
+            keyframes = `@keyframes anim-${layerId}-${size} {
+              from { transform: translateY(${animation.from ?? '-100%'}); }
+              to { transform: translateY(${animation.to ?? '0%'}); }
+            }`;
+            break;
+          case 'scale':
+            keyframes = `@keyframes anim-${layerId}-${size} {
+              from { transform: scale(${animation.from ?? 0}); }
+              to { transform: scale(${animation.to ?? 1}); }
+            }`;
+            break;
+          case 'custom':
+            const prop = animation.property || 'opacity';
+            keyframes = `@keyframes anim-${layerId}-${size} {
+              from { ${prop}: ${animation.from ?? 0}; }
+              to { ${prop}: ${animation.to ?? 1}; }
+            }`;
+            break;
+        }
+        
+        return keyframes;
+      })
+      .filter(Boolean)
+      .join('\n        ');
+  };
+
   // Generate CSS with media queries for each size
   const generateResponsiveCSS = (): string => {
     const firstSize = allowedSizes[0];
@@ -92,12 +156,20 @@ export const generateResponsiveHTML = (
           fontSizeRule = `\n        font-size: ${config.fontSize};`;
         }
 
+        // Add animation styles
+        let animationRule = '';
+        const animation = config.animations?.[0];
+        if (animation) {
+          const animationIterationCount = animationLoop === -1 ? 'infinite' : animationLoop > 0 ? animationLoop.toString() : '1';
+          animationRule = `\n        animation: anim-${layerId}-${firstSize} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards;`;
+        }
+
         return `      #${layerId} {
         display: block;
         left: ${posX.value}${posX.unit || 'px'};
         top: ${posY.value}${posY.unit || 'px'};
         width: ${width.value}${width.unit};
-        height: ${height.value}${height.unit};${fontSizeRule}
+        height: ${height.value}${height.unit};${fontSizeRule}${animationRule}
       }`;
       })
       .join('\n');
@@ -129,20 +201,31 @@ export const generateResponsiveHTML = (
               fontSizeRule = `\n          font-size: ${config.fontSize};`;
             }
 
+            // Add animation styles
+            let animationRule = '';
+            const animation = config.animations?.[0];
+            if (animation) {
+              const animationIterationCount = animationLoop === -1 ? 'infinite' : animationLoop > 0 ? animationLoop.toString() : '1';
+              animationRule = `\n          animation: anim-${layerId}-${size} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards;`;
+            }
+
             return `        #${layerId} {
           display: block;
           left: ${posX.value}${posX.unit || 'px'};
           top: ${posY.value}${posY.unit || 'px'};
           width: ${width.value}${width.unit};
-          height: ${height.value}${height.unit};${fontSizeRule}
+          height: ${height.value}${height.unit};${fontSizeRule}${animationRule}
         }`;
           })
           .join('\n');
 
+        const animationKeyframes = generateAnimationKeyframes(size);
+
         return `
       /* ${size} */
       @media (min-width: ${dimensions.width}px) and (min-height: ${dimensions.height}px) {
-        .ad-container {
+        ${animationKeyframes ? `/* Animation keyframes for ${size} */\n        ${animationKeyframes}\n\n        ` : ''}
+.ad-container {
           width: ${dimensions.width}px;
           height: ${dimensions.height}px;
         }
@@ -150,6 +233,8 @@ ${layerStyles}
       }`;
       })
       .join('\n');
+
+    const baseAnimationKeyframes = generateAnimationKeyframes(firstSize);
 
     return `
       html, body {
@@ -166,6 +251,9 @@ ${layerStyles}
         overflow: hidden;
         margin: 0 auto;
       }
+
+      /* Animation keyframes for ${firstSize} */
+      ${baseAnimationKeyframes}
 
       /* Base styles for ${firstSize} */
 ${baseStyles}

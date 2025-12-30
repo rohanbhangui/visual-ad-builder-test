@@ -1,10 +1,10 @@
-import { type RichtextLayer, type AdSize } from '../../data';
-import { ColorInput } from '../ColorInput';
-import { Label } from '../Label';
-import { FONT_SIZE_OPTIONS, GOOGLE_FONTS, UI_COLORS } from '../../consts';
-import TextAlignLeftIcon from '../../assets/icons/text-align-left.svg?react';
-import TextAlignCenterIcon from '../../assets/icons/text-align-center.svg?react';
-import TextAlignRightIcon from '../../assets/icons/text-align-right.svg?react';
+import { type RichtextLayer, type AdSize } from '../../../data';
+import { ColorInput } from '../../ColorInput';
+import { Label } from '../../Label';
+import { FONT_SIZE_OPTIONS, GOOGLE_FONTS, UI_COLORS } from '../../../consts';
+import TextAlignLeftIcon from '../../../assets/icons/text-align-left.svg?react';
+import TextAlignCenterIcon from '../../../assets/icons/text-align-center.svg?react';
+import TextAlignRightIcon from '../../../assets/icons/text-align-right.svg?react';
 
 interface RichtextLayerFieldsProps {
   layer: RichtextLayer;
@@ -14,7 +14,7 @@ interface RichtextLayerFieldsProps {
   onFontFamilyChange: (layerId: string, fontFamily: string) => void;
   onFontSizeChange: (layerId: string, fontSize: string) => void;
   onTextAlignChange: (layerId: string, textAlign: 'left' | 'center' | 'right') => void;
-  contentEditableRef: React.RefObject<HTMLDivElement | null>;
+  contentEditableRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const RichtextLayerFields = ({
@@ -36,7 +36,7 @@ export const RichtextLayerFields = ({
         {/* Font Family and Font Size */}
         <div className="flex gap-2 mb-1">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Font Family</label>
+            <Label isGlobal={true}>Font Family</Label>
             <select
               value={layer.styles?.fontFamily || 'Arial'}
               onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
@@ -53,7 +53,7 @@ export const RichtextLayerFields = ({
             </select>
           </div>
           <div>
-            <Label isPerSize={true} selectedSize={selectedSize}>
+            <Label>
               Font Size
             </Label>
             <select
@@ -176,6 +176,7 @@ export const RichtextLayerFields = ({
         value={layer.styles?.color || '#000000'}
         onChange={(color) => onColorChange(layer.id, color)}
         disabled={layer.locked}
+        isGlobal={true}
       />
     </>
   );

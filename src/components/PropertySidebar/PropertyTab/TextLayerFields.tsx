@@ -1,15 +1,15 @@
-import { type TextLayer, type AdSize } from '../../data';
-import { ColorInput } from '../ColorInput';
-import { Label } from '../Label';
+import { type TextLayer, type AdSize } from '../../../data';
+import { ColorInput } from '../../ColorInput';
+import { Label } from '../../Label';
 import {
   FONT_SIZE_OPTIONS,
   MAX_TEXT_CONTENT_LENGTH,
   GOOGLE_FONTS,
   UI_COLORS,
-} from '../../consts';
-import TextAlignLeftIcon from '../../assets/icons/text-align-left.svg?react';
-import TextAlignCenterIcon from '../../assets/icons/text-align-center.svg?react';
-import TextAlignRightIcon from '../../assets/icons/text-align-right.svg?react';
+} from '../../../consts';
+import TextAlignLeftIcon from '../../../assets/icons/text-align-left.svg?react';
+import TextAlignCenterIcon from '../../../assets/icons/text-align-center.svg?react';
+import TextAlignRightIcon from '../../../assets/icons/text-align-right.svg?react';
 
 interface TextLayerFieldsProps {
   layer: TextLayer;
@@ -36,7 +36,7 @@ export const TextLayerFields = ({
   return (
     <>
       <div className="flex items-center justify-between mb-1">
-        <label className="block text-xs font-medium text-gray-600">Content</label>
+        <Label isGlobal={true}>Content</Label>
         <span
           className={`text-xs ${
             layer.content.length > MAX_TEXT_CONTENT_LENGTH ? 'text-red-500' : 'text-gray-500'
@@ -64,10 +64,11 @@ export const TextLayerFields = ({
           value={layer.styles?.color || '#000000'}
           onChange={(color) => onColorChange(layer.id, color)}
           disabled={layer.locked}
+          isGlobal={true}
         />
 
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Text Align</label>
+          <Label isGlobal={true}>Text Align</Label>
           <div className="inline-flex border border-gray-300 rounded overflow-hidden">
             <button
               onClick={() => onTextAlignChange(layer.id, 'left')}
@@ -112,7 +113,7 @@ export const TextLayerFields = ({
       {/* Font Family and Font Size side by side */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Font Family</label>
+          <Label isGlobal={true}>Font Family</Label>
           <select
             value={layer.styles?.fontFamily || 'Arial'}
             onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
@@ -130,7 +131,7 @@ export const TextLayerFields = ({
         </div>
 
         <div>
-          <Label isPerSize={true} selectedSize={selectedSize}>
+          <Label>
             Font Size
           </Label>
           <select

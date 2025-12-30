@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { type VideoLayer } from '../../data';
-import { UrlInput } from '../UrlInput';
+import { type VideoLayer } from '../../../data';
+import { UrlInput } from '../../UrlInput';
+import { Label } from '../../Label';
 
 interface VideoLayerFieldsProps {
   layer: VideoLayer;
@@ -22,8 +23,8 @@ export const VideoLayerFields = ({
   return (
     <>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Video URL</label>
-        <div className="mb-2">
+        <Label isGlobal={true}>Video URL</Label>
+        <div>
           {layer.url && !videoLoadError ? (
             <video
               key={layer.url}
@@ -55,6 +56,7 @@ export const VideoLayerFields = ({
           onChange={(url) => onVideoUrlChange(layer.id, url)}
           placeholder="https://example.com/video.mp4"
           disabled={layer.locked}
+          isGlobal={true}
         />
       </div>
 

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Label } from './Label';
 
 interface UrlInputProps {
   label: string;
@@ -6,11 +7,18 @@ interface UrlInputProps {
   onChange: (url: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  isGlobal?: boolean;
 }
 
-export const UrlInput = ({ label, value, onChange, placeholder, disabled }: UrlInputProps) => {
+export const UrlInput = ({ label, value, onChange, placeholder, disabled, isGlobal = false }: UrlInputProps) => {
   const [inputValue, setInputValue] = useState(value);
   const [error, setError] = useState(false);
+  const onChangeRef = useRef(onChange);
+
+  // Keep onChange ref up to date
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   // Sync input value when prop value changes
   useEffect(() => {
@@ -22,7 +30,7 @@ export const UrlInput = ({ label, value, onChange, placeholder, disabled }: UrlI
     const timer = setTimeout(() => {
       if (inputValue === '') {
         setError(false);
-        onChange('');
+        onChangeRef.current('');
         return;
       }
 
@@ -30,18 +38,18 @@ export const UrlInput = ({ label, value, onChange, placeholder, disabled }: UrlI
       try {
         new URL(inputValue);
         setError(false);
-        onChange(inputValue);
+        onChangeRef.current(inputValue);
       } catch {
         setError(true);
       }
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timer);
-  }, [inputValue, onChange]);
+  }, [inputValue]);
 
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      {label !== "" ? <Label isGlobal={isGlobal}>{label}</Label> : null }
       <input
         type="text"
         value={inputValue}
@@ -49,7 +57,7 @@ export const UrlInput = ({ label, value, onChange, placeholder, disabled }: UrlI
         disabled={disabled}
         className={`w-full h-8 px-2 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           error ? 'border-red-500' : 'border-gray-300'
-        } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+        } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''} ${label === "" ? 'mt-1' : ''}`}
         placeholder={placeholder}
       />
     </div>

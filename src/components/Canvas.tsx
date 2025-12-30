@@ -24,6 +24,8 @@ interface CanvasProps {
   onCanvasSettingsClick?: () => void;
   isSpacePressed?: boolean;
   isPanning?: boolean;
+  animationKey?: number; // Key to force iframe reload for replay
+  animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -46,6 +48,8 @@ export const Canvas: React.FC<CanvasProps> = ({
   onCanvasSettingsClick,
   isSpacePressed = false,
   isPanning = false,
+  animationKey = 0,
+  animationLoop = 0,
 }) => {
   const generatePreviewHTML = (): string => {
     const layerElements = layers
@@ -62,8 +66,16 @@ export const Canvas: React.FC<CanvasProps> = ({
         const height = config.height;
         const zIndex = layers.length - index;
         const opacity = layer.styles.opacity;
+        
+        // Get animation for this size
+        const animation = config.animations?.[0];
+        const animationName = animation ? `anim-${layer.id}` : '';
+        const animationIterationCount = animationLoop === -1 ? 'infinite' : animationLoop > 0 ? animationLoop.toString() : '1';
+        const animationStyle = animation 
+          ? `animation: ${animationName} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards;` 
+          : '';
 
-        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; opacity: ${opacity};`;
+        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; opacity: ${opacity}; ${animationStyle}`;
 
         let content = '';
 
@@ -105,6 +117,66 @@ export const Canvas: React.FC<CanvasProps> = ({
     });
     const googleFontsLink = fontFamilies.length > 0 ? getGoogleFontsLink(fontFamilies) : '';
 
+    // Generate CSS keyframes for animations
+    const animationKeyframes = layers
+      .filter((layer) => layer.sizeConfig[selectedSize]?.animations?.[0])
+      .map((layer) => {
+        const config = layer.sizeConfig[selectedSize]!;
+        const animation = config.animations![0];
+        
+        let keyframes = '';
+        
+        switch (animation.type) {
+          case 'fadeIn':
+            keyframes = `@keyframes anim-${layer.id} {
+              from { opacity: ${animation.from ?? 0}; }
+              to { opacity: ${animation.to ?? 1}; }
+            }`;
+            break;
+          case 'slideLeft':
+            keyframes = `@keyframes anim-${layer.id} {
+              from { transform: translateX(${animation.from ?? '100%'}); }
+              to { transform: translateX(${animation.to ?? '0%'}); }
+            }`;
+            break;
+          case 'slideRight':
+            keyframes = `@keyframes anim-${layer.id} {
+              from { transform: translateX(${animation.from ?? '-100%'}); }
+              to { transform: translateX(${animation.to ?? '0%'}); }
+            }`;
+            break;
+          case 'slideUp':
+            keyframes = `@keyframes anim-${layer.id} {
+              from { transform: translateY(${animation.from ?? '100%'}); }
+              to { transform: translateY(${animation.to ?? '0%'}); }
+            }`;
+            break;
+          case 'slideDown':
+            keyframes = `@keyframes anim-${layer.id} {
+              from { transform: translateY(${animation.from ?? '-100%'}); }
+              to { transform: translateY(${animation.to ?? '0%'}); }
+            }`;
+            break;
+          case 'scale':
+            keyframes = `@keyframes anim-${layer.id} {
+              from { transform: scale(${animation.from ?? 0}); }
+              to { transform: scale(${animation.to ?? 1}); }
+            }`;
+            break;
+          case 'custom':
+            // For custom animations, use the property specified
+            const prop = animation.property || 'opacity';
+            keyframes = `@keyframes anim-${layer.id} {
+              from { ${prop}: ${animation.from ?? 0}; }
+              to { ${prop}: ${animation.to ?? 1}; }
+            }`;
+            break;
+        }
+        
+        return keyframes;
+      })
+      .join('\n');
+
     return `
       <!DOCTYPE html>
       <html>
@@ -135,6 +207,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             * {
               box-sizing: border-box;
             }
+            ${animationKeyframes}
           </style>
         </head>
         <body>
@@ -522,6 +595,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         </div>
       ) : (
         <iframe
+          key={animationKey}
           srcDoc={generatePreviewHTML()}
           className="border-0 shadow-md"
           style={{

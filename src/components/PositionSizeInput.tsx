@@ -8,8 +8,6 @@ interface PositionSizeInputProps {
   onChange: (value: number, unit?: 'px' | '%') => void;
   disabled?: boolean;
   placeholder?: string;
-  isPerSize?: boolean;
-  selectedSize?: string;
 }
 
 export const PositionSizeInput = ({
@@ -19,8 +17,6 @@ export const PositionSizeInput = ({
   onChange,
   disabled,
   placeholder,
-  isPerSize = false,
-  selectedSize,
 }: PositionSizeInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>(placeholder || value.toString());
@@ -98,7 +94,7 @@ export const PositionSizeInput = ({
 
   return (
     <div>
-      <Label isPerSize={isPerSize} selectedSize={selectedSize}>
+      <Label>
         {label}
       </Label>
       <div className="flex gap-1">

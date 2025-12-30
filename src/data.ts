@@ -16,6 +16,25 @@ export interface Size {
   unit?: 'px' | '%'; // Primarily px for ad dimensions
 }
 
+// Time value type for animation duration and delay
+export interface TimeValue {
+  value: number;
+  unit: 'ms' | 's';
+}
+
+// Animation configuration
+export interface Animation {
+  id: string; // Unique ID for React keys
+  type: 'fadeIn' | 'slideLeft' | 'slideRight' | 'slideUp' | 'slideDown' | 'scale' | 'custom';
+  property?: 'opacity' | 'x' | 'y' | 'width' | 'height' | 'scale' | 'color'; // Only for custom
+  from?: string | number; // Start value
+  to?: string | number; // End value
+  duration: TimeValue;
+  delay: TimeValue;
+  easing: 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'linear';
+  repeat?: number; // 0 = no repeat, -1 = infinite
+}
+
 // Size-specific configuration for a layer
 export interface SizeConfig {
   positionX: Size;
@@ -23,6 +42,7 @@ export interface SizeConfig {
   width: Size;
   height: Size;
   fontSize?: string; // Font size specific to this ad size (e.g., '14px')
+  animations?: Animation[]; // Animations for this size
 }
 
 // Union type for layer content based on type
@@ -137,6 +157,17 @@ export const sampleCanvas: Canvas = {
           width: { value: 280, unit: 'px' },
           height: { value: 35, unit: 'px' },
           fontSize: '20px',
+          animations: [
+            {
+              id: crypto.randomUUID(),
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0.1, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
         },
         '336x280': {
           positionX: { value: 10, unit: 'px' },
@@ -144,10 +175,21 @@ export const sampleCanvas: Canvas = {
           width: { value: 316, unit: 'px' },
           height: { value: 35, unit: 'px' },
           fontSize: '24px',
+          animations: [
+            {
+              id: crypto.randomUUID(),
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0.1, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
         },
         '728x90': {
           positionX: { value: 124, unit: 'px' },
-          positionY: { value: 17, unit: 'px' },
+          positionY: { value: 15, unit: 'px' },
           width: { value: 234, unit: 'px' },
           height: { value: 30, unit: 'px' },
           fontSize: '20px',
@@ -182,6 +224,17 @@ export const sampleCanvas: Canvas = {
           width: { value: 280, unit: 'px' },
           height: { value: 39, unit: 'px' },
           fontSize: '14px',
+          animations: [
+            {
+              id: crypto.randomUUID(),
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0.2, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
         },
         '336x280': {
           positionX: { value: 21, unit: 'px' },
@@ -189,6 +242,17 @@ export const sampleCanvas: Canvas = {
           width: { value: 294, unit: 'px' },
           height: { value: 36, unit: 'px' },
           fontSize: '14px',
+          animations: [
+            {
+              id: crypto.randomUUID(),
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0.2, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
         },
         '728x90': {
           positionX: { value: 98, unit: 'px' },
@@ -226,12 +290,34 @@ export const sampleCanvas: Canvas = {
           positionY: { value: 19, unit: 'px' },
           width: { value: 164, unit: 'px' },
           height: { value: 92, unit: 'px' },
+          animations: [
+            {
+              id: crypto.randomUUID(),
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
         },
         '336x280': {
           positionX: { value: 69, unit: 'px' },
           positionY: { value: 5, unit: '%' },
           width: { value: 198, unit: 'px' },
           height: { value: 111, unit: 'px' },
+          animations: [
+            {
+              id: crypto.randomUUID(),
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
         },
         '728x90': {
           positionX: { value: 568, unit: 'px' },
@@ -269,6 +355,17 @@ export const sampleCanvas: Canvas = {
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
           fontSize: '14px',
+          animations: [
+            {
+              id: crypto.randomUUID(),
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0.3, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
         },
         '336x280': {
           positionX: { value: 120, unit: 'px' },
@@ -276,6 +373,17 @@ export const sampleCanvas: Canvas = {
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
           fontSize: '14px',
+          animations: [
+            {
+              id: crypto.randomUUID(),
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0.3, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
         },
         '728x90': {
           positionX: { value: 421, unit: 'px' },

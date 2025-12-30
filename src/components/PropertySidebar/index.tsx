@@ -2,29 +2,20 @@ import { useState, useRef, useEffect } from 'react';
 import { 
   type LayerContent, 
   type AdSize,
-  type ImageLayer,
-  type VideoLayer,
-  type ButtonLayer,
-  type TextLayer,
-  type RichtextLayer
+  type Animation,
 } from '../../data';
 import { ColorInput } from '../ColorInput';
 import { PositionSizeInput } from '../PositionSizeInput';
 import EditIcon from '../../assets/icons/edit.svg?react';
-import LockIcon from '../../assets/icons/lock.svg?react';
-import UnlockIcon from '../../assets/icons/unlock.svg?react';
+import XIcon from '../../assets/icons/x.svg?react';
 import AlignLeftIcon from '../../assets/icons/align-left.svg?react';
 import AlignCenterHIcon from '../../assets/icons/align-center-h.svg?react';
 import AlignRightIcon from '../../assets/icons/align-right.svg?react';
 import AlignTopIcon from '../../assets/icons/align-top.svg?react';
 import AlignCenterVIcon from '../../assets/icons/align-center-v.svg?react';
 import AlignBottomIcon from '../../assets/icons/align-bottom.svg?react';
-import XIcon from '../../assets/icons/x.svg?react';
-import { ImageLayerFields } from './ImageLayerFields';
-import { VideoLayerFields } from './VideoLayerFields';
-import { ButtonLayerFields } from './ButtonLayerFields';
-import { TextLayerFields } from './TextLayerFields';
-import { RichtextLayerFields } from './RichtextLayerFields';
+import { PropertyTab } from './PropertyTab';
+import { AnimationTab } from './AnimationTab';
 
 const ALIGNMENT_BUTTONS = [
   { alignment: 'left' as const, icon: AlignLeftIcon, title: 'Align Left' },
@@ -35,12 +26,15 @@ const ALIGNMENT_BUTTONS = [
   { alignment: 'bottom' as const, icon: AlignBottomIcon, title: 'Align Bottom' },
 ];
 
+type TabType = 'properties' | 'animations';
+
 interface PropertySidebarProps {
   selectedLayerIds: string[];
   layers: LayerContent[];
   selectedSize: AdSize;
   canvasName?: string;
   canvasBackgroundColor?: string;
+  animationLoop?: number;
   isClippingEnabled?: boolean;
   onClippingEnabledChange?: (enabled: boolean) => void;
   onPropertyChange: (
@@ -75,7 +69,9 @@ interface PropertySidebarProps {
   onAspectRatioLockToggle: (layerId: string) => void;
   onCanvasNameChange: (name: string) => void;
   onCanvasBackgroundColorChange: (color: string) => void;
+  onAnimationLoopChange?: (loop: number) => void;
   onHtmlIdChange: (layerId: string, htmlId: string) => void;
+  onAnimationChange: (layerId: string, size: AdSize, animation: Animation | null) => void;
 }
 
 export const PropertySidebar = ({
@@ -84,6 +80,7 @@ export const PropertySidebar = ({
   selectedSize,
   canvasName,
   canvasBackgroundColor,
+  animationLoop = 0,
   isClippingEnabled = false,
   onClippingEnabledChange,
   onPropertyChange,
@@ -106,10 +103,13 @@ export const PropertySidebar = ({
   onAspectRatioLockToggle,
   onCanvasNameChange,
   onCanvasBackgroundColorChange,
+  onAnimationLoopChange,
   onHtmlIdChange,
+  onAnimationChange,
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
+  const [activeTab, setActiveTab] = useState<TabType>('properties');
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
   // Update contentEditable when layer selection changes (not when content changes)
@@ -281,6 +281,24 @@ export const PropertySidebar = ({
                 <span className="text-gray-700">Clip Layers to Canvas</span>
               </label>
             </div>
+
+            {/* Animation Loop Setting */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">Animation Loop</label>
+              <select
+                value={animationLoop}
+                onChange={(e) => onAnimationLoopChange?.(parseInt(e.target.value))}
+                className="w-full h-8 px-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="0">No Loop</option>
+                <option value="-1">Loop Infinitely</option>
+                <option value="1">Loop 1 time</option>
+                <option value="2">Loop 2 times</option>
+                <option value="3">Loop 3 times</option>
+                <option value="5">Loop 5 times</option>
+                <option value="10">Loop 10 times</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -293,16 +311,11 @@ export const PropertySidebar = ({
   const config = layer.sizeConfig[selectedSize];
   if (!config) return null;
 
-  const posX = config.positionX;
-  const posY = config.positionY;
-  const width = config.width;
-  const height = config.height;
-
   return (
-    <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
-      <div className="p-4">
+    <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto flex flex-col">
+      <div className="px-4 pt-4 pb-3 flex-shrink-0">
         {/* Editable Label */}
-        <div className="mb-6">
+        <div className="mb-3 h-9 flex items-center">
           {isEditingLabel ? (
             <input
               type="text"
@@ -326,10 +339,10 @@ export const PropertySidebar = ({
                 }
               }}
               autoFocus
-              className="w-full px-2 py-1 text-lg font-semibold text-gray-900 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 text-lg font-semibold text-gray-900 border-2 border-blue-500 rounded focus:outline-none"
             />
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full">
               <div className="flex-1 min-w-0 relative overflow-hidden">
                 <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">{layer.label}</h2>
                 <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
@@ -348,240 +361,78 @@ export const PropertySidebar = ({
             </div>
           )}
         </div>
+      </div>
 
-        <div className="space-y-3">
-          {/* HTML ID */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Element ID</label>
-            <input
-              type="text"
-              value={layer.attributes.id || ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                // Only allow valid HTML ID characters (no spaces)
-                if (!/\s/.test(value)) {
-                  onHtmlIdChange(layer.id, value);
-                }
-              }}
-              placeholder="e.g., my-element"
-              disabled={layer.locked}
-              className={`w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''
-              }`}
-            />
-          </div>
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 flex-shrink-0">
+        <button
+          onClick={() => setActiveTab('properties')}
+          className={`flex-1 px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+            activeTab === 'properties'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Properties
+        </button>
+        <button
+          onClick={() => setActiveTab('animations')}
+          className={`flex-1 px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+            activeTab === 'animations'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Animations
+        </button>
+      </div>
 
-          {/* Alignment Buttons */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Alignment</label>
-            <div className="flex gap-1">
-              {ALIGNMENT_BUTTONS.map(({ alignment, icon: Icon, title }) => (
-                <button
-                  key={alignment}
-                  onClick={() => onAlignLayer(layer.id, alignment)}
-                  disabled={layer.locked}
-                  className={`p-2 border border-gray-300 rounded hover:bg-gray-50 ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  title={title}
-                >
-                  <Icon />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Position X and Y */}
-          <div className="grid grid-cols-2 gap-2">
-            <PositionSizeInput
-              label="X"
-              value={posX.value}
-              unit={posX.unit || 'px'}
-              onChange={(value, unit) => onPropertyChange(layer.id, 'positionX', value, unit)}
-              disabled={layer.locked}
-              isPerSize={true}
-              selectedSize={selectedSize}
-            />
-            <PositionSizeInput
-              label="Y"
-              value={posY.value}
-              unit={posY.unit || 'px'}
-              onChange={(value, unit) => onPropertyChange(layer.id, 'positionY', value, unit)}
-              disabled={layer.locked}
-              isPerSize={true}
-              selectedSize={selectedSize}
-            />
-          </div>
-
-          {/* Width and Height */}
-          <div className="relative">
-            <div className="grid grid-cols-2 gap-2">
-              <PositionSizeInput
-                label="Width"
-                value={width.value}
-                unit={width.unit || 'px'}
-                onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
-                disabled={layer.locked}
-                isPerSize={true}
-                selectedSize={selectedSize}
-              />
-              <PositionSizeInput
-                label="Height"
-                value={height.value}
-                unit={height.unit || 'px'}
-                onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
-                disabled={layer.locked}
-                isPerSize={true}
-                selectedSize={selectedSize}
-              />
-            </div>
-            <button
-              onClick={() => onAspectRatioLockToggle(layer.id)}
-              disabled={layer.locked}
-              className={`absolute left-[calc(50%-12px)] bottom-[5px] -translate-x-1/2 p-0.5 rounded hover:bg-gray-100 transition-colors bg-white ${
-                layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-              }`}
-              title={layer.aspectRatioLocked ? 'Unlock aspect ratio' : 'Lock aspect ratio'}
-            >
-              {layer.aspectRatioLocked ? (
-                <LockIcon className="w-3.5 h-3.5 text-gray-600" />
-              ) : (
-                <UnlockIcon className="w-3.5 h-3.5 text-gray-400" />
-              )}
-            </button>
-          </div>
-
-          {/* Image Controls */}
-          {layer.type === 'image' ? (
-            <ImageLayerFields
-              layer={layer satisfies ImageLayer}
-              onImageUrlChange={onImageUrlChange}
-              onObjectFitChange={onObjectFitChange}
-            />
-          ) : null}
-
-          {/* Video Controls */}
-          {layer.type === 'video' ? (
-            <VideoLayerFields
-              layer={layer satisfies VideoLayer}
-              onVideoUrlChange={onVideoUrlChange}
-              onVideoPropertyChange={onVideoPropertyChange}
-            />
-          ) : null}
-
-          {/* Button Controls */}
-          {layer.type === 'button' ? (
-            <ButtonLayerFields
-              layer={layer satisfies ButtonLayer}
-              selectedSize={selectedSize}
-              onImageUrlChange={onImageUrlChange}
-              onTextChange={onTextChange}
-              onColorChange={onColorChange}
-              onFontFamilyChange={onFontFamilyChange}
-              onFontSizeChange={onFontSizeChange}
-              onBackgroundColorChange={onBackgroundColorChange}
-            />
-          ) : null}
-
-          {/* Text Content Editor */}
-          {layer.type === 'text' ? (
-            <TextLayerFields
-              layer={layer satisfies TextLayer}
-              selectedSize={selectedSize}
-              onContentChange={onContentChange}
-              onColorChange={onColorChange}
-              onFontFamilyChange={onFontFamilyChange}
-              onFontSizeChange={onFontSizeChange}
-              onTextAlignChange={onTextAlignChange}
-            />
-          ) : null}
-
-          {layer.type === 'richtext' ? (
-            <RichtextLayerFields
-              layer={layer satisfies RichtextLayer}
-              selectedSize={selectedSize}
-              onContentChange={onContentChange}
-              onColorChange={onColorChange}
-              onFontFamilyChange={onFontFamilyChange}
-              onFontSizeChange={onFontSizeChange}
-              onTextAlignChange={onTextAlignChange}
-              contentEditableRef={contentEditableRef}
-            />
-          ) : null}
-        </div>
-
-        {/* Layer Opacity */}
+      {/* Tab Content */}
+      <div className="px-4 pb-4 flex-1 overflow-y-auto">
         <div className="mt-4">
-          <label className="block text-xs font-medium text-gray-600 mb-1">Layer Opacity</label>
-          <div className="flex items-center gap-3">
-            <div
-              className="flex-1 relative h-1 bg-gray-200 rounded-full cursor-pointer"
-              onMouseDown={(e) => {
-                if (layer.locked) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const updateOpacity = (clientX: number) => {
-                  const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-                  const percentage = (x / rect.width) * 100;
-                  onOpacityChange(layer.id, percentage / 100);
-                };
-
-                updateOpacity(e.clientX);
-
-                const handleMouseMove = (e: MouseEvent) => {
-                  updateOpacity(e.clientX);
-                };
-
-                const handleMouseUp = () => {
-                  document.removeEventListener('mousemove', handleMouseMove);
-                  document.removeEventListener('mouseup', handleMouseUp);
-                };
-
-                document.addEventListener('mousemove', handleMouseMove);
-                document.addEventListener('mouseup', handleMouseUp);
-              }}
-            >
-              <div
-                className={`absolute top-0 left-0 h-full rounded-full ${
-                  layer.locked ? 'bg-gray-400' : 'bg-blue-500'
-                }`}
-                style={{ width: `${(layer.styles?.opacity || 1) * 100}%` }}
-              />
-              <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border border-gray-300 rounded-full shadow-sm ${
-                  layer.locked ? 'cursor-not-allowed' : 'cursor-pointer'
-                }`}
-                style={{ left: `calc(${(layer.styles?.opacity || 1) * 100}% - 8px)` }}
-              />
-            </div>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={Math.round((layer.styles?.opacity || 1) * 100)}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (!isNaN(value)) {
-                  const clamped = Math.max(0, Math.min(100, value));
-                  onOpacityChange(layer.id, clamped / 100);
-                }
-              }}
-              disabled={layer.locked}
-              className="w-14 px-2 py-1 text-sm border border-gray-300 rounded text-right focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ fontSize: '14px' }}
-            />
-          </div>
+          {activeTab === 'properties' ? (
+          <PropertyTab
+            layer={layer}
+            selectedSize={selectedSize}
+            contentEditableRef={contentEditableRef}
+            onPropertyChange={onPropertyChange}
+            onHtmlIdChange={onHtmlIdChange}
+            onAlignLayer={onAlignLayer}
+            onAspectRatioLockToggle={onAspectRatioLockToggle}
+            onContentChange={onContentChange}
+            onColorChange={onColorChange}
+            onFontSizeChange={onFontSizeChange}
+            onFontFamilyChange={onFontFamilyChange}
+            onTextAlignChange={onTextAlignChange}
+            onTextChange={onTextChange}
+            onBackgroundColorChange={onBackgroundColorChange}
+            onImageUrlChange={onImageUrlChange}
+            onObjectFitChange={onObjectFitChange}
+            onVideoUrlChange={onVideoUrlChange}
+            onVideoPropertyChange={onVideoPropertyChange}
+            onOpacityChange={onOpacityChange}
+          />
+        ) : (
+          <AnimationTab
+            layer={layer}
+            selectedSize={selectedSize}
+            onAnimationChange={onAnimationChange}
+          />
+        )}
         </div>
+      </div>
 
-        {/* Delete Button */}
-        <div className="mt-6">
-          <button
-            onClick={() => onDelete(layer.id)}
-            disabled={layer.locked}
-            className={`w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded transition-colors ${
-              layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-            }`}
-          >
-            Delete Layer
-          </button>
-        </div>
+      {/* Delete Button - Outside tabs */}
+      <div className="p-4 border-t border-gray-200 flex-shrink-0">
+        <button
+          onClick={() => onDelete(layer.id)}
+          disabled={layer.locked}
+          className={`w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded transition-colors ${
+            layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+          }`}
+        >
+          Delete Layer
+        </button>
       </div>
     </div>
   );

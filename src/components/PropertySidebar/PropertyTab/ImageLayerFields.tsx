@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { type ImageLayer } from '../../data';
-import { UrlInput } from '../UrlInput';
+import { type ImageLayer } from '../../../data';
+import { UrlInput } from '../../UrlInput';
+import { Label } from '../../Label';
 
 interface ImageLayerFieldsProps {
   layer: ImageLayer;
@@ -18,8 +19,8 @@ export const ImageLayerFields = ({
   return (
     <>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Image URL</label>
-        <div className="mb-2">
+        <Label isGlobal={true}>Image URL</Label>
+        <div>
           {layer.url && !imageLoadError ? (
             <img
               key={layer.url}
@@ -52,6 +53,7 @@ export const ImageLayerFields = ({
           onChange={(url) => onImageUrlChange(layer.id, url)}
           placeholder="https://example.com/image.jpg"
           disabled={layer.locked}
+          isGlobal={true}
         />
       </div>
 

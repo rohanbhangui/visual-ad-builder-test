@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { Label } from './Label';
 
 interface ColorInputProps {
   label: string;
   value: string;
   onChange: (color: string) => void;
   disabled?: boolean;
+  isGlobal?: boolean;
 }
 
-export const ColorInput = ({ label, value, onChange, disabled }: ColorInputProps) => {
+export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false }: ColorInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState(value || '');
 
@@ -39,7 +41,7 @@ export const ColorInput = ({ label, value, onChange, disabled }: ColorInputProps
 
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <Label isGlobal={isGlobal}>{label}</Label>
       <div
         className={`flex items-stretch border rounded overflow-hidden ${
           error ? 'border-red-500' : 'border-gray-300'

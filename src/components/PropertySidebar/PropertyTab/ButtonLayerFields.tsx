@@ -1,8 +1,8 @@
-import { type ButtonLayer, type AdSize } from '../../data';
-import { ColorInput } from '../ColorInput';
-import { UrlInput } from '../UrlInput';
-import { Label } from '../Label';
-import { FONT_SIZE_OPTIONS, MAX_BUTTON_TEXT_LENGTH, GOOGLE_FONTS } from '../../consts';
+import { type ButtonLayer, type AdSize } from '../../../data';
+import { ColorInput } from '../../ColorInput';
+import { UrlInput } from '../../UrlInput';
+import { Label } from '../../Label';
+import { FONT_SIZE_OPTIONS, MAX_BUTTON_TEXT_LENGTH, GOOGLE_FONTS } from '../../../consts';
 
 interface ButtonLayerFieldsProps {
   layer: ButtonLayer;
@@ -36,11 +36,12 @@ export const ButtonLayerFields = ({
         onChange={(url) => onImageUrlChange(layer.id, url)}
         placeholder="https://example.com"
         disabled={layer.locked}
+        isGlobal={true}
       />
 
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-xs font-medium text-gray-600">Button Text</label>
+          <Label isGlobal={true}>Button Text</Label>
           <span
             className={`text-xs ${
               layer.text.length > MAX_BUTTON_TEXT_LENGTH ? 'text-red-500' : 'text-gray-500'
@@ -64,12 +65,11 @@ export const ButtonLayerFields = ({
         label="Text Color"
         value={layer.styles?.color || '#ffffff'}
         onChange={(color) => onColorChange(layer.id, color)}
-        disabled={layer.locked}
-      />
+        disabled={layer.locked}        isGlobal={true}      />
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Font Family</label>
+          <Label isGlobal={true}>Font Family</Label>
           <select
             value={layer.styles?.fontFamily || 'Arial'}
             onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
@@ -86,7 +86,7 @@ export const ButtonLayerFields = ({
           </select>
         </div>
         <div>
-          <Label isPerSize={true} selectedSize={selectedSize}>
+          <Label>
             Font Size
           </Label>
           <select
@@ -111,6 +111,7 @@ export const ButtonLayerFields = ({
         value={layer.styles?.backgroundColor || '#333333'}
         onChange={(color) => onBackgroundColorChange(layer.id, color)}
         disabled={layer.locked}
+        isGlobal={true}
       />
     </>
   );
