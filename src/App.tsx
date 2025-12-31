@@ -25,6 +25,7 @@ const App = () => {
   );
   const [animationLoop, setAnimationLoop] = useState<number>(sampleCanvas.animationLoop ?? -1);
   const [animationLoopDelay, setAnimationLoopDelay] = useState<{ value: number; unit: 'ms' | 's' }>(sampleCanvas.animationLoopDelay || { value: 5, unit: 's' });
+  const [animationResetDuration, setAnimationResetDuration] = useState<{ value: number; unit: 'ms' | 's' }>(sampleCanvas.animationResetDuration || { value: 1, unit: 's' });
 
   const [selectedLayerIds, setSelectedLayerIds] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
@@ -1009,14 +1010,14 @@ const App = () => {
 
   const handleExportHTML = () => {
     setSelectedLayerIds([]);
-    const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor, animationLoop, animationLoopDelay);
+    const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor, animationLoop, animationLoopDelay, animationResetDuration);
     setExportedHTML(html);
     setIsExportModalOpen(true);
   };
 
   const handleAddLayer = (type: 'text' | 'richtext' | 'image' | 'video' | 'button') => {
     const newLayer: LayerContent = {
-      id: crypto.randomUUID(),
+      id: `sa-${crypto.randomUUID()}`,
       label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
       type,
       locked: false,
@@ -1146,6 +1147,7 @@ const App = () => {
             animationKey={animationKey}
             animationLoop={animationLoop}
             animationLoopDelay={animationLoopDelay}
+            animationResetDuration={animationResetDuration}
             onLayerMouseDown={handleLayerMouseDown}
             onResizeMouseDown={handleResizeMouseDown}
             onMouseMove={(e) => {
@@ -1220,11 +1222,13 @@ const App = () => {
             canvasBackgroundColor={canvasBackgroundColor}
             animationLoop={animationLoop}
             animationLoopDelay={animationLoopDelay}
+            animationResetDuration={animationResetDuration}
             isClippingEnabled={isClippingEnabled}
             onClippingEnabledChange={setIsClippingEnabled}
             onCanvasNameChange={setCanvasName}
             onAnimationLoopChange={setAnimationLoop}
             onAnimationLoopDelayChange={setAnimationLoopDelay}
+            onAnimationResetDurationChange={setAnimationResetDuration}
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}
             onClearSelection={() => setSelectedLayerIds([])}

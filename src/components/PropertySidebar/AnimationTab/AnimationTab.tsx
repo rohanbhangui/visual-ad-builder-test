@@ -45,7 +45,7 @@ export const AnimationTab = ({
   const handleAddAnimation = () => {
     const animationNumber = animations.length + 1;
     const newAnimation: Animation = {
-      id: crypto.randomUUID(),
+      id: `sa-${crypto.randomUUID()}`,
       name: `Animation ${animationNumber}`,
       type: 'fadeIn',
       from: 0,

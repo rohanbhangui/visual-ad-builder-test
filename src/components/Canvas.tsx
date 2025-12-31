@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { type LayerContent, type AdSize } from '../data';
 import { COLORS } from '../consts';
 import { getGoogleFontsLink } from '../utils/googleFonts';
 import SettingsIcon from '../assets/icons/settings.svg?react';
+import PlayIcon from '../assets/icons/play.svg?react';
+import PauseIcon from '../assets/icons/pause.svg?react';
+import ReplayIcon from '../assets/icons/replay.svg?react';
+import PlayFilledIcon from '../assets/icons/play-filled.svg?react';
+import PauseFilledIcon from '../assets/icons/pause-filled.svg?react';
 
 interface CanvasProps {
   mode: 'edit' | 'preview';
@@ -27,6 +32,7 @@ interface CanvasProps {
   animationKey?: number; // Key to force iframe reload for replay
   animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
   animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Delay between loop iterations
+  animationResetDuration?: { value: number; unit: 'ms' | 's' }; // Duration to wait after reset before restarting
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -52,13 +58,13 @@ export const Canvas: React.FC<CanvasProps> = ({
   animationKey = 0,
   animationLoop = 0,
   animationLoopDelay = { value: 0, unit: 's' as const },
+  animationResetDuration = { value: 1, unit: 's' as const },
 }) => {
-  // Track which toggle buttons are in "paused" state (true = paused/showing pause icon)
-  const [toggleButtonStates, setToggleButtonStates] = React.useState<Record<string, boolean>>({});
-
   const generatePreviewHTML = (): string => {
-    // Calculate loop time in milliseconds for the script
+    // Calculate cycle timing for keyframes (needed for layer mapping)
     const loopTimeMs = animationLoopDelay.unit === 's' ? animationLoopDelay.value * 1000 : animationLoopDelay.value;
+    const resetDelayMs = animationResetDuration.unit === 's' ? animationResetDuration.value * 1000 : animationResetDuration.value;
+    const totalCycleTime = loopTimeMs + resetDelayMs; // in ms
     
     const layerElements = layers
       .filter((layer) => {
@@ -77,32 +83,41 @@ export const Canvas: React.FC<CanvasProps> = ({
         
         // Get animations for this size
         const animations = config.animations || [];
-        // Always set iteration count to 1, JS will handle looping
-        const animationStyle = animations.length > 0
+        
+        // Check if properties are animated
+        const hasOpacityAnimation = animations.some(a => a.type === 'fadeIn');
+        
+        // Calculate iteration count: -1 = infinite, 0 = run once (no loop), >0 = that many times
+        const iterationCount = animationLoop === -1 ? 'infinite' : (animationLoop === 0 ? '1' : animationLoop.toString());
+        
+        // Use totalCycleTime as duration, keyframes handle internal timing including delay
+        const animationStyle = animations.length > 0 && animationLoop !== 0
           ? `animation: ${animations.map(anim => 
-              `anim-${layer.id}-${anim.id} ${anim.duration.value}${anim.duration.unit} ${anim.easing} ${anim.delay.value}${anim.delay.unit} 1 forwards`
+              `anim-${layer.id}-${anim.id} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
             ).join(', ')};`
           : '';
 
-        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; opacity: ${opacity}; ${animationStyle}`;
+        // Build style, excluding animated properties
+        const opacityStyle = !hasOpacityAnimation ? `opacity: ${opacity};` : '';
+        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; ${opacityStyle} ${animationStyle}`;
 
         let content = '';
 
         switch (layer.type) {
           case 'image':
-            content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" alt="${layer.label}">`;
+            content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" alt="${layer.label}">`;
             break;
           case 'text':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
             break;
           case 'richtext':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
               const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
               const controls = layer.properties?.controls !== false ? ' controls' : '';
-              content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls}></video>`;
+              content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls}></video>`;
             }
             break;
           case 'button': {
@@ -114,15 +129,15 @@ export const Canvas: React.FC<CanvasProps> = ({
             let isToggleIcon = false;
             
             if (icon.type === 'play') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
             } else if (icon.type === 'pause') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
             } else if (icon.type === 'replay') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>`;
             } else if (icon.type === 'play-fill') {
               iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
             } else if (icon.type === 'pause-fill') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>`;
             } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
               isToggleIcon = true;
               // Find target video to check autoplay status
@@ -214,67 +229,107 @@ export const Canvas: React.FC<CanvasProps> = ({
     });
     const googleFontsLink = fontFamilies.length > 0 ? getGoogleFontsLink(fontFamilies) : '';
 
-    // Generate CSS keyframes for animations
+    // Generate CSS keyframes and initial states for animations
     const animationKeyframes: string[] = [];
+    const initialAnimationStates: string[] = [];
     
     layers.forEach((layer) => {
       const config = layer.sizeConfig[selectedSize];
       const animations = config?.animations;
       
-      if (!animations || animations.length === 0) return;
+      if (!animations || animations.length === 0 || animationLoop === 0) return;
+      
+      // Calculate keyframe percentages
+      const resetStartPercent = (loopTimeMs / totalCycleTime) * 100;
+      
+      // Generate initial state CSS for elements with animations
+      const layerId = layer.attributes.id || layer.id;
+      const initialStates: string[] = [];
+      animations.forEach((animation) => {
+        switch (animation.type) {
+          case 'fadeIn':
+            initialStates.push(`opacity: ${animation.from ?? 0}`);
+            break;
+          case 'slideLeft':
+            initialStates.push(`transform: translateX(${animation.from ?? '100%'})`);
+            break;
+          case 'slideRight':
+            initialStates.push(`transform: translateX(${animation.from ?? '-100%'})`);
+            break;
+          case 'slideUp':
+            initialStates.push(`transform: translateY(${animation.from ?? '100%'})`);
+            break;
+          case 'slideDown':
+            initialStates.push(`transform: translateY(${animation.from ?? '-100%'})`);
+            break;
+          case 'scale':
+            initialStates.push(`transform: scale(${animation.from ?? 0})`);
+            break;
+          case 'custom': {
+            const prop = animation.property || 'opacity';
+            initialStates.push(`${prop}: ${animation.from ?? 0}`);
+            break;
+          }
+        }
+      });
+      if (initialStates.length > 0) {
+        const selector = layerId ? `#${layerId}` : `[data-layer-id="${layer.id}"]`;
+        initialAnimationStates.push(`${selector} { ${initialStates.join('; ')}; }`);
+      }
       
       animations.forEach((animation) => {
+        const duration = animation.duration.unit === 's' ? animation.duration.value * 1000 : animation.duration.value;
+        const delay = animation.delay.unit === 's' ? animation.delay.value * 1000 : animation.delay.value;
+        const animStartPercent = (delay / totalCycleTime) * 100;
+        const animEndPercent = ((delay + duration) / totalCycleTime) * 100;
+        
         let keyframes = '';
+        let fromValue = '';
+        let toValue = '';
         
         switch (animation.type) {
           case 'fadeIn':
-            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
-              from { opacity: ${animation.from ?? 0}; }
-              to { opacity: ${animation.to ?? 1}; }
-            }`;
+            fromValue = `opacity: ${animation.from ?? 0}`;
+            toValue = `opacity: ${animation.to ?? layer.styles.opacity ?? 1}`;
             break;
           case 'slideLeft':
-            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
-              from { transform: translateX(${animation.from ?? '100%'}); }
-              to { transform: translateX(${animation.to ?? '0%'}); }
-            }`;
+            fromValue = `transform: translateX(${animation.from ?? '100%'})`;
+            toValue = `transform: translateX(${animation.to ?? '0%'})`;
             break;
           case 'slideRight':
-            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
-              from { transform: translateX(${animation.from ?? '-100%'}); }
-              to { transform: translateX(${animation.to ?? '0%'}); }
-            }`;
+            fromValue = `transform: translateX(${animation.from ?? '-100%'})`;
+            toValue = `transform: translateX(${animation.to ?? '0%'})`;
             break;
           case 'slideUp':
-            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
-              from { transform: translateY(${animation.from ?? '100%'}); }
-              to { transform: translateY(${animation.to ?? '0%'}); }
-            }`;
+            fromValue = `transform: translateY(${animation.from ?? '100%'})`;
+            toValue = `transform: translateY(${animation.to ?? '0%'})`;
             break;
           case 'slideDown':
-            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
-              from { transform: translateY(${animation.from ?? '-100%'}); }
-              to { transform: translateY(${animation.to ?? '0%'}); }
-            }`;
+            fromValue = `transform: translateY(${animation.from ?? '-100%'})`;
+            toValue = `transform: translateY(${animation.to ?? '0%'})`;
             break;
           case 'scale':
-            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
-              from { transform: scale(${animation.from ?? 0}); }
-              to { transform: scale(${animation.to ?? 1}); }
-            }`;
+            fromValue = `transform: scale(${animation.from ?? 0})`;
+            toValue = `transform: scale(${animation.to ?? 1})`;
             break;
           case 'custom': {
-            // For custom animations, use the property specified
             const prop = animation.property || 'opacity';
-            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
-              from { ${prop}: ${animation.from ?? 0}; }
-              to { ${prop}: ${animation.to ?? 1}; }
-            }`;
+            fromValue = `${prop}: ${animation.from ?? 0}`;
+            toValue = `${prop}: ${animation.to ?? 1}`;
             break;
           }
         }
         
-        if (keyframes) {
+        if (fromValue && toValue) {
+          // Option B: 0% = from, delay% = hold from, delay+duration% = to, loopTime% = hold to, then snap back
+          keyframes = `@keyframes anim-${layer.id}-${animation.id} {
+            0% { ${fromValue}; }
+            ${animStartPercent.toFixed(4)}% { ${fromValue}; }
+            ${animEndPercent.toFixed(4)}% { ${toValue}; }
+            ${resetStartPercent.toFixed(4)}% { ${toValue}; }
+            ${(resetStartPercent + 0.01).toFixed(4)}% { ${fromValue}; }
+            100% { ${fromValue}; }
+          }`;
           animationKeyframes.push(keyframes);
         }
       });
@@ -310,111 +365,15 @@ export const Canvas: React.FC<CanvasProps> = ({
             * {
               box-sizing: border-box;
             }
+            ${initialAnimationStates.join('\n            ')}
             ${animationKeyframes.join('\n')}
           </style>
         </head>
         <body>
           ${layerElements}
           <script>
-            (function() {
-              const loopCount = ${animationLoop};
-              const totalLoopTime = ${loopTimeMs};
-              
-              if (loopCount === 0) return; // No looping
-              
-              let currentLoop = 0;
-              
-              // Find all elements with animations
-              const animatedElements = Array.from(document.querySelectorAll('[style*="animation"]'));
-              if (animatedElements.length === 0) return;
-              
-              // Track which elements have completed all their animations in this cycle
-              const completedElements = new Set();
-              const elementAnimCounts = new Map();
-              const elementAnimEndCounts = new Map();
-              const maxAnimationDuration = new Map();
-              
-              // Setup: count animations per element and calculate max duration
-              animatedElements.forEach(el => {
-                const style = window.getComputedStyle(el);
-                const animationNames = style.animationName.split(',').filter(n => n.trim() !== 'none');
-                const durations = style.animationDuration.split(',').map(d => parseFloat(d) * 1000);
-                const delays = style.animationDelay.split(',').map(d => parseFloat(d) * 1000);
-                
-                elementAnimCounts.set(el, animationNames.length);
-                elementAnimEndCounts.set(el, 0);
-                
-                // Calculate max (duration + delay) for this element
-                let maxDuration = 0;
-                for (let i = 0; i < animationNames.length; i++) {
-                  const totalDuration = (durations[i] || 0) + (delays[i] || 0);
-                  maxDuration = Math.max(maxDuration, totalDuration);
-                }
-                maxAnimationDuration.set(el, maxDuration);
-              });
-              
-              // Calculate the longest animation across all elements
-              let globalMaxDuration = 0;
-              maxAnimationDuration.forEach(duration => {
-                globalMaxDuration = Math.max(globalMaxDuration, duration);
-              });
-              
-              function restartAllAnimations() {
-                // Reset all videos to the beginning
-                document.querySelectorAll('video').forEach(video => {
-                  video.currentTime = 0;
-                  if (video.autoplay) {
-                    video.play();
-                  }
-                });
-                
-                // Restart all animations
-                animatedElements.forEach(el => {
-                  const currentStyle = el.style.animation;
-                  el.style.animation = 'none';
-                  void el.offsetHeight; // Force reflow
-                  el.style.animation = currentStyle;
-                });
-                
-                // Reset tracking
-                completedElements.clear();
-                elementAnimEndCounts.forEach((_, key) => {
-                  elementAnimEndCounts.set(key, 0);
-                });
-              }
-              
-              function checkAllComplete() {
-                // Check if all elements have completed all their animations
-                if (completedElements.size === animatedElements.length) {
-                  currentLoop++;
-                  
-                  // Check if we should continue looping
-                  const shouldContinue = loopCount === -1 || currentLoop < loopCount;
-                  
-                  if (shouldContinue) {
-                    // Wait for the remaining time in the loop cycle
-                    // If animations took longer than totalLoopTime, wait at least 100ms
-                    const pauseDuration = Math.max(100, totalLoopTime - globalMaxDuration);
-                    setTimeout(restartAllAnimations, pauseDuration);
-                  }
-                }
-              }
-              
-              // Listen to animationend on all animated elements
-              animatedElements.forEach(el => {
-                el.addEventListener('animationend', function(e) {
-                  const totalAnims = elementAnimCounts.get(el);
-                  const currentEndCount = elementAnimEndCounts.get(el) + 1;
-                  elementAnimEndCounts.set(el, currentEndCount);
-                  
-                  // Only mark as complete when ALL animations on this element have ended
-                  if (currentEndCount >= totalAnims) {
-                    completedElements.add(el);
-                    checkAllComplete();
-                  }
-                });
-              });
-            })();
+            // No JavaScript timing needed - CSS keyframes handle the full loop cycle!
+            console.log('🎬 Animation system initialized with CSS-only looping');
           </script>
         </body>
       </html>
@@ -514,67 +473,34 @@ export const Canvas: React.FC<CanvasProps> = ({
         
         let iconElement: React.ReactNode = null;
         if (icon.type === 'play') {
-          iconElement = (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-          );
+          iconElement = <PlayIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
         } else if (icon.type === 'pause') {
-          iconElement = (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-          );
+          iconElement = <PauseIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
         } else if (icon.type === 'replay') {
-          iconElement = (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-              <path d="M3 3v5h5"></path>
-            </svg>
-          );
+          iconElement = <ReplayIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
         } else if (icon.type === 'play-fill') {
-          iconElement = (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-          );
+          iconElement = <PlayFilledIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
         } else if (icon.type === 'pause-fill') {
-          iconElement = (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-          );
+          iconElement = <PauseFilledIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
         } else if (icon.type === 'toggle-filled') {
-          // Show play or pause icon based on toggle state
-          const isPaused = toggleButtonStates[layer.id];
+          // Show play or pause icon based on toggle state (defaulting to play)
+          const isPaused = false;
           iconElement = isPaused ? (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
+            <PauseFilledIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
           ) : (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
+            <PlayFilledIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
           );
         } else if (icon.type === 'toggle-outline') {
-          // Show play or pause icon based on toggle state
-          const isPaused = toggleButtonStates[layer.id];
+          // Show play or pause icon based on toggle state (defaulting to play)
+          const isPaused = false;
           iconElement = isPaused ? (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
-              <rect x="6" y="4" width="4" height="16"></rect>
-              <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
+            <PauseIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
           ) : (
-            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
+            <PlayIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
           );
         } else if (icon.type === 'toggle-custom') {
-          // Show play or pause image based on toggle state
-          const isPaused = toggleButtonStates[layer.id];
+          // Show play or pause image based on toggle state (defaulting to play)
+          const isPaused = false;
           const imageSrc = isPaused ? icon.customPauseImage : icon.customPlayImage;
           if (imageSrc) {
             iconElement = <img src={imageSrc} width={iconSize} height={iconSize} alt="" style={{ objectFit: 'contain' }} />;
@@ -598,10 +524,10 @@ export const Canvas: React.FC<CanvasProps> = ({
               gap: hasText && hasIcon ? '6px' : '0',
             }}
           >
-            {hasIcon && hasText && icon.position === 'before' && iconElement}
-            {hasText && <span>{layer.text}</span>}
-            {hasIcon && hasText && icon.position === 'after' && iconElement}
-            {hasIcon && !hasText && iconElement}
+            {hasIcon && hasText && icon.position === 'before' ? iconElement : null}
+            {hasText ? <span>{layer.text}</span> : null}
+            {hasIcon && hasText && icon.position === 'after' ? iconElement : null}
+            {hasIcon && !hasText ? iconElement : null}
           </div>
         );
         break;

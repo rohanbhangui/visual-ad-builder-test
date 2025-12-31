@@ -37,6 +37,7 @@ interface PropertySidebarProps {
   canvasBackgroundColor?: string;
   animationLoop?: number;
   animationLoopDelay?: { value: number; unit: 'ms' | 's' };
+  animationResetDuration?: { value: number; unit: 'ms' | 's' };
   isClippingEnabled?: boolean;
   onClippingEnabledChange?: (enabled: boolean) => void;
   onPropertyChange: (
@@ -74,6 +75,7 @@ interface PropertySidebarProps {
   onCanvasBackgroundColorChange: (color: string) => void;
   onAnimationLoopChange?: (loop: number) => void;
   onAnimationLoopDelayChange?: (delay: { value: number; unit: 'ms' | 's' }) => void;
+  onAnimationResetDurationChange?: (duration: { value: number; unit: 'ms' | 's' }) => void;
   onHtmlIdChange: (layerId: string, htmlId: string) => void;
   onAnimationChange: (layerId: string, size: AdSize, animations: Animation[]) => void;
   onButtonActionTypeChange: (layerId: string, actionType: 'link' | 'videoControl') => void;
@@ -89,6 +91,7 @@ export const PropertySidebar = ({
   canvasBackgroundColor,
   animationLoop = 0,
   animationLoopDelay = { value: 0, unit: 's' as const },
+  animationResetDuration = { value: 1, unit: 's' as const },
   isClippingEnabled = false,
   onClippingEnabledChange,
   onPropertyChange,
@@ -315,7 +318,7 @@ export const PropertySidebar = ({
               </div>
               
               <div>
-                <Label isSecondary>Loop Duration <span className="font-normal">(pause between loops)</span></Label>
+                <Label isSecondary>Loop Duration</Label>
                 <div className="flex gap-1">
                   <input
                     type="number"
@@ -329,6 +332,29 @@ export const PropertySidebar = ({
                   <select
                     value={animationLoopDelay.unit}
                     onChange={(e) => onAnimationLoopDelayChange?.({ ...animationLoopDelay, unit: e.target.value as 'ms' | 's' })}
+                    className="w-14 h-8 px-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                  >
+                    <option value="ms">ms</option>
+                    <option value="s">s</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <Label isSecondary>Reset Duration <span className="font-normal">(pause between loops)</span></Label>
+                <div className="flex gap-1">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={animationResetDuration.value}
+                    onChange={(e) => onAnimationResetDurationChange?.({ ...animationResetDuration, value: parseFloat(e.target.value) || 0 })}
+                    placeholder="1"
+                    className="w-16 h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <select
+                    value={animationResetDuration.unit}
+                    onChange={(e) => onAnimationResetDurationChange?.({ ...animationResetDuration, unit: e.target.value as 'ms' | 's' })}
                     className="w-14 h-8 px-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                   >
                     <option value="ms">ms</option>

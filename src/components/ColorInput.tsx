@@ -53,7 +53,7 @@ export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false 
       <div
         className={`flex items-stretch border rounded overflow-hidden ${
           error ? 'border-red-500' : 'border-gray-300'
-        }`}
+        } ${disabled ? 'bg-gray-100' : 'bg-white'}`}
       >
         <input
           type="color"
@@ -71,7 +71,7 @@ export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false 
           value={inputValue}
           onChange={handleTextChange}
           disabled={disabled}
-          className={`flex-1 h-8 px-2 py-1 text-sm border-none border-l border-gray-300 focus:outline-none ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+          className={`flex-1 h-8 px-2 py-1 text-sm border-none border-l border-gray-300 focus:outline-none ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
           placeholder="rgba(0,0,0,0) or #000000"
         />
         <div className="border-l border-gray-300 self-stretch my-1.5" />
@@ -92,8 +92,8 @@ export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false 
               }
             }}
             disabled={disabled}
-            className={`appearance-none h-8 px-2 pr-7 text-sm border-none focus:outline-none focus:ring-0 bg-white ${
-              disabled ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
+            className={`appearance-none h-8 px-2 pr-7 text-sm border-none focus:outline-none focus:ring-0 ${
+              disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'
             }`}
           >
             <option value="custom">Custom</option>

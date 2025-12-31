@@ -151,13 +151,14 @@ export interface Canvas {
   };
   animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
   animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Delay between loop iterations
+  animationResetDuration?: { value: number; unit: 'ms' | 's' }; // Duration to wait after reset before restarting animations
   createdAt: Date;
   updatedAt: Date;
 }
 
 // Sample data with 4-5 layers
 export const sampleCanvas: Canvas = {
-  id: crypto.randomUUID(),
+  id: `sa-${crypto.randomUUID()}`,
   name: 'Sample HTML5 Ad',
   allowedSizes: ['300x250', '336x280', '728x90', '160x600'],
   styles: {
@@ -165,7 +166,7 @@ export const sampleCanvas: Canvas = {
   },
   layers: [
     {
-      id: crypto.randomUUID(),
+      id: `sa-${crypto.randomUUID()}`,
       label: 'Headline',
       type: 'richtext',
       locked: false,
@@ -180,7 +181,7 @@ export const sampleCanvas: Canvas = {
           fontSize: '20px',
           animations: [
             {
-              id: crypto.randomUUID(),
+              id: `sa-${crypto.randomUUID()}`,
               name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
@@ -199,7 +200,7 @@ export const sampleCanvas: Canvas = {
           fontSize: '24px',
           animations: [
             {
-              id: crypto.randomUUID(),
+              id: `sa-${crypto.randomUUID()}`,
               name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
@@ -234,7 +235,7 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: crypto.randomUUID(),
+      id: `sa-${crypto.randomUUID()}`,
       label: 'Get 50% off on your first purchase. Limited time offer!',
       type: 'text',
       locked: false,
@@ -249,7 +250,7 @@ export const sampleCanvas: Canvas = {
           fontSize: '14px',
           animations: [
             {
-              id: crypto.randomUUID(),
+              id: `sa-${crypto.randomUUID()}`,
               name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
@@ -268,7 +269,7 @@ export const sampleCanvas: Canvas = {
           fontSize: '14px',
           animations: [
             {
-              id: crypto.randomUUID(),
+              id: `sa-${crypto.randomUUID()}`,
               name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
@@ -303,7 +304,7 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: crypto.randomUUID(),
+      id: `sa-${crypto.randomUUID()}`,
       label: 'Play/Pause Button',
       type: 'button',
       locked: false,
@@ -316,6 +317,18 @@ export const sampleCanvas: Canvas = {
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
           iconSize: 16,
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0, unit: 's' },
+              easing: 'ease-in-out',
+            },
+          ],
         },
         '336x280': {
           positionX: { value: 73, unit: 'px' },
@@ -323,6 +336,18 @@ export const sampleCanvas: Canvas = {
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
           iconSize: 16,
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: 0,
+              to: 1,
+              duration: { value: 1, unit: 's' },
+              delay: { value: 0, unit: 's' },
+              easing: 'ease-in-out',
+            },
+          ],
         },
         '728x90': {
           positionX: { value: 573, unit: 'px' },
@@ -358,7 +383,7 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: crypto.randomUUID(),
+      id: `sa-${crypto.randomUUID()}`,
       label: 'Demo Video',
       type: 'video',
       locked: false,
@@ -372,7 +397,7 @@ export const sampleCanvas: Canvas = {
           height: { value: 92, unit: 'px' },
           animations: [
             {
-              id: crypto.randomUUID(),
+              id: `sa-${crypto.randomUUID()}`,
               name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
@@ -390,7 +415,7 @@ export const sampleCanvas: Canvas = {
           height: { value: 111, unit: 'px' },
           animations: [
             {
-              id: crypto.randomUUID(),
+              id: `sa-${crypto.randomUUID()}`,
               name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
@@ -424,7 +449,7 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: crypto.randomUUID(),
+      id: `sa-${crypto.randomUUID()}`,
       label: 'CTA Button',
       type: 'button',
       locked: false,
@@ -439,7 +464,7 @@ export const sampleCanvas: Canvas = {
           fontSize: '14px',
           animations: [
             {
-              id: crypto.randomUUID(),
+              id: `sa-${crypto.randomUUID()}`,
               name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
@@ -458,7 +483,7 @@ export const sampleCanvas: Canvas = {
           fontSize: '14px',
           animations: [
             {
-              id: crypto.randomUUID(),
+              id: `sa-${crypto.randomUUID()}`,
               name: 'Animation 1',
               type: 'fadeIn',
               from: 0,
@@ -496,7 +521,7 @@ export const sampleCanvas: Canvas = {
       },
     },
     {
-      id: crypto.randomUUID(),
+      id: `sa-${crypto.randomUUID()}`,
       label: 'Background Image',
       type: 'image',
       locked: true,
@@ -531,9 +556,13 @@ export const sampleCanvas: Canvas = {
       url: 'https://images.pexels.com/photos/1303098/pexels-photo-1303098.jpeg',
       styles: {
         opacity: 0.46,
+        objectFit: 'cover',
       },
     },
   ],
+  animationLoop: -1, // Infinite
+  animationLoopDelay: { value: 5, unit: 's' }, // Total time for one complete cycle
+  animationResetDuration: { value: 1, unit: 's' }, // 1 second pause after reset before restarting
   createdAt: new Date(),
   updatedAt: new Date(),
 };
