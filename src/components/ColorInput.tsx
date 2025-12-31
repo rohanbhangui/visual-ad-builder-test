@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Label } from './Label';
+import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
 
 interface ColorInputProps {
   label: string;
@@ -84,7 +85,7 @@ export const ColorInput = ({
           className={`flex-1 h-8 px-2 py-1 text-sm border-none border-l border-gray-300 focus:outline-none ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
           placeholder="rgba(0,0,0,0) or #000000"
         />
-        {showNoneOption && (
+        {showNoneOption ? (
           <>
             <div className="border-l border-gray-300 self-stretch my-1.5" />
             <div className="relative flex items-center">
@@ -104,29 +105,17 @@ export const ColorInput = ({
                   }
                 }}
                 disabled={disabled}
-                className={`appearance-none h-8 px-2 pr-7 text-sm border-none focus:outline-none focus:ring-0 ${
+                className={`appearance-none h-8 px-2 pr-6 text-xs border-none focus:outline-none focus:ring-0 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'
                 }`}
               >
-                <option value="custom">Custom</option>
+                <option value="custom">Color</option>
                 <option value="transparent">None</option>
               </select>
-              <svg
-                className="absolute right-[9px] top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-700"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <ChevronDownIcon className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-700" />
             </div>
           </>
-        )}
+        ) : null}
       </div>
     </div>
   );

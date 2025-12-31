@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../data';
 import { ColorInput } from '../ColorInput';
 import { PositionSizeInput } from '../PositionSizeInput';
@@ -111,7 +111,7 @@ interface PropertySidebarProps {
   ) => void;
 }
 
-export const PropertySidebar = ({
+const PropertySidebarComponent = ({
   selectedLayerIds,
   layers,
   selectedSize,
@@ -647,3 +647,5 @@ export const PropertySidebar = ({
     </div>
   );
 };
+
+export const PropertySidebar = memo(PropertySidebarComponent);

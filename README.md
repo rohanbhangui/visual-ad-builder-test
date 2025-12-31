@@ -22,7 +22,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - 1 click export HTML for all relevant sizes with id overrides
 - Multiple layer select (click layers with `shift`)
 - Zoom and pan support (`Ctrl/Cmd + scroll` to zoom scroll / `spacebar + mouse drag` is pan)
-- Trackpad support for 2 finger pan and pinch to zoom in/out
+- Trackpad support for pan and pinch to zoom in/out
 
 ### Layers Panel
 

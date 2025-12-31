@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { sampleCanvas, type LayerContent, type AdSize } from './data';
 import { HTML5_AD_SIZES, UI_LAYOUT } from './consts';
 import { TopBar } from './components/TopBar';
@@ -78,13 +78,13 @@ const App = () => {
     }
   }, [layers]);
 
-  const handleDeleteLayer = (layerId: string) => {
+  const handleDeleteLayer = useCallback((layerId: string) => {
     const layer = layers.find((l) => l.id === layerId);
     if (layer && window.confirm(`Are you sure you want to delete "${layer.label}"?`)) {
       setLayers((prev) => prev.filter((l) => l.id !== layerId));
       setSelectedLayerIds([]);
     }
-  };
+  }, [layers]);
 
   const handleDeleteSelectedLayers = () => {
     if (selectedLayerIds.length === 0) return;
@@ -537,7 +537,7 @@ const App = () => {
     setDragOverLayerIndex(null);
   };
 
-  const handlePropertyChange = (
+  const handlePropertyChange = useCallback((
     layerId: string,
     property: 'positionX' | 'positionY' | 'width' | 'height',
     value: number,
@@ -605,13 +605,13 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, [selectedSize]);
 
-  const handleLabelChange = (layerId: string, newLabel: string) => {
+  const handleLabelChange = useCallback((layerId: string, newLabel: string) => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, label: newLabel } : l)));
-  };
+  }, []);
 
-  const handleHtmlIdChange = (layerId: string, htmlId: string) => {
+  const handleHtmlIdChange = useCallback((layerId: string, htmlId: string) => {
     // Validate: no spaces allowed
     if (/\s/.test(htmlId)) {
       return;
@@ -628,9 +628,9 @@ const App = () => {
         l.id === layerId ? { ...l, attributes: { ...l.attributes, id: htmlId } } : l
       )
     );
-  };
+  }, [layers]);
 
-  const handleAnimationChange = (
+  const handleAnimationChange = useCallback((
     layerId: string,
     size: AdSize,
     animations: import('./data').Animation[]
@@ -650,9 +650,9 @@ const App = () => {
         return { ...l, sizeConfig: updatedSizeConfig };
       })
     );
-  };
+  }, []);
 
-  const handleAnimationLoopDelayChange = (
+  const handleAnimationLoopDelayChange = useCallback((
     layerId: string,
     size: AdSize,
     delay: { value: number; unit: 'ms' | 's' }
@@ -672,9 +672,9 @@ const App = () => {
         return { ...l, sizeConfig: updatedSizeConfig };
       })
     );
-  };
+  }, []);
 
-  const handleAnimationResetDurationChange = (
+  const handleAnimationResetDurationChange = useCallback((
     layerId: string,
     size: AdSize,
     duration: { value: number; unit: 'ms' | 's' }
@@ -694,13 +694,13 @@ const App = () => {
         return { ...l, sizeConfig: updatedSizeConfig };
       })
     );
-  };
+  }, []);
 
-  const handleContentChange = (layerId: string, content: string) => {
+  const handleContentChange = useCallback((layerId: string, content: string) => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, content } : l)));
-  };
+  }, []);
 
-  const handleColorChange = (layerId: string, color: string) => {
+  const handleColorChange = useCallback((layerId: string, color: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
@@ -715,9 +715,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleFontSizeChange = (layerId: string, fontSize: string) => {
+  const handleFontSizeChange = useCallback((layerId: string, fontSize: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
@@ -741,9 +741,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, [selectedSize]);
 
-  const handleIconSizeChange = (layerId: string, iconSize: number) => {
+  const handleIconSizeChange = useCallback((layerId: string, iconSize: number) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
@@ -764,9 +764,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, [selectedSize]);
 
-  const handleFontFamilyChange = (layerId: string, fontFamily: string) => {
+  const handleFontFamilyChange = useCallback((layerId: string, fontFamily: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && (l.type === 'richtext' || l.type === 'button')) {
@@ -781,8 +781,8 @@ const App = () => {
         return l;
       })
     );
-  };
-  const handleTextAlignChange = (layerId: string, textAlign: 'left' | 'center' | 'right') => {
+  }, []);
+  const handleTextAlignChange = useCallback((layerId: string, textAlign: 'left' | 'center' | 'right') => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && (l.type === 'text' || l.type === 'richtext')) {
@@ -797,8 +797,8 @@ const App = () => {
         return l;
       })
     );
-  };
-  const handleTextChange = (layerId: string, text: string) => {
+  }, []);
+  const handleTextChange = useCallback((layerId: string, text: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'button') {
@@ -807,9 +807,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleBackgroundColorChange = (layerId: string, color: string) => {
+  const handleBackgroundColorChange = useCallback((layerId: string, color: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'button') {
@@ -824,15 +824,15 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleAspectRatioLockToggle = (layerId: string) => {
+  const handleAspectRatioLockToggle = useCallback((layerId: string) => {
     setLayers((prev) =>
       prev.map((l) => (l.id === layerId ? { ...l, aspectRatioLocked: !l.aspectRatioLocked } : l))
     );
-  };
+  }, []);
 
-  const handleOpacityChange = (layerId: string, opacity: number) => {
+  const handleOpacityChange = useCallback((layerId: string, opacity: number) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
@@ -847,17 +847,17 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleCanvasBackgroundColorChange = (color: string) => {
+  const handleCanvasBackgroundColorChange = useCallback((color: string) => {
     setCanvasBackgroundColor(color);
-  };
+  }, []);
 
   const handleReplayAnimations = () => {
     setAnimationKey((prev) => prev + 1);
   };
 
-  const handleButtonActionTypeChange = (layerId: string, actionType: 'link' | 'videoControl') => {
+  const handleButtonActionTypeChange = useCallback((layerId: string, actionType: 'link' | 'videoControl') => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'button') {
@@ -866,9 +866,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleButtonIconChange = (
+  const handleButtonIconChange = useCallback((
     layerId: string,
     icon: {
       type:
@@ -897,9 +897,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleVideoControlChange = (
+  const handleVideoControlChange = useCallback((
     layerId: string,
     videoControl: {
       targetElementId: string;
@@ -914,9 +914,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleImageUrlChange = (layerId: string, url: string) => {
+  const handleImageUrlChange = useCallback((layerId: string, url: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'image') {
@@ -925,9 +925,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleObjectFitChange = (layerId: string, objectFit: string) => {
+  const handleObjectFitChange = useCallback((layerId: string, objectFit: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'image') {
@@ -942,9 +942,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleVideoUrlChange = (layerId: string, url: string) => {
+  const handleVideoUrlChange = useCallback((layerId: string, url: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'video') {
@@ -953,9 +953,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleVideoPropertyChange = (
+  const handleVideoPropertyChange = useCallback((
     layerId: string,
     property: 'autoplay' | 'controls',
     value: boolean
@@ -974,9 +974,9 @@ const App = () => {
         return l;
       })
     );
-  };
+  }, []);
 
-  const handleAlignLayer = (
+  const handleAlignLayer = useCallback((
     layerId: string,
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
   ) => {
@@ -1042,7 +1042,7 @@ const App = () => {
         };
       })
     );
-  };
+  }, [selectedLayerIds, selectedSize, dimensions.width, dimensions.height]);
 
   const handleAlignMultipleLayers = (
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
