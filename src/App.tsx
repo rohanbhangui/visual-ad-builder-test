@@ -24,8 +24,6 @@ const App = () => {
     sampleCanvas.styles?.backgroundColor || '#ffffff'
   );
   const [animationLoop, setAnimationLoop] = useState<number>(sampleCanvas.animationLoop ?? -1);
-  const [animationLoopDelay, setAnimationLoopDelay] = useState<{ value: number; unit: 'ms' | 's' }>(sampleCanvas.animationLoopDelay || { value: 5, unit: 's' });
-  const [animationResetDuration, setAnimationResetDuration] = useState<{ value: number; unit: 'ms' | 's' }>(sampleCanvas.animationResetDuration || { value: 1, unit: 's' });
 
   const [selectedLayerIds, setSelectedLayerIds] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
@@ -609,6 +607,42 @@ const App = () => {
     );
   };
 
+  const handleAnimationLoopDelayChange = (layerId: string, size: AdSize, delay: { value: number; unit: 'ms' | 's' }) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id !== layerId) return l;
+        
+        const updatedSizeConfig = { ...l.sizeConfig };
+        if (updatedSizeConfig[size]) {
+          updatedSizeConfig[size] = {
+            ...updatedSizeConfig[size],
+            animationLoopDelay: delay,
+          };
+        }
+        
+        return { ...l, sizeConfig: updatedSizeConfig };
+      })
+    );
+  };
+
+  const handleAnimationResetDurationChange = (layerId: string, size: AdSize, duration: { value: number; unit: 'ms' | 's' }) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id !== layerId) return l;
+        
+        const updatedSizeConfig = { ...l.sizeConfig };
+        if (updatedSizeConfig[size]) {
+          updatedSizeConfig[size] = {
+            ...updatedSizeConfig[size],
+            animationResetDuration: duration,
+          };
+        }
+        
+        return { ...l, sizeConfig: updatedSizeConfig };
+      })
+    );
+  };
+
   const handleContentChange = (layerId: string, content: string) => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, content } : l)));
   };
@@ -1010,7 +1044,7 @@ const App = () => {
 
   const handleExportHTML = () => {
     setSelectedLayerIds([]);
-    const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor, animationLoop, animationLoopDelay, animationResetDuration);
+    const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor, animationLoop);
     setExportedHTML(html);
     setIsExportModalOpen(true);
   };
@@ -1146,8 +1180,6 @@ const App = () => {
             isPanning={isPanning}
             animationKey={animationKey}
             animationLoop={animationLoop}
-            animationLoopDelay={animationLoopDelay}
-            animationResetDuration={animationResetDuration}
             onLayerMouseDown={handleLayerMouseDown}
             onResizeMouseDown={handleResizeMouseDown}
             onMouseMove={(e) => {
@@ -1221,14 +1253,10 @@ const App = () => {
             canvasName={canvasName}
             canvasBackgroundColor={canvasBackgroundColor}
             animationLoop={animationLoop}
-            animationLoopDelay={animationLoopDelay}
-            animationResetDuration={animationResetDuration}
             isClippingEnabled={isClippingEnabled}
             onClippingEnabledChange={setIsClippingEnabled}
             onCanvasNameChange={setCanvasName}
             onAnimationLoopChange={setAnimationLoop}
-            onAnimationLoopDelayChange={setAnimationLoopDelay}
-            onAnimationResetDurationChange={setAnimationResetDuration}
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}
             onClearSelection={() => setSelectedLayerIds([])}
@@ -1251,6 +1279,8 @@ const App = () => {
             onCanvasBackgroundColorChange={handleCanvasBackgroundColorChange}
             onHtmlIdChange={handleHtmlIdChange}
             onAnimationChange={handleAnimationChange}
+            onAnimationLoopDelayChange={handleAnimationLoopDelayChange}
+            onAnimationResetDurationChange={handleAnimationResetDurationChange}
             onButtonActionTypeChange={handleButtonActionTypeChange}
             onButtonIconChange={handleButtonIconChange}
             onVideoControlChange={handleVideoControlChange}

@@ -31,8 +31,6 @@ interface CanvasProps {
   isPanning?: boolean;
   animationKey?: number; // Key to force iframe reload for replay
   animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
-  animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Delay between loop iterations
-  animationResetDuration?: { value: number; unit: 'ms' | 's' }; // Duration to wait after reset before restarting
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -57,10 +55,13 @@ export const Canvas: React.FC<CanvasProps> = ({
   isPanning = false,
   animationKey = 0,
   animationLoop = 0,
-  animationLoopDelay = { value: 0, unit: 's' as const },
-  animationResetDuration = { value: 1, unit: 's' as const },
 }) => {
   const generatePreviewHTML = (): string => {
+    // Get loop delay and reset duration from the first layer's selected size config (or defaults)
+    const firstLayerConfig = layers[0]?.sizeConfig[selectedSize];
+    const animationLoopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
+    const animationResetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
+    
     // Calculate cycle timing for keyframes (needed for layer mapping)
     const loopTimeMs = animationLoopDelay.unit === 's' ? animationLoopDelay.value * 1000 : animationLoopDelay.value;
     const resetDelayMs = animationResetDuration.unit === 's' ? animationResetDuration.value * 1000 : animationResetDuration.value;

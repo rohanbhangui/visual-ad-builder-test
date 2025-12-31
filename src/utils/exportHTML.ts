@@ -6,14 +6,8 @@ export const generateResponsiveHTML = (
   layers: LayerContent[],
   allowedSizes: AdSize[],
   backgroundColor: string = '#ffffff',
-  animationLoop: number = 0,
-  animationLoopDelay: { value: number; unit: 'ms' | 's' } = { value: 0, unit: 's' },
-  animationResetDuration: { value: number; unit: 'ms' | 's' } = { value: 1, unit: 's' }
+  animationLoop: number = 0
 ): string => {
-  // Calculate loop time in milliseconds for the script
-  const loopTimeMs = animationLoopDelay.unit === 's' ? animationLoopDelay.value * 1000 : animationLoopDelay.value;
-  const resetDelayMs = animationResetDuration.unit === 's' ? animationResetDuration.value * 1000 : animationResetDuration.value;
-  
   // Collect all font families used in layers
   const fontFamilies = layers.flatMap((layer) => {
     if (
@@ -25,6 +19,14 @@ export const generateResponsiveHTML = (
     return [];
   });
   const googleFontsLink = fontFamilies.length > 0 ? getGoogleFontsLink(fontFamilies) : '';
+
+  // Get loop timing from first layer's config for the first size
+  const firstSize = allowedSizes[0];
+  const firstLayerConfigForTiming = layers[0]?.sizeConfig[firstSize];
+  const loopDelayForScript = firstLayerConfigForTiming?.animationLoopDelay || { value: 5, unit: 's' as const };
+  const resetDurationForScript = firstLayerConfigForTiming?.animationResetDuration || { value: 1, unit: 's' as const };
+  const loopTimeMs = loopDelayForScript.unit === 's' ? loopDelayForScript.value * 1000 : loopDelayForScript.value;
+  const resetDelayMs = resetDurationForScript.unit === 's' ? resetDurationForScript.value * 1000 : resetDurationForScript.value;
 
   // Generate single set of layer elements
   const generateLayerElements = (): string => {
@@ -183,6 +185,14 @@ export const generateResponsiveHTML = (
   // Generate CSS keyframes for animations per size
   const generateAnimationKeyframes = (size: AdSize): string => {
     const allKeyframes: string[] = [];
+    
+    // Get loop delay and reset duration from first layer's size config (or defaults)
+    const firstLayerConfig = layers[0]?.sizeConfig[size];
+    const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
+    const resetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
+    
+    const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
+    const resetDelayMs = resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
     const totalCycleTime = loopTimeMs + resetDelayMs;
     
     layers.forEach((layer) => {
@@ -269,6 +279,13 @@ export const generateResponsiveHTML = (
         if (!config) {
           return `      #${layerId} { display: none; }`;
         }
+
+        // Get loop timing from first layer's config for this size
+        const firstLayerConfig = layers[0]?.sizeConfig[firstSize];
+        const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
+        const resetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
+        const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
+        const resetDelayMs = resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
 
         const posX = config.positionX;
         const posY = config.positionY;
@@ -360,6 +377,13 @@ export const generateResponsiveHTML = (
             if (!config) {
               return `        #${layerId} { display: none; }`;
             }
+
+            // Get loop timing from first layer's config for this size
+            const firstLayerConfig = layers[0]?.sizeConfig[size];
+            const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
+            const resetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
+            const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
+            const resetDelayMs = resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
 
             const posX = config.positionX;
             const posY = config.positionY;

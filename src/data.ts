@@ -45,6 +45,8 @@ export interface SizeConfig {
   fontSize?: string; // Font size specific to this ad size (e.g., '14px')
   iconSize?: number; // Icon size in pixels (for button layers)
   animations?: Animation[]; // Animations for this size
+  animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Loop duration for this size
+  animationResetDuration?: { value: number; unit: 'ms' | 's' }; // Reset pause duration for this size
 }
 
 // Union type for layer content based on type
@@ -150,8 +152,6 @@ export interface Canvas {
     backgroundColor?: string;
   };
   animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
-  animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Delay between loop iterations
-  animationResetDuration?: { value: number; unit: 'ms' | 's' }; // Duration to wait after reset before restarting animations
   createdAt: Date;
   updatedAt: Date;
 }
@@ -260,6 +260,8 @@ export const sampleCanvas: Canvas = {
               easing: 'ease-in-out',
             },
           ],
+          animationLoopDelay: { value: 5, unit: 's' },
+          animationResetDuration: { value: 1, unit: 's' },
         },
         '336x280': {
           positionX: { value: 21, unit: 'px' },
@@ -279,6 +281,8 @@ export const sampleCanvas: Canvas = {
               easing: 'ease-in-out',
             },
           ],
+          animationLoopDelay: { value: 5, unit: 's' },
+          animationResetDuration: { value: 1, unit: 's' },
         },
         '728x90': {
           positionX: { value: 98, unit: 'px' },
@@ -348,6 +352,8 @@ export const sampleCanvas: Canvas = {
               easing: 'ease-in-out',
             },
           ],
+          animationLoopDelay: { value: 5, unit: 's' },
+          animationResetDuration: { value: 1, unit: 's' },
         },
         '728x90': {
           positionX: { value: 573, unit: 'px' },
@@ -407,6 +413,8 @@ export const sampleCanvas: Canvas = {
               easing: 'ease-in-out',
             },
           ],
+          animationLoopDelay: { value: 5, unit: 's' },
+          animationResetDuration: { value: 1, unit: 's' },
         },
         '336x280': {
           positionX: { value: 69, unit: 'px' },
@@ -425,6 +433,8 @@ export const sampleCanvas: Canvas = {
               easing: 'ease-in-out',
             },
           ],
+          animationLoopDelay: { value: 5, unit: 's' },
+          animationResetDuration: { value: 1, unit: 's' },
         },
         '728x90': {
           positionX: { value: 568, unit: 'px' },
@@ -474,6 +484,8 @@ export const sampleCanvas: Canvas = {
               easing: 'ease-in-out',
             },
           ],
+          animationLoopDelay: { value: 5, unit: 's' },
+          animationResetDuration: { value: 1, unit: 's' },
         },
         '336x280': {
           positionX: { value: 120, unit: 'px' },
@@ -493,6 +505,8 @@ export const sampleCanvas: Canvas = {
               easing: 'ease-in-out',
             },
           ],
+          animationLoopDelay: { value: 5, unit: 's' },
+          animationResetDuration: { value: 1, unit: 's' },
         },
         '728x90': {
           positionX: { value: 421, unit: 'px' },
@@ -561,8 +575,6 @@ export const sampleCanvas: Canvas = {
     },
   ],
   animationLoop: -1, // Infinite
-  animationLoopDelay: { value: 5, unit: 's' }, // Total time for one complete cycle
-  animationResetDuration: { value: 1, unit: 's' }, // 1 second pause after reset before restarting
   createdAt: new Date(),
   updatedAt: new Date(),
 };
