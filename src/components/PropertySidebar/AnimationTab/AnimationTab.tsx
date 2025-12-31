@@ -36,6 +36,8 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(animations.map((a) => a.id)));
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   
   // Local state for numeric inputs to allow typing
   const [durationInputs, setDurationInputs] = useState<Map<string, string>>(new Map());
@@ -93,6 +95,47 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
       }
       return next;
     });
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newAnimations = [...animations];
+    const draggedAnimation = newAnimations[draggedIndex];
+    newAnimations.splice(draggedIndex, 1);
+    newAnimations.splice(dropIndex, 0, draggedAnimation);
+
+    onAnimationChange(layer.id, selectedSize, newAnimations);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   const handleTypeChange = (animationId: string, type: Animation['type']) => {
@@ -166,14 +209,35 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
 
   return (
     <div className="space-y-3">
-      {animations.map((animation) => {
+      {animations.map((animation, index) => {
         const isExpanded = expandedIds.has(animation.id);
         const isEditingName = editingNameId === animation.id;
+        const isDragging = draggedIndex === index;
+        const showDropLineAbove = dragOverIndex === index && draggedIndex !== null && draggedIndex > index;
+        const showDropLineBelow = dragOverIndex === index && draggedIndex !== null && draggedIndex < index;
 
         return (
-          <div key={animation.id} className="border border-gray-300 rounded">
-            {/* Animation Header */}
-            <div className="flex items-center h-9 px-2 bg-gray-50 border-b border-gray-200">
+          <div key={animation.id} className="relative">
+            {/* Drop indicator line above */}
+            {showDropLineAbove && (
+              <div className="absolute -top-1.5 left-0 right-0 h-0.5 bg-blue-500 z-10" />
+            )}
+            
+            <div
+              className={`border border-gray-300 rounded transition-opacity ${
+                isDragging ? 'opacity-50' : ''
+              }`}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+            >
+              {/* Animation Header */}
+              <div
+                className="flex items-center h-9 px-2 bg-gray-50 border-b border-gray-200 cursor-move"
+                draggable={!layer.locked && !isEditingName}
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragEnd={handleDragEnd}
+              >
               <button
                 onClick={() => toggleExpanded(animation.id)}
                 className="p-0 mr-1.5 cursor-pointer"
@@ -236,6 +300,12 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
               <div className="p-3 space-y-3">{renderAnimationFields(animation)}</div>
             ) : null}
           </div>
+          
+          {/* Drop indicator line below */}
+          {showDropLineBelow && (
+            <div className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-blue-500 z-10" />
+          )}
+        </div>
         );
       })}
 
