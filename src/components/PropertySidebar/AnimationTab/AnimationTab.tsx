@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../../data';
 import { Label } from '../../Label';
 import { ColorInput } from '../../ColorInput';
@@ -34,15 +34,23 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
   const config = layer.sizeConfig[selectedSize];
   const animations = config?.animations || [];
 
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(animations.map((a) => a.id)));
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
   
   // Local state for numeric inputs to allow typing
   const [durationInputs, setDurationInputs] = useState<Map<string, string>>(new Map());
   const [delayInputs, setDelayInputs] = useState<Map<string, string>>(new Map());
   const [startPointInputs, setStartPointInputs] = useState<Map<string, string>>(new Map());
+
+  // Reset expanded state when layer changes, but only if user hasn't interacted
+  useEffect(() => {
+    if (!userHasInteracted) {
+      setExpandedIds(new Set());
+    }
+  }, [layer.id, selectedSize, userHasInteracted]);
 
   if (!config) return null;
 
@@ -86,6 +94,7 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
   };
 
   const toggleExpanded = (animationId: string) => {
+    setUserHasInteracted(true);
     setExpandedIds((prev) => {
       const next = new Set(prev);
       if (next.has(animationId)) {

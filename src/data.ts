@@ -44,6 +44,7 @@ export interface SizeConfig {
   height: Size;
   fontSize?: string; // Font size specific to this ad size (e.g., '14px')
   iconSize?: number; // Icon size in pixels (for button layers)
+  borderRadius?: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }; // Corner radius in px (number = all corners, object = individual corners)
   animations?: Animation[]; // Animations for this size
   animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Loop duration for this size
   animationResetDuration?: { value: number; unit: 'ms' | 's' }; // Reset pause duration for this size
@@ -482,6 +483,7 @@ export const sampleCanvas: Canvas = {
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
           fontSize: '14px',
+          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4 },
           animations: [
             {
               id: `sa-${crypto.randomUUID()}`,
@@ -512,6 +514,7 @@ export const sampleCanvas: Canvas = {
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
           fontSize: '14px',
+          borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4 },
           animations: [
             {
               id: `sa-${crypto.randomUUID()}`,

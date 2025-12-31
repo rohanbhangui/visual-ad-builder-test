@@ -11,6 +11,7 @@ import {
 import { PositionSizeInput } from '../../PositionSizeInput';
 import { Label } from '../../Label';
 import { ColorInput } from '../../ColorInput';
+import { CornersInput } from '../../CornersInput';
 import LockIcon from '../../../assets/icons/lock.svg?react';
 import UnlockIcon from '../../../assets/icons/unlock.svg?react';
 import AlignLeftIcon from '../../../assets/icons/align-left.svg?react';
@@ -97,6 +98,10 @@ interface PropertyTabProps {
       action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
     }
   ) => void;
+  onBorderRadiusChange: (
+    layerId: string,
+    borderRadius: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
+  ) => void;
 }
 
 export const PropertyTab = ({
@@ -124,6 +129,7 @@ export const PropertyTab = ({
   onButtonActionTypeChange,
   onButtonIconChange,
   onVideoControlChange,
+  onBorderRadiusChange,
 }: PropertyTabProps) => {
   const config = layer.sizeConfig[selectedSize];
   if (!config) return null;
@@ -237,6 +243,15 @@ export const PropertyTab = ({
         </button>
       </div>
 
+      {/* Corners */}
+      <CornersInput
+        value={config.borderRadius || 0}
+        onChange={(value) => onBorderRadiusChange(layer.id, value)}
+        disabled={layer.locked}
+        isSizeSpecific={true}
+        selectedSize={selectedSize}
+      />
+
       {/* Image Controls */}
       {layer.type === 'image' ? (
         <ImageLayerFields
@@ -310,9 +325,21 @@ export const PropertyTab = ({
         />
       </div>
 
-      {/* Layer Opacity */}
+      {/* Corners */}
       <div className="mt-4">
-        <Label>Layer Opacity</Label>
+        <CornersInput
+          label="Corners"
+          value={config.borderRadius || 0}
+          onChange={(value) => onBorderRadiusChange(layer.id, value)}
+          disabled={layer.locked}
+          isSizeSpecific={true}
+          selectedSize={selectedSize}
+        />
+      </div>
+
+      {/* Opacity */}
+      <div className="mt-4">
+        <Label>Opacity</Label>
         <div className="flex items-center gap-3">
           <div
             className="flex-1 relative h-1 bg-gray-200 rounded-full cursor-pointer"

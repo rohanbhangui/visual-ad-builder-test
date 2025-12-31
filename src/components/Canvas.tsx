@@ -126,9 +126,16 @@ export const Canvas: React.FC<CanvasProps> = ({
                 .join(', ')
             : '';
 
+        // Format border-radius
+        const borderRadiusStyle = config.borderRadius
+          ? typeof config.borderRadius === 'number'
+            ? `border-radius: ${config.borderRadius}px;`
+            : `border-radius: ${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px;`
+          : '';
+
         // Build style, excluding animated properties (animation applied via script)
         const opacityStyle = !hasOpacityAnimation ? `opacity: ${opacity};` : '';
-        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; ${opacityStyle}`;
+        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; ${opacityStyle} ${borderRadiusStyle}`;
 
         let content = '';
 
@@ -469,6 +476,13 @@ export const Canvas: React.FC<CanvasProps> = ({
 
     const isSelected = selectedLayerIds.includes(layer.id);
 
+    // Format border-radius for React style
+    const borderRadiusValue = config.borderRadius
+      ? typeof config.borderRadius === 'number'
+        ? `${config.borderRadius}px`
+        : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`
+      : undefined;
+
     const style: React.CSSProperties = {
       position: 'absolute',
       left: `${posX.value}${posX.unit || 'px'}`,
@@ -479,6 +493,8 @@ export const Canvas: React.FC<CanvasProps> = ({
       zIndex: layers.length - index,
       pointerEvents: layer.locked ? 'none' : 'auto',
       opacity: layer.styles?.opacity || 1,
+      borderRadius: borderRadiusValue,
+      overflow: config.borderRadius ? 'hidden' : undefined,
     };
 
     const contentWrapperClassName = `w-full h-full relative ${

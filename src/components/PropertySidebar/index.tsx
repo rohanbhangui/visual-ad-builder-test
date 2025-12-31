@@ -109,6 +109,10 @@ interface PropertySidebarProps {
       action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
     }
   ) => void;
+  onBorderRadiusChange: (
+    layerId: string,
+    borderRadius: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
+  ) => void;
 }
 
 const PropertySidebarComponent = ({
@@ -149,6 +153,7 @@ const PropertySidebarComponent = ({
   onButtonActionTypeChange,
   onButtonIconChange,
   onVideoControlChange,
+  onBorderRadiusChange,
   activeTab: activeTabProp = 'properties',
   onActiveTabChange,
 }: PropertySidebarProps) => {
@@ -623,6 +628,7 @@ const PropertySidebarComponent = ({
               onButtonActionTypeChange={onButtonActionTypeChange}
               onButtonIconChange={onButtonIconChange}
               onVideoControlChange={onVideoControlChange}
+              onBorderRadiusChange={onBorderRadiusChange}
             />
           ) : (
             <AnimationTab

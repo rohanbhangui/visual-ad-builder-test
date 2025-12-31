@@ -379,6 +379,18 @@ export const generateResponsiveHTML = (
           iconSizeRule = `\n      #${layerId} svg { width: ${config.iconSize}px; height: ${config.iconSize}px; }`;
         }
 
+        // Add border-radius for layers
+        let borderRadiusRule = '';
+        if (config.borderRadius) {
+          const borderRadius = typeof config.borderRadius === 'number'
+            ? `${config.borderRadius}px`
+            : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`;
+          borderRadiusRule = `\n        border-radius: ${borderRadius};`;
+          if (layer.type === 'image' || layer.type === 'video') {
+            borderRadiusRule += '\n        overflow: hidden;';
+          }
+        }
+
         // Add initial state CSS based on animation "from" values
         let initialStateRules = '';
         const animations = config.animations;
@@ -423,7 +435,7 @@ export const generateResponsiveHTML = (
         left: ${posX.value}${posX.unit || 'px'};
         top: ${posY.value}${posY.unit || 'px'};
         width: ${width.value}${width.unit};
-        height: ${height.value}${height.unit};${fontSizeRule}${initialStateRules}
+        height: ${height.value}${height.unit};${fontSizeRule}${borderRadiusRule}${initialStateRules}
       }${iconSizeRule}`;
       })
       .join('\n');
@@ -462,6 +474,18 @@ export const generateResponsiveHTML = (
             let iconSizeRule = '';
             if (layer.type === 'button' && config.iconSize) {
               iconSizeRule = `\n        #${layerId} svg { width: ${config.iconSize}px; height: ${config.iconSize}px; }`;
+            }
+
+            // Add border-radius for layers
+            let borderRadiusRule = '';
+            if (config.borderRadius) {
+              const borderRadius = typeof config.borderRadius === 'number'
+                ? `${config.borderRadius}px`
+                : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`;
+              borderRadiusRule = `\n          border-radius: ${borderRadius};`;
+              if (layer.type === 'image' || layer.type === 'video') {
+                borderRadiusRule += '\n          overflow: hidden;';
+              }
             }
 
             // Add initial state CSS based on animation "from" values
@@ -508,7 +532,7 @@ export const generateResponsiveHTML = (
           left: ${posX.value}${posX.unit || 'px'};
           top: ${posY.value}${posY.unit || 'px'};
           width: ${width.value}${width.unit};
-          height: ${height.value}${height.unit};${fontSizeRule}${initialStateRules}
+          height: ${height.value}${height.unit};${fontSizeRule}${borderRadiusRule}${initialStateRules}
         }${iconSizeRule}`;
           })
           .join('\n');

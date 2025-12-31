@@ -208,7 +208,6 @@ export const ButtonLayerFields = ({
           {layer.actionType === 'videoControl' &&
           layer.videoControl?.action === 'togglePlayPause' ? (
             <>
-              <option value="none">No Icon</option>
               <option value="toggle-filled">Filled</option>
               <option value="toggle-outline">Not Filled</option>
               <option value="toggle-custom">Custom</option>

@@ -859,6 +859,32 @@ const App = () => {
     setCanvasBackgroundColor(color);
   }, []);
 
+  const handleBorderRadiusChange = useCallback((
+    layerId: string,
+    borderRadius: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
+  ) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId) {
+          const currentConfig = l.sizeConfig[selectedSize];
+          if (!currentConfig) return l;
+
+          return {
+            ...l,
+            sizeConfig: {
+              ...l.sizeConfig,
+              [selectedSize]: {
+                ...currentConfig,
+                borderRadius,
+              },
+            },
+          };
+        }
+        return l;
+      })
+    );
+  }, [selectedSize]);
+
   const handleReplayAnimations = () => {
     setAnimationKey((prev) => prev + 1);
   };
@@ -1399,6 +1425,7 @@ const App = () => {
             onButtonActionTypeChange={handleButtonActionTypeChange}
             onButtonIconChange={handleButtonIconChange}
             onVideoControlChange={handleVideoControlChange}
+            onBorderRadiusChange={handleBorderRadiusChange}
           />
         ) : null}
       </div>
