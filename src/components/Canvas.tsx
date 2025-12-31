@@ -102,38 +102,38 @@ export const Canvas: React.FC<CanvasProps> = ({
         const iterationCount =
           animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
 
-        // Use totalCycleTime as duration, keyframes handle internal timing including delay
-        const animationStyle =
+        // Build animation string to be applied via script on DOMContentLoaded
+        const animationValue =
           animations.length > 0
-            ? `animation: ${animations
+            ? animations
                 .map(
                   (anim) =>
                     `anim-${layer.id}-${anim.id} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
                 )
-                .join(', ')};`
+                .join(', ')
             : '';
 
-        // Build style, excluding animated properties
+        // Build style, excluding animated properties (animation applied via script)
         const opacityStyle = !hasOpacityAnimation ? `opacity: ${opacity};` : '';
-        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; ${opacityStyle} ${animationStyle}`;
+        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; ${opacityStyle}`;
 
         let content = '';
 
         switch (layer.type) {
           case 'image':
-            content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" alt="${layer.label}">`;
+            content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" ${animationValue ? `data-animation="${animationValue}"` : ''} alt="${layer.label}">`;
             break;
           case 'text':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
             break;
           case 'richtext':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};">${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
               const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
               const controls = layer.properties?.controls !== false ? ' controls' : '';
-              content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls}></video>`;
+              content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls} ${animationValue ? `data-animation="${animationValue}"` : ''}></video>`;
             }
             break;
           case 'button': {
@@ -241,11 +241,11 @@ export const Canvas: React.FC<CanvasProps> = ({
                       : `if (v.paused) { v.play(); } else { v.pause(); }${iconToggleLogic}`
               } }`;
 
-              content = `<button ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} onclick="${onclickHandler}" style="${baseStyle}">${contentHtml}</button>`;
+              content = `<button ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} onclick="${onclickHandler}" style="${baseStyle}" ${animationValue ? `data-animation="${animationValue}"` : ''}>${contentHtml}</button>`;
             } else {
               const href = layer.actionType === 'link' ? layer.url : '#';
               const target = layer.actionType === 'link' ? ' target="_blank"' : '';
-              content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${href}"${target} style="${baseStyle} text-decoration: none;">${contentHtml}</a>`;
+              content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${href}"${target} style="${baseStyle} text-decoration: none;" ${animationValue ? `data-animation="${animationValue}"` : ''}>${contentHtml}</a>`;
             }
             break;
           }
@@ -425,8 +425,16 @@ export const Canvas: React.FC<CanvasProps> = ({
         <body>
           ${layerElements}
           <script>
-            // No JavaScript timing needed - CSS keyframes handle the full loop cycle!
-            console.log('🎬 Animation system initialized with CSS-only looping');
+            // Apply animations on DOMContentLoaded to ensure fonts/images are ready
+            document.addEventListener('DOMContentLoaded', function() {
+              const elementsWithAnimation = document.querySelectorAll('[data-animation]');
+              elementsWithAnimation.forEach(function(el) {
+                const animationValue = el.getAttribute('data-animation');
+                if (animationValue) {
+                  el.style.animation = animationValue;
+                }
+              });
+            });
           </script>
         </body>
       </html>

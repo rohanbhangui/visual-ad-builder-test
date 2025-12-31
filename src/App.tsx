@@ -1262,12 +1262,12 @@ const App = () => {
           {mode === 'preview' ? (
             <button
               onClick={handleReplayAnimations}
-              className="absolute bottom-4 right-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded shadow-lg transition-colors cursor-pointer flex items-center gap-2"
+              className="absolute bottom-4 left-4 flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer"
               title="Replay Animations"
             >
               <svg
-                width="16"
-                height="16"
+                width="20"
+                height="20"
                 viewBox="0 0 16 16"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -1284,23 +1284,25 @@ const App = () => {
             </button>
           ) : null}
 
-          {/* Snapping Toggle */}
-          <button
-            onClick={() => setIsSnappingEnabled(!isSnappingEnabled)}
-            className={`absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all border w-24 cursor-pointer ${
-              isSnappingEnabled
-                ? 'bg-blue-600 border-blue-700 text-white'
-                : 'bg-white border-gray-200 text-gray-700'
-            }`}
-            title={isSnappingEnabled ? 'Snapping enabled' : 'Snapping disabled'}
-          >
-            <img
-              src={isSnappingEnabled ? magnetOutlineIcon : freeMoveIcon}
-              alt={isSnappingEnabled ? 'magnet' : 'free move'}
-              className={`w-5 h-5 ${isSnappingEnabled ? 'brightness-0 invert' : 'text-gray-700'}`}
-            />
-            <span className="text-sm font-medium">{isSnappingEnabled ? 'Snap' : 'Free'}</span>
-          </button>
+          {/* Snapping Toggle - Only in Edit Mode */}
+          {mode === 'edit' ? (
+            <button
+              onClick={() => setIsSnappingEnabled(!isSnappingEnabled)}
+              className={`absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all border w-24 cursor-pointer ${
+                isSnappingEnabled
+                  ? 'bg-blue-600 border-blue-700 text-white'
+                  : 'bg-white border-gray-200 text-gray-700'
+              }`}
+              title={isSnappingEnabled ? 'Snapping enabled' : 'Snapping disabled'}
+            >
+              <img
+                src={isSnappingEnabled ? magnetOutlineIcon : freeMoveIcon}
+                alt={isSnappingEnabled ? 'magnet' : 'free move'}
+                className={`w-5 h-5 ${isSnappingEnabled ? 'brightness-0 invert' : 'text-gray-700'}`}
+              />
+              <span className="text-sm font-medium">{isSnappingEnabled ? 'Snap' : 'Free'}</span>
+            </button>
+          ) : null}
 
           {/* Zoom Controls */}
           {mode === 'edit' ? (

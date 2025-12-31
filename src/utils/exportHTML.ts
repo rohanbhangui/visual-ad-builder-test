@@ -20,6 +20,32 @@ export const generateResponsiveHTML = (
   });
   const googleFontsLink = fontFamilies.length > 0 ? getGoogleFontsLink(fontFamilies) : '';
 
+  // Pre-compute animation data for each layer for first size
+  const firstSize = allowedSizes[0];
+  const animationDataMap = new Map<string, string>();
+  
+  layers.forEach((layer) => {
+    const layerId = layer.attributes.id || layer.id;
+    const config = layer.sizeConfig[firstSize];
+    const animations = config?.animations;
+    
+    if (animations && animations.length > 0) {
+      const firstLayerConfig = layers[0]?.sizeConfig[firstSize];
+      const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
+      const resetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
+      const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
+      const resetDelayMs = resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
+      const totalCycleTime = loopTimeMs + resetDelayMs;
+      const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
+      
+      const animationStrings = animations.map(
+        (animation) =>
+          `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
+      );
+      animationDataMap.set(layerId, animationStrings.join(', '));
+    }
+  });
+
   // Generate single set of layer elements
   const generateLayerElements = (): string => {
     return layers
@@ -39,6 +65,10 @@ export const generateResponsiveHTML = (
         const opacityStyle = !hasOpacityAnimation ? ` opacity: ${opacity};` : '';
         const baseStyle = `position: absolute; z-index: ${zIndex};${opacityStyle}`;
 
+        // Get animation data for this layer
+        const animationData = animationDataMap.get(layerId);
+        const animationAttr = animationData ? ` data-animation="${animationData}"` : '';
+
         let content = '';
         let additionalStyles = '';
 
@@ -46,21 +76,21 @@ export const generateResponsiveHTML = (
           case 'image': {
             // Width/height will be set via CSS for each size
             additionalStyles = `object-fit: ${layer.styles.objectFit || 'cover'};`;
-            content = `<img id="${layerId}" src="${layer.url}" style="${baseStyle} ${additionalStyles}" alt="${layer.label}">`;
+            content = `<img id="${layerId}" src="${layer.url}" style="${baseStyle} ${additionalStyles}"${animationAttr} alt="${layer.label}">`;
             break;
           }
           case 'text':
             additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'}; white-space: pre-wrap;`;
-            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
+            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}"${animationAttr}>${layer.content}</div>`;
             break;
           case 'richtext':
             additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};`;
-            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}">${layer.content}</div>`;
+            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}"${animationAttr}>${layer.content}</div>`;
             break;
           case 'video': {
             const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
             const controls = layer.properties?.controls !== false ? ' controls' : '';
-            content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
+            content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}${animationAttr}></video>`;
             break;
           }
           case 'button': {
@@ -182,11 +212,11 @@ export const generateResponsiveHTML = (
 
               const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${videoAction} ${iconToggleLogic} }`;
 
-              content = `<button id="${layerId}" onclick="${onclickHandler}" style="${baseButtonStyle}">${contentHtml}</button>`;
+              content = `<button id="${layerId}" onclick="${onclickHandler}" style="${baseButtonStyle}"${animationAttr}>${contentHtml}</button>`;
             } else {
               const href = layer.actionType === 'link' ? layer.url : '#';
               const target = layer.actionType === 'link' ? ' target="_blank"' : '';
-              content = `<a id="${layerId}" href="${href}"${target} style="${baseButtonStyle} text-decoration: none;">${contentHtml}</a>`;
+              content = `<a id="${layerId}" href="${href}"${target} style="${baseButtonStyle} text-decoration: none;"${animationAttr}>${contentHtml}</a>`;
             }
             break;
           }
@@ -384,8 +414,8 @@ export const generateResponsiveHTML = (
           }
         }
 
-        // Add animation styles
-        let animationRule = '';
+        // Add animation styles - store as data attribute, not in CSS
+        let animationDataAttr = '';
         if (animations && animations.length > 0) {
           const totalCycleTime = loopTimeMs + resetDelayMs;
           const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
@@ -393,7 +423,7 @@ export const generateResponsiveHTML = (
             (animation) =>
               `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
           );
-          animationRule = `\n        animation: ${animationStrings.join(', ')};`;
+          animationDataAttr = animationStrings.join(', ');
         }
 
         return `      #${layerId} {
@@ -401,7 +431,7 @@ export const generateResponsiveHTML = (
         left: ${posX.value}${posX.unit || 'px'};
         top: ${posY.value}${posY.unit || 'px'};
         width: ${width.value}${width.unit};
-        height: ${height.value}${height.unit};${fontSizeRule}${initialStateRules}${animationRule}
+        height: ${height.value}${height.unit};${fontSizeRule}${initialStateRules}
       }${iconSizeRule}`;
       })
       .join('\n');
@@ -493,24 +523,14 @@ export const generateResponsiveHTML = (
               }
             }
 
-            // Add animation styles
-            let animationRule = '';
-            if (animations && animations.length > 0) {
-              const totalCycleTime = loopTimeMs + resetDelayMs;
-              const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
-              const animationStrings = animations.map(
-                (animation) =>
-                  `anim-${layerId}-${animation.id}-${size} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
-              );
-              animationRule = `\n          animation: ${animationStrings.join(', ')};`;
-            }
+            // Animation styles removed - will be applied via script on DOMContentLoaded
 
             return `        #${layerId} {
           display: block;
           left: ${posX.value}${posX.unit || 'px'};
           top: ${posY.value}${posY.unit || 'px'};
           width: ${width.value}${width.unit};
-          height: ${height.value}${height.unit};${fontSizeRule}${initialStateRules}${animationRule}
+          height: ${height.value}${height.unit};${fontSizeRule}${initialStateRules}
         }${iconSizeRule}`;
           })
           .join('\n');
@@ -593,6 +613,17 @@ ${mediaQueries}`;
 ${generateLayerElements()}
     </div>
     <script>
+      // Apply animations on DOMContentLoaded to ensure fonts/images are ready
+      document.addEventListener('DOMContentLoaded', function() {
+        const elementsWithAnimation = document.querySelectorAll('[data-animation]');
+        elementsWithAnimation.forEach(function(el) {
+          const animationValue = el.getAttribute('data-animation');
+          if (animationValue) {
+            el.style.animation = animationValue;
+          }
+        });
+      });
+
       // Auto-play videos on load
       (function() {
         document.querySelectorAll('video[autoplay]').forEach(function(video) {
