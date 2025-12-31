@@ -370,6 +370,7 @@ export const PropertySidebar = ({
                 label="Background Color"
                 value={canvasBackgroundColor || '#ffffff'}
                 onChange={onCanvasBackgroundColorChange}
+                showNoneOption={true}
               />
             </div>
 

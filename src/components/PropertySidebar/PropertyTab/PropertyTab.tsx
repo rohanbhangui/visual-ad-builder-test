@@ -306,6 +306,7 @@ export const PropertyTab = ({
           value={layer.styles?.backgroundColor || 'transparent'}
           onChange={(color) => onBackgroundColorChange(layer.id, color)}
           disabled={layer.locked}
+          showNoneOption={true}
         />
       </div>
 

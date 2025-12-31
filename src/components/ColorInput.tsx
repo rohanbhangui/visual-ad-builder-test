@@ -7,6 +7,7 @@ interface ColorInputProps {
   onChange: (color: string) => void;
   disabled?: boolean;
   isGlobal?: boolean;
+  showNoneOption?: boolean;
 }
 
 export const ColorInput = ({
@@ -15,6 +16,7 @@ export const ColorInput = ({
   onChange,
   disabled,
   isGlobal = false,
+  showNoneOption = false,
 }: ColorInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState(value || '');
@@ -82,45 +84,49 @@ export const ColorInput = ({
           className={`flex-1 h-8 px-2 py-1 text-sm border-none border-l border-gray-300 focus:outline-none ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
           placeholder="rgba(0,0,0,0) or #000000"
         />
-        <div className="border-l border-gray-300 self-stretch my-1.5" />
-        <div className="relative flex items-center">
-          <select
-            value={dropdownValue}
-            onChange={(e) => {
-              const newValue = e.target.value as 'transparent' | 'custom';
-              if (newValue === 'transparent') {
-                setInputValue('rgba(0,0,0,0)');
-                onChange('rgba(0,0,0,0)');
-                setError('');
-              } else {
-                // Switching to custom - use black as default
-                setInputValue('#000000');
-                onChange('#000000');
-                setError('');
-              }
-            }}
-            disabled={disabled}
-            className={`appearance-none h-8 px-2 pr-7 text-sm border-none focus:outline-none focus:ring-0 ${
-              disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'
-            }`}
-          >
-            <option value="custom">Custom</option>
-            <option value="transparent">None</option>
-          </select>
-          <svg
-            className="absolute right-[9px] top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-700"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </div>
+        {showNoneOption && (
+          <>
+            <div className="border-l border-gray-300 self-stretch my-1.5" />
+            <div className="relative flex items-center">
+              <select
+                value={dropdownValue}
+                onChange={(e) => {
+                  const newValue = e.target.value as 'transparent' | 'custom';
+                  if (newValue === 'transparent') {
+                    setInputValue('rgba(0,0,0,0)');
+                    onChange('rgba(0,0,0,0)');
+                    setError('');
+                  } else {
+                    // Switching to custom - use black as default
+                    setInputValue('#000000');
+                    onChange('#000000');
+                    setError('');
+                  }
+                }}
+                disabled={disabled}
+                className={`appearance-none h-8 px-2 pr-7 text-sm border-none focus:outline-none focus:ring-0 ${
+                  disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white cursor-pointer'
+                }`}
+              >
+                <option value="custom">Custom</option>
+                <option value="transparent">None</option>
+              </select>
+              <svg
+                className="absolute right-[9px] top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-700"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
