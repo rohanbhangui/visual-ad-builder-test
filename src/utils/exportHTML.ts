@@ -20,24 +20,6 @@ export const generateResponsiveHTML = (
   });
   const googleFontsLink = fontFamilies.length > 0 ? getGoogleFontsLink(fontFamilies) : '';
 
-  // Get loop timing from first layer's config for the first size
-  const firstSize = allowedSizes[0];
-  const firstLayerConfigForTiming = layers[0]?.sizeConfig[firstSize];
-  const loopDelayForScript = firstLayerConfigForTiming?.animationLoopDelay || {
-    value: 5,
-    unit: 's' as const,
-  };
-  const resetDurationForScript = firstLayerConfigForTiming?.animationResetDuration || {
-    value: 1,
-    unit: 's' as const,
-  };
-  const loopTimeMs =
-    loopDelayForScript.unit === 's' ? loopDelayForScript.value * 1000 : loopDelayForScript.value;
-  const resetDelayMs =
-    resetDurationForScript.unit === 's'
-      ? resetDurationForScript.value * 1000
-      : resetDurationForScript.value;
-
   // Generate single set of layer elements
   const generateLayerElements = (): string => {
     return layers
@@ -238,7 +220,7 @@ export const generateResponsiveHTML = (
       const config = layer.sizeConfig[size];
       const animations = config?.animations;
 
-      if (!animations || animations.length === 0 || animationLoop === 0) return;
+      if (!animations || animations.length === 0) return;
 
       const resetStartPercent = (loopTimeMs / totalCycleTime) * 100;
 
@@ -290,14 +272,26 @@ export const generateResponsiveHTML = (
         }
 
         if (fromValue && toValue) {
-          keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
-            0% { ${fromValue}; }
-            ${animStartPercent.toFixed(4)}% { ${fromValue}; }
-            ${animEndPercent.toFixed(4)}% { ${toValue}; }
-            ${resetStartPercent.toFixed(4)}% { ${toValue}; }
-            ${(resetStartPercent + 0.01).toFixed(4)}% { ${fromValue}; }
-            100% { ${fromValue}; }
-          }`;
+          // Generate keyframes based on loop type
+          if (animationLoop === 0) {
+            // No loop: animate once and hold at "to" state
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
+              0% { ${fromValue}; }
+              ${animStartPercent.toFixed(4)}% { ${fromValue}; }
+              ${animEndPercent.toFixed(4)}% { ${toValue}; }
+              100% { ${toValue}; }
+            }`;
+          } else {
+            // Loop: include reset to enable looping
+            keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
+              0% { ${fromValue}; }
+              ${animStartPercent.toFixed(4)}% { ${fromValue}; }
+              ${animEndPercent.toFixed(4)}% { ${toValue}; }
+              ${resetStartPercent.toFixed(4)}% { ${toValue}; }
+              ${(resetStartPercent + 0.01).toFixed(4)}% { ${fromValue}; }
+              100% { ${fromValue}; }
+            }`;
+          }
           allKeyframes.push(keyframes);
         }
       });
@@ -392,9 +386,9 @@ export const generateResponsiveHTML = (
 
         // Add animation styles
         let animationRule = '';
-        if (animations && animations.length > 0 && animationLoop !== 0) {
+        if (animations && animations.length > 0) {
           const totalCycleTime = loopTimeMs + resetDelayMs;
-          const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop.toString();
+          const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
           const animationStrings = animations.map(
             (animation) =>
               `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
@@ -501,9 +495,9 @@ export const generateResponsiveHTML = (
 
             // Add animation styles
             let animationRule = '';
-            if (animations && animations.length > 0 && animationLoop !== 0) {
+            if (animations && animations.length > 0) {
               const totalCycleTime = loopTimeMs + resetDelayMs;
-              const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop.toString();
+              const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
               const animationStrings = animations.map(
                 (animation) =>
                   `anim-${layerId}-${animation.id}-${size} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
@@ -599,145 +593,13 @@ ${mediaQueries}`;
 ${generateLayerElements()}
     </div>
     <script>
-      // Animation loop controller
+      // Auto-play videos on load
       (function() {
-        const loopCount = ${animationLoop};
-        const totalLoopTime = ${loopTimeMs};
-        const resetDelayMs = ${resetDelayMs};
-        
-        let currentLoop = 0;
-        
-        // Find all elements with animations
-        const animatedElements = Array.from(document.querySelectorAll('[style*="animation"]'));
-        if (animatedElements.length === 0) return; // No elements with animations
-        
-        // If no looping (loopCount === 0), animations still run once via CSS, so we're done
-        if (loopCount === 0) return;
-        
-        // Calculate animation durations for timing
-        const maxAnimationDuration = new Map();
-        
-        // Setup: calculate max duration for each element
-        animatedElements.forEach(element => {
-          const style = window.getComputedStyle(element);
-          const animationNames = style.animationName.split(',').filter(n => n.trim() !== 'none');
-          const durations = style.animationDuration.split(',').map(d => parseFloat(d) * 1000);
-          const delays = style.animationDelay.split(',').map(d => parseFloat(d) * 1000);
-          
-          // Calculate max (duration + delay) for this element
-          let maxDuration = 0;
-          for (let i = 0; i < animationNames.length; i++) {
-            const totalDuration = (durations[i] || 0) + (delays[i] || 0);
-            maxDuration = Math.max(maxDuration, totalDuration);
-          }
-          maxAnimationDuration.set(element, maxDuration);
-        });
-        
-        // Calculate the longest animation across all elements
-        let globalMaxDuration = 0;
-        maxAnimationDuration.forEach(duration => {
-          globalMaxDuration = Math.max(globalMaxDuration, duration);
-        });
-        
-        function resetToInitialState() {
-          console.log('🔄 Resetting to initial state...');
-          // Reset all videos to the beginning (paused at start)
-          document.querySelectorAll('video').forEach(function(video) {
-            video.currentTime = 0;
-            video.pause();
+        document.querySelectorAll('video[autoplay]').forEach(function(video) {
+          video.play().catch(function() {
+            // Autoplay was prevented by browser policy
           });
-          
-          // Clear inline styles to let CSS rules take over
-          animatedElements.forEach(element => {
-            // Remove inline animation style
-            element.style.removeProperty('animation');
-            // Clear animated properties so CSS initial state takes over
-            element.style.removeProperty('opacity');
-            element.style.removeProperty('transform');
-          });
-          
-          // Force reflow
-          void document.body.offsetHeight;
-          
-          console.log('✅ Reset complete, elements at initial state');
-        }
-        
-        function startAnimations() {
-          console.log('🚀 Starting animations...');
-          
-          // Start videos that have autoplay
-          document.querySelectorAll('video').forEach(function(video) {
-            if (video.autoplay) {
-              video.play();
-            }
-          });
-          
-          // Force reflow to restart animations
-          void document.body.offsetHeight;
-          
-          console.log('✅ Animations started!');
-          
-          // Schedule the next loop based on animation duration (but not on first run)
-          if (currentLoop > 0 && (loopCount === -1 || currentLoop < loopCount - 1)) {
-            console.log('⏰ Scheduling next loop after', globalMaxDuration + 'ms (animation duration)');
-            setTimeout(function() {
-              currentLoop++;
-              console.log('✨ Animation cycle completed! Loop', currentLoop, '/', loopCount === -1 ? 'infinite' : loopCount);
-              
-              const shouldContinue = loopCount === -1 || currentLoop < loopCount;
-              console.log('   Should continue?', shouldContinue);
-              
-              if (shouldContinue) {
-                const remainingLoopTime = Math.max(0, totalLoopTime - globalMaxDuration);
-                console.log('⏱️  Waiting', remainingLoopTime + 'ms (remaining loop time)...');
-                
-                setTimeout(function() {
-                  resetToInitialState();
-                  console.log('⏱️  Waiting', resetDelayMs + 'ms (reset duration) before restarting...');
-                  setTimeout(function() {
-                    startAnimations();
-                  }, resetDelayMs);
-                }, remainingLoopTime);
-              } else {
-                console.log('🏁 Animation loop complete. No more loops.');
-              }
-            }, globalMaxDuration);
-          }
-        }
-        
-        // Start the first animation cycle
-        console.log('🎭 Animation loop initialized:', {
-          loopCount: loopCount === -1 ? 'infinite' : loopCount,
-          totalLoopTime: totalLoopTime + 'ms',
-          resetDelayMs: resetDelayMs + 'ms',
-          globalMaxDuration: globalMaxDuration + 'ms',
-          animatedElements: animatedElements.length
         });
-        
-        // Schedule first loop completion (let CSS animations run naturally on first load)
-        console.log('⏰ Scheduling first loop completion after', globalMaxDuration + 'ms');
-        setTimeout(function() {
-          currentLoop++;
-          console.log('✨ First animation cycle completed! Loop', currentLoop, '/', loopCount === -1 ? 'infinite' : loopCount);
-          
-          const shouldContinue = loopCount === -1 || currentLoop < loopCount;
-          console.log('   Should continue?', shouldContinue);
-          
-          if (shouldContinue) {
-            const remainingLoopTime = Math.max(0, totalLoopTime - globalMaxDuration);
-            console.log('⏱️  Waiting', remainingLoopTime + 'ms (remaining loop time)...');
-            
-            setTimeout(function() {
-              resetToInitialState();
-              console.log('⏱️  Waiting', resetDelayMs + 'ms (reset duration) before restarting...');
-              setTimeout(function() {
-                startAnimations();
-              }, resetDelayMs);
-            }, remainingLoopTime);
-          } else {
-            console.log('🏁 Animation loop complete. No more loops.');
-          }
-        }, globalMaxDuration);
       })();
     </script>
   </body>

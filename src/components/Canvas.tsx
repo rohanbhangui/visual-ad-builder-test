@@ -104,7 +104,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
         // Use totalCycleTime as duration, keyframes handle internal timing including delay
         const animationStyle =
-          animations.length > 0 && animationLoop !== 0
+          animations.length > 0
             ? `animation: ${animations
                 .map(
                   (anim) =>
@@ -275,7 +275,7 @@ export const Canvas: React.FC<CanvasProps> = ({
       const config = layer.sizeConfig[selectedSize];
       const animations = config?.animations;
 
-      if (!animations || animations.length === 0 || animationLoop === 0) return;
+      if (!animations || animations.length === 0) return;
 
       // Calculate keyframe percentages
       const resetStartPercent = (loopTimeMs / totalCycleTime) * 100;
@@ -363,15 +363,26 @@ export const Canvas: React.FC<CanvasProps> = ({
         }
 
         if (fromValue && toValue) {
-          // Option B: 0% = from, delay% = hold from, delay+duration% = to, loopTime% = hold to, then snap back
-          keyframes = `@keyframes anim-${layer.id}-${animation.id} {
-            0% { ${fromValue}; }
-            ${animStartPercent.toFixed(4)}% { ${fromValue}; }
-            ${animEndPercent.toFixed(4)}% { ${toValue}; }
-            ${resetStartPercent.toFixed(4)}% { ${toValue}; }
-            ${(resetStartPercent + 0.01).toFixed(4)}% { ${fromValue}; }
-            100% { ${fromValue}; }
-          }`;
+          // Generate keyframes based on loop type
+          if (animationLoop === 0) {
+            // No loop: animate once and hold at "to" state
+            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
+              0% { ${fromValue}; }
+              ${animStartPercent.toFixed(4)}% { ${fromValue}; }
+              ${animEndPercent.toFixed(4)}% { ${toValue}; }
+              100% { ${toValue}; }
+            }`;
+          } else {
+            // Loop: include reset to enable looping
+            keyframes = `@keyframes anim-${layer.id}-${animation.id} {
+              0% { ${fromValue}; }
+              ${animStartPercent.toFixed(4)}% { ${fromValue}; }
+              ${animEndPercent.toFixed(4)}% { ${toValue}; }
+              ${resetStartPercent.toFixed(4)}% { ${toValue}; }
+              ${(resetStartPercent + 0.01).toFixed(4)}% { ${fromValue}; }
+              100% { ${fromValue}; }
+            }`;
+          }
           animationKeyframes.push(keyframes);
         }
       });

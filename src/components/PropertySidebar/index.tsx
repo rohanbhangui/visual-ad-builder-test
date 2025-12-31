@@ -84,8 +84,20 @@ interface PropertySidebarProps {
   onButtonIconChange: (
     layerId: string,
     icon: {
-      type: 'none' | 'play' | 'pause' | 'replay' | 'custom';
+      type:
+        | 'none'
+        | 'play'
+        | 'pause'
+        | 'replay'
+        | 'play-fill'
+        | 'pause-fill'
+        | 'custom'
+        | 'toggle-filled'
+        | 'toggle-outline'
+        | 'toggle-custom';
       customImage?: string;
+      customPlayImage?: string;
+      customPauseImage?: string;
       color?: string;
       position?: 'before' | 'after';
     }
@@ -384,7 +396,6 @@ export const PropertySidebar = ({
                   className="w-full h-8 px-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                 >
                   <option value="0">No Loop</option>
-                  <option value="1">1 time</option>
                   <option value="2">2 times</option>
                   <option value="3">3 times</option>
                   <option value="5">5 times</option>

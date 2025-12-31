@@ -72,8 +72,20 @@ interface PropertyTabProps {
   onButtonIconChange: (
     layerId: string,
     icon: {
-      type: 'none' | 'play' | 'pause' | 'replay' | 'custom';
+      type:
+        | 'none'
+        | 'play'
+        | 'pause'
+        | 'replay'
+        | 'play-fill'
+        | 'pause-fill'
+        | 'custom'
+        | 'toggle-filled'
+        | 'toggle-outline'
+        | 'toggle-custom';
       customImage?: string;
+      customPlayImage?: string;
+      customPauseImage?: string;
       color?: string;
       position?: 'before' | 'after';
     }
@@ -255,7 +267,6 @@ export const PropertyTab = ({
           onFontFamilyChange={onFontFamilyChange}
           onFontSizeChange={onFontSizeChange}
           onIconSizeChange={onIconSizeChange}
-          onBackgroundColorChange={onBackgroundColorChange}
           onButtonActionTypeChange={onButtonActionTypeChange}
           onButtonIconChange={onButtonIconChange}
           onVideoControlChange={onVideoControlChange}

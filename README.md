@@ -52,3 +52,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Opacity support
 - Lock aspect ratio (width vs. height without `shift`)
 - Indicators for controls that are global vs local to the size (with tooltips)
+- Animation panel with multiple animations allowed
+- Animations have a duration and a reset period before restarting the animation
+- Buttons can control urls and can act as video controllers
+- Arrow key support for position, width and height
