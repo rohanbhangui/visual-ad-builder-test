@@ -617,6 +617,12 @@ const App = () => {
       return;
     }
 
+    // Validate: cannot start with a number
+    if (htmlId && /^\d/.test(htmlId)) {
+      alert('ID cannot start with a number. Please choose a valid ID.');
+      return;
+    }
+
     // Validate: must be unique across layers (if not empty)
     if (htmlId && layers.some((l) => l.id !== layerId && l.attributes.id === htmlId)) {
       alert('This ID is already in use by another layer. Please choose a unique ID.');
