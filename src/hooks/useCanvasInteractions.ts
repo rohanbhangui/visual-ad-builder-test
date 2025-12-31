@@ -244,12 +244,21 @@ export const useCanvasInteractions = ({
             const otherConfig = layer.sizeConfig[selectedSize];
             if (!otherConfig) return;
 
-            const otherX = Number(otherConfig.positionX.value);
-            const otherY = Number(otherConfig.positionY.value);
-            const otherRight = otherX + Number(otherConfig.width.value);
-            const otherBottom = otherY + Number(otherConfig.height.value);
-            const otherCenterX = otherX + Number(otherConfig.width.value) / 2;
-            const otherCenterY = otherY + Number(otherConfig.height.value) / 2;
+            // Convert positions and dimensions to pixels if they're percentages
+            const otherXData = otherConfig.positionX;
+            const otherYData = otherConfig.positionY;
+            const otherWidthData = otherConfig.width;
+            const otherHeightData = otherConfig.height;
+            
+            const otherX = otherXData.unit === '%' ? (Number(otherXData.value) / 100) * dimensions.width : Number(otherXData.value);
+            const otherY = otherYData.unit === '%' ? (Number(otherYData.value) / 100) * dimensions.height : Number(otherYData.value);
+            const otherWidth = otherWidthData.unit === '%' ? (Number(otherWidthData.value) / 100) * dimensions.width : Number(otherWidthData.value);
+            const otherHeight = otherHeightData.unit === '%' ? (Number(otherHeightData.value) / 100) * dimensions.height : Number(otherHeightData.value);
+            
+            const otherRight = otherX + otherWidth;
+            const otherBottom = otherY + otherHeight;
+            const otherCenterX = otherX + otherWidth / 2;
+            const otherCenterY = otherY + otherHeight / 2;
 
             // Vertical snapping
             if (snapDx === 0) {
@@ -559,12 +568,21 @@ export const useCanvasInteractions = ({
             const otherConfig = layer.sizeConfig[selectedSize];
             if (!otherConfig) return;
 
-            const otherX = Number(otherConfig.positionX.value);
-            const otherY = Number(otherConfig.positionY.value);
-            const otherRight = otherX + Number(otherConfig.width.value);
-            const otherBottom = otherY + Number(otherConfig.height.value);
-            const otherCenterX = otherX + Number(otherConfig.width.value) / 2;
-            const otherCenterY = otherY + Number(otherConfig.height.value) / 2;
+            // Convert positions and dimensions to pixels if they're percentages
+            const otherXData = otherConfig.positionX;
+            const otherYData = otherConfig.positionY;
+            const otherWidthData = otherConfig.width;
+            const otherHeightData = otherConfig.height;
+            
+            const otherX = otherXData.unit === '%' ? (Number(otherXData.value) / 100) * dimensions.width : Number(otherXData.value);
+            const otherY = otherYData.unit === '%' ? (Number(otherYData.value) / 100) * dimensions.height : Number(otherYData.value);
+            const otherWidth = otherWidthData.unit === '%' ? (Number(otherWidthData.value) / 100) * dimensions.width : Number(otherWidthData.value);
+            const otherHeight = otherHeightData.unit === '%' ? (Number(otherHeightData.value) / 100) * dimensions.height : Number(otherHeightData.value);
+            
+            const otherRight = otherX + otherWidth;
+            const otherBottom = otherY + otherHeight;
+            const otherCenterX = otherX + otherWidth / 2;
+            const otherCenterY = otherY + otherHeight / 2;
 
             // Vertical snapping (left and right edges)
             if (snapToEdge(newX, otherX, 'left') || snapToEdge(newX, otherRight, 'left')) {
