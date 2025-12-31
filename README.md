@@ -1,10 +1,5 @@
 # Visual Ad Builder Test
 
-<img width="1747" height="1178" alt="image" src="https://github.com/user-attachments/assets/e173a6e4-1821-4882-ac36-5c62dafb2bc1" />
-
-<img width="1747" height="1176" alt="image" src="https://github.com/user-attachments/assets/fb8f118d-0d0f-4c8b-911b-9fb435d7c507" />
-
-
 Quick test to build a visual ad builder app for multiple sizes
 
 Demo: https://visual-ad-builder-test.vercel.app/
@@ -60,3 +55,10 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Buttons can control urls and can act as video controllers
 - Arrow key support for position, width and height
 - Animation Loop Duration will hint what is the minimum animation length required to fulfill all animations
+
+
+## Screenshots
+
+<img width="1747" height="1178" alt="image" src="https://github.com/user-attachments/assets/e173a6e4-1821-4882-ac36-5c62dafb2bc1" />
+
+<img width="1747" height="1176" alt="image" src="https://github.com/user-attachments/assets/fb8f118d-0d0f-4c8b-911b-9fb435d7c507" />
