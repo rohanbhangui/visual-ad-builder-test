@@ -746,6 +746,39 @@ const App = () => {
     setAnimationKey((prev) => prev + 1);
   };
 
+  const handleButtonActionTypeChange = (layerId: string, actionType: 'link' | 'videoControl') => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'button') {
+          return { ...l, actionType };
+        }
+        return l;
+      })
+    );
+  };
+
+  const handleButtonIconChange = (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; size?: number; position?: 'before' | 'after' }) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'button') {
+          return { ...l, icon };
+        }
+        return l;
+      })
+    );
+  };
+
+  const handleVideoControlChange = (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'button') {
+          return { ...l, videoControl };
+        }
+        return l;
+      })
+    );
+  };
+
   const handleImageUrlChange = (layerId: string, url: string) => {
     setLayers((prev) =>
       prev.map((l) => {
@@ -1009,13 +1042,16 @@ const App = () => {
       ...(type === 'button'
         ? {
             text: 'Click Here',
-            url: '#',
+            actionType: 'link' as const,
+            url: '',
+            icon: { type: 'none' as const, size: 24, position: 'before' as const },
             styles: { backgroundColor: '#333333', color: '#ffffff', opacity: 1 },
           }
         : {}),
     } as LayerContent;
 
     setLayers((prev) => [newLayer, ...prev]);
+    // Select the newly created layer immediately
     setSelectedLayerIds([newLayer.id]);
   };
 
@@ -1187,6 +1223,9 @@ const App = () => {
             onCanvasBackgroundColorChange={handleCanvasBackgroundColorChange}
             onHtmlIdChange={handleHtmlIdChange}
             onAnimationChange={handleAnimationChange}
+            onButtonActionTypeChange={handleButtonActionTypeChange}
+            onButtonIconChange={handleButtonIconChange}
+            onVideoControlChange={handleVideoControlChange}
           />
         ) : null}
       </div>

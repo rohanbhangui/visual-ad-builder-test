@@ -116,7 +116,21 @@ export interface VideoLayer extends BaseLayer {
 export interface ButtonLayer extends BaseLayer {
   type: 'button';
   text: string;
-  url: string;
+  actionType: 'link' | 'videoControl';
+  url: string; // Used when actionType is 'link'
+  videoControl?: {
+    targetElementId: string;
+    action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
+  };
+  icon?: {
+    type: 'none' | 'play' | 'pause' | 'replay' | 'play-fill' | 'pause-fill' | 'custom' | 'toggle-filled' | 'toggle-outline' | 'toggle-custom';
+    customImage?: string; // For single custom image
+    customPlayImage?: string; // For toggle custom play icon
+    customPauseImage?: string; // For toggle custom pause icon
+    color?: string; // For SVG icons
+    size?: number; // Size in pixels
+    position?: 'before' | 'after'; // Relative to text
+  };
   styles: {
     backgroundColor?: string;
     color?: string;
@@ -290,6 +304,58 @@ export const sampleCanvas: Canvas = {
     },
     {
       id: crypto.randomUUID(),
+      label: 'Play/Pause Button',
+      type: 'button',
+      locked: false,
+      aspectRatioLocked: false,
+      attributes: { id: 'play-pause-btn' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 80, unit: 'px' },
+          positionY: { value: 31, unit: 'px' },
+          width: { value: 24, unit: 'px' },
+          height: { value: 24, unit: 'px' },
+        },
+        '336x280': {
+          positionX: { value: 81, unit: 'px' },
+          positionY: { value: 31, unit: 'px' },
+          width: { value: 24, unit: 'px' },
+          height: { value: 24, unit: 'px' },
+        },
+        '728x90': {
+          positionX: { value: 580, unit: 'px' },
+          positionY: { value: 12, unit: 'px' },
+          width: { value: 24, unit: 'px' },
+          height: { value: 24, unit: 'px' },
+        },
+        '160x600': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 12, unit: 'px' },
+          width: { value: 24, unit: 'px' },
+          height: { value: 24, unit: 'px' },
+        },
+      },
+      text: '',
+      actionType: 'videoControl',
+      url: '',
+      videoControl: {
+        targetElementId: 'demo-video',
+        action: 'togglePlayPause',
+      },
+      icon: {
+        type: 'toggle-filled',
+        size: 16,
+        position: 'before',
+        color: '#ffffff',
+      },
+      styles: {
+        backgroundColor: 'transparent',
+        color: '#ffffff',
+        opacity: 1,
+      },
+    },
+    {
+      id: crypto.randomUUID(),
       label: 'Demo Video',
       type: 'video',
       locked: false,
@@ -416,7 +482,9 @@ export const sampleCanvas: Canvas = {
         },
       },
       text: 'Shop Now',
+      actionType: 'link' as const,
       url: 'https://www.google.com',
+      icon: { type: 'none' as const, size: 24, position: 'before' as const },
       styles: {
         backgroundColor: '#0d821b',
         color: '#ffffff',

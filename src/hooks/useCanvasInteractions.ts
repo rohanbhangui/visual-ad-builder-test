@@ -57,7 +57,7 @@ export const useCanvasInteractions = ({
   });
 
   const dimensions = HTML5_AD_SIZES[selectedSize];
-  const SNAP_THRESHOLD = 8;
+  const SNAP_THRESHOLD = 8 / zoom; // Adjust snap threshold for zoom level
 
   // Store latest values in refs so event handlers always have current state
   const zoomRef = useRef(zoom);
@@ -244,12 +244,12 @@ export const useCanvasInteractions = ({
             const otherConfig = layer.sizeConfig[selectedSize];
             if (!otherConfig) return;
 
-            const otherX = otherConfig.positionX.value;
-            const otherY = otherConfig.positionY.value;
-            const otherRight = otherX + otherConfig.width.value;
-            const otherBottom = otherY + otherConfig.height.value;
-            const otherCenterX = otherX + otherConfig.width.value / 2;
-            const otherCenterY = otherY + otherConfig.height.value / 2;
+            const otherX = Number(otherConfig.positionX.value);
+            const otherY = Number(otherConfig.positionY.value);
+            const otherRight = otherX + Number(otherConfig.width.value);
+            const otherBottom = otherY + Number(otherConfig.height.value);
+            const otherCenterX = otherX + Number(otherConfig.width.value) / 2;
+            const otherCenterY = otherY + Number(otherConfig.height.value) / 2;
 
             // Vertical snapping
             if (snapDx === 0) {
@@ -336,7 +336,7 @@ export const useCanvasInteractions = ({
         const currentLayer = layers.find((l) => l.id === selectedLayerIds[0]);
         if (!currentLayer) return;
 
-        const MIN_SIZE = 30;
+        const MIN_SIZE = currentLayer.type === 'button' ? 20 : 30;
         const centerX = layerX + width / 2;
         const centerY = layerY + height / 2;
         const aspectRatio = width / height;
@@ -559,12 +559,12 @@ export const useCanvasInteractions = ({
             const otherConfig = layer.sizeConfig[selectedSize];
             if (!otherConfig) return;
 
-            const otherX = otherConfig.positionX.value;
-            const otherY = otherConfig.positionY.value;
-            const otherRight = otherX + otherConfig.width.value;
-            const otherBottom = otherY + otherConfig.height.value;
-            const otherCenterX = otherX + otherConfig.width.value / 2;
-            const otherCenterY = otherY + otherConfig.height.value / 2;
+            const otherX = Number(otherConfig.positionX.value);
+            const otherY = Number(otherConfig.positionY.value);
+            const otherRight = otherX + Number(otherConfig.width.value);
+            const otherBottom = otherY + Number(otherConfig.height.value);
+            const otherCenterX = otherX + Number(otherConfig.width.value) / 2;
+            const otherCenterY = otherY + Number(otherConfig.height.value) / 2;
 
             // Vertical snapping (left and right edges)
             if (snapToEdge(newX, otherX, 'left') || snapToEdge(newX, otherRight, 'left')) {

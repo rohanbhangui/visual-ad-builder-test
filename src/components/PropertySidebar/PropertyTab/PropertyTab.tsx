@@ -36,6 +36,7 @@ const ALIGNMENT_BUTTONS = [
 
 interface PropertyTabProps {
   layer: LayerContent;
+  layers: LayerContent[]; // Add layers for video dropdown
   selectedSize: AdSize;
   contentEditableRef?: RefObject<HTMLDivElement | null>;
   onPropertyChange: (
@@ -66,10 +67,14 @@ interface PropertyTabProps {
     value: boolean
   ) => void;
   onOpacityChange: (layerId: string, opacity: number) => void;
+  onButtonActionTypeChange: (layerId: string, actionType: 'link' | 'videoControl') => void;
+  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; size?: number; position?: 'before' | 'after' }) => void;
+  onVideoControlChange: (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => void;
 }
 
 export const PropertyTab = ({
   layer,
+  layers,
   selectedSize,
   contentEditableRef,
   onPropertyChange,
@@ -88,6 +93,9 @@ export const PropertyTab = ({
   onVideoUrlChange,
   onVideoPropertyChange,
   onOpacityChange,
+  onButtonActionTypeChange,
+  onButtonIconChange,
+  onVideoControlChange,
 }: PropertyTabProps) => {
   const config = layer.sizeConfig[selectedSize];
   if (!config) return null;
@@ -218,12 +226,16 @@ export const PropertyTab = ({
         <ButtonLayerFields
           layer={layer satisfies ButtonLayer}
           selectedSize={selectedSize}
+          layers={layers}
           onImageUrlChange={onImageUrlChange}
           onTextChange={onTextChange}
           onColorChange={onColorChange}
           onFontFamilyChange={onFontFamilyChange}
           onFontSizeChange={onFontSizeChange}
           onBackgroundColorChange={onBackgroundColorChange}
+          onButtonActionTypeChange={onButtonActionTypeChange}
+          onButtonIconChange={onButtonIconChange}
+          onVideoControlChange={onVideoControlChange}
         />
       ) : null}
 

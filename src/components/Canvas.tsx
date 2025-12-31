@@ -102,9 +102,67 @@ export const Canvas: React.FC<CanvasProps> = ({
               content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls}></video>`;
             }
             break;
-          case 'button':
-            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${layer.url}" target="_blank" style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;">${layer.text}</a>`;
+          case 'button': {
+            const icon = layer.icon || { type: 'none', size: 24, position: 'before' };
+            const iconSize = icon.size || 24;
+            const iconColor = icon.color || layer.styles?.color || '#ffffff';
+            
+            let iconHtml = '';
+            if (icon.type === 'play') {
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+            } else if (icon.type === 'pause') {
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+            } else if (icon.type === 'replay') {
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
+            } else if (icon.type === 'play-fill') {
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+            } else if (icon.type === 'pause-fill') {
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+            } else if (icon.type === 'toggle-filled') {
+              // Start with play icon (will toggle in exported version)
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+            } else if (icon.type === 'toggle-outline') {
+              // Start with play icon (will toggle in exported version)
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+            } else if (icon.type === 'toggle-custom' && icon.customPlayImage) {
+              // Start with play icon (will toggle in exported version)
+              iconHtml = `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+            } else if (icon.type === 'custom' && icon.customImage) {
+              iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+            }
+            
+            const hasText = layer.text && layer.text.trim().length > 0;
+            const hasIcon = icon.type !== 'none' && iconHtml;
+            const gap = hasText && hasIcon ? '6px' : '0';
+            
+            let contentHtml = '';
+            if (hasIcon && hasText) {
+              contentHtml = icon.position === 'before' 
+                ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
+                : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
+            } else if (hasIcon) {
+              contentHtml = iconHtml;
+            } else {
+              contentHtml = layer.text;
+            }
+            
+            // Create onclick handler for video controls
+            const onclickHandler = layer.actionType === 'videoControl' && layer.videoControl 
+              ? `event.preventDefault(); const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${
+                  layer.videoControl.action === 'play' ? 'v.play();' :
+                  layer.videoControl.action === 'pause' ? 'v.pause();' :
+                  layer.videoControl.action === 'restart' ? 'v.currentTime = 0; v.play();' :
+                  'v.paused ? v.play() : v.pause();'
+                } }`
+              : '';
+            
+            const href = layer.actionType === 'link' ? layer.url : '#';
+            const target = layer.actionType === 'link' ? ' target="_blank"' : '';
+            const onclick = onclickHandler ? ` onclick="${onclickHandler}"` : '';
+            
+            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${href}"${target}${onclick} style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;">${contentHtml}</a>`;
             break;
+          }
         }
 
         return content;
@@ -269,6 +327,15 @@ export const Canvas: React.FC<CanvasProps> = ({
               });
               
               function restartAllAnimations() {
+                // Reset all videos to the beginning
+                document.querySelectorAll('video').forEach(video => {
+                  video.currentTime = 0;
+                  if (video.autoplay) {
+                    video.play();
+                  }
+                });
+                
+                // Restart all animations
                 animatedElements.forEach(el => {
                   const currentStyle = el.style.animation;
                   el.style.animation = 'none';
@@ -407,7 +474,69 @@ export const Canvas: React.FC<CanvasProps> = ({
           );
         }
         break;
-      case 'button':
+      case 'button': {
+        const icon = layer.icon || { type: 'none', size: 24, position: 'before' };
+        const iconSize = icon.size || 24;
+        const iconColor = icon.color || layer.styles?.color || '#ffffff';
+        
+        let iconElement: React.ReactNode = null;
+        if (icon.type === 'play') {
+          iconElement = (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          );
+        } else if (icon.type === 'pause') {
+          iconElement = (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          );
+        } else if (icon.type === 'replay') {
+          iconElement = (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+          );
+        } else if (icon.type === 'play-fill') {
+          iconElement = (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          );
+        } else if (icon.type === 'pause-fill') {
+          iconElement = (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          );
+        } else if (icon.type === 'toggle-filled') {
+          // Show play icon in edit mode
+          iconElement = (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          );
+        } else if (icon.type === 'toggle-outline') {
+          // Show play icon in edit mode
+          iconElement = (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          );
+        } else if (icon.type === 'toggle-custom' && icon.customPlayImage) {
+          // Show play icon in edit mode
+          iconElement = <img src={icon.customPlayImage} width={iconSize} height={iconSize} alt="" style={{ objectFit: 'contain' }} />;
+        } else if (icon.type === 'custom' && icon.customImage) {
+          iconElement = <img src={icon.customImage} width={iconSize} height={iconSize} alt="" style={{ objectFit: 'contain' }} />;
+        }
+        
+        const hasText = layer.text && layer.text.trim().length > 0;
+        const hasIcon = icon.type !== 'none' && iconElement;
+        
         content = (
           <div
             {...(layer.attributes.id && { id: layer.attributes.id })}
@@ -417,12 +546,17 @@ export const Canvas: React.FC<CanvasProps> = ({
               color: layer.styles?.color || '#ffffff',
               fontSize: config.fontSize || '14px',
               fontFamily: layer.styles?.fontFamily || 'Arial',
+              gap: hasText && hasIcon ? '6px' : '0',
             }}
           >
-            {layer.text}
+            {hasIcon && hasText && icon.position === 'before' && iconElement}
+            {hasText && <span>{layer.text}</span>}
+            {hasIcon && hasText && icon.position === 'after' && iconElement}
+            {hasIcon && !hasText && iconElement}
           </div>
         );
         break;
+      }
     }
 
     return (

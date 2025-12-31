@@ -58,10 +58,86 @@ export const generateResponsiveHTML = (
             const controls = layer.properties?.controls !== false ? ' controls' : '';
             content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
             break;
-          case 'button':
+          case 'button': {
+            const icon = layer.icon || { type: 'none', size: 24, position: 'before' };
+            const iconSize = icon.size || 24;
+            const iconColor = icon.color || layer.styles?.color || '#ffffff';
+            
+            // For toggle icons, generate both play and pause SVGs
+            const playIconFilled = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+            const pauseIconFilled = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+            const playIconOutline = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+            const pauseIconOutline = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+            
+            let iconHtml = '';
+            let isToggleIcon = false;
+            let toggleIconData = '';
+            
+            if (icon.type === 'play') {
+              iconHtml = playIconOutline;
+            } else if (icon.type === 'pause') {
+              iconHtml = pauseIconOutline;
+            } else if (icon.type === 'replay') {
+              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
+            } else if (icon.type === 'play-fill') {
+              iconHtml = playIconFilled;
+            } else if (icon.type === 'pause-fill') {
+              iconHtml = pauseIconFilled;
+            } else if (icon.type === 'toggle-filled') {
+              iconHtml = playIconFilled;
+              isToggleIcon = true;
+              toggleIconData = ` data-play-icon="${playIconFilled.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIconFilled.replace(/"/g, '&quot;')}"`;
+            } else if (icon.type === 'toggle-outline') {
+              iconHtml = playIconOutline;
+              isToggleIcon = true;
+              toggleIconData = ` data-play-icon="${playIconOutline.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIconOutline.replace(/"/g, '&quot;')}"`;
+            } else if (icon.type === 'toggle-custom' && icon.customPlayImage && icon.customPauseImage) {
+              iconHtml = `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+              isToggleIcon = true;
+              toggleIconData = ` data-play-icon="<img src='${icon.customPlayImage}' width='${iconSize}' height='${iconSize}' style='object-fit: contain;' />" data-pause-icon="<img src='${icon.customPauseImage}' width='${iconSize}' height='${iconSize}' style='object-fit: contain;' />"`;
+            } else if (icon.type === 'custom' && icon.customImage) {
+              iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+            }
+            
+            const hasText = layer.text && layer.text.trim().length > 0;
+            const hasIcon = icon.type !== 'none' && iconHtml;
+            const gap = hasText && hasIcon ? '6px' : '0';
+            
+            let contentHtml = '';
+            if (hasIcon && hasText) {
+              contentHtml = icon.position === 'before' 
+                ? `<span class="btn-icon">${iconHtml}</span><span style="margin-left: ${gap};">${layer.text}</span>`
+                : `<span style="margin-right: ${gap};">${layer.text}</span><span class="btn-icon">${iconHtml}</span>`;
+            } else if (hasIcon) {
+              contentHtml = `<span class="btn-icon">${iconHtml}</span>`;
+            } else {
+              contentHtml = layer.text;
+            }
+            
+            // Create onclick handler for video controls with icon toggle support
+            let onclickHandler = '';
+            if (layer.actionType === 'videoControl' && layer.videoControl) {
+              const videoAction = layer.videoControl.action === 'play' ? 'v.play();' :
+                layer.videoControl.action === 'pause' ? 'v.pause();' :
+                layer.videoControl.action === 'restart' ? 'v.currentTime = 0; v.play();' :
+                'v.paused ? v.play() : v.pause();';
+              
+              const iconToggle = isToggleIcon 
+                ? `const btn = event.currentTarget; const iconEl = btn.querySelector('.btn-icon'); if (iconEl && v) { iconEl.innerHTML = v.paused ? btn.dataset.playIcon : btn.dataset.pauseIcon; }`
+                : '';
+              
+              onclickHandler = `event.preventDefault(); const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${videoAction} ${iconToggle} }`;
+            }
+            
+            const href = layer.actionType === 'link' ? layer.url : '#';
+            const target = layer.actionType === 'link' ? ' target="_blank"' : '';
+            const onclick = onclickHandler ? ` onclick="${onclickHandler}"` : '';
+            const dataAttrs = isToggleIcon ? toggleIconData : '';
+            
             additionalStyles = `display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;`;
-            content = `<a id="${layerId}" href="${layer.url}" target="_blank" style="${baseStyle} ${additionalStyles}">${layer.text}</a>`;
+            content = `<a id="${layerId}" href="${href}"${target}${onclick}${dataAttrs} style="${baseStyle} ${additionalStyles}">${contentHtml}</a>`;
             break;
+          }
         }
 
         return `    ${content}`;
@@ -357,8 +433,15 @@ ${generateLayerElements()}
           globalMaxDuration = Math.max(globalMaxDuration, duration);
         });
         
-        function restartAllAnimations() {
-          animatedElements.forEach(element => {
+        function restartAllAnimations() {          // Reset all videos to the beginning
+          document.querySelectorAll('video').forEach(function(video) {
+            video.currentTime = 0;
+            if (video.autoplay) {
+              video.play();
+            }
+          });
+          
+          // Restart all animations          animatedElements.forEach(element => {
             const currentStyle = element.style.animation;
             element.style.animation = 'none';
             void element.offsetHeight; // Force reflow

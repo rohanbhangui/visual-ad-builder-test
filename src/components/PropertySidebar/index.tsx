@@ -75,6 +75,9 @@ interface PropertySidebarProps {
   onAnimationLoopDelayChange?: (delay: { value: number; unit: 'ms' | 's' }) => void;
   onHtmlIdChange: (layerId: string, htmlId: string) => void;
   onAnimationChange: (layerId: string, size: AdSize, animations: Animation[]) => void;
+  onButtonActionTypeChange: (layerId: string, actionType: 'link' | 'videoControl') => void;
+  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; size?: number; position?: 'before' | 'after' }) => void;
+  onVideoControlChange: (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => void;
 }
 
 export const PropertySidebar = ({
@@ -111,6 +114,9 @@ export const PropertySidebar = ({
   onAnimationLoopDelayChange,
   onHtmlIdChange,
   onAnimationChange,
+  onButtonActionTypeChange,
+  onButtonIconChange,
+  onVideoControlChange,
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
@@ -423,6 +429,7 @@ export const PropertySidebar = ({
           {activeTab === 'properties' ? (
           <PropertyTab
             layer={layer}
+            layers={layers}
             selectedSize={selectedSize}
             contentEditableRef={contentEditableRef}
             onPropertyChange={onPropertyChange}
@@ -441,6 +448,9 @@ export const PropertySidebar = ({
             onVideoUrlChange={onVideoUrlChange}
             onVideoPropertyChange={onVideoPropertyChange}
             onOpacityChange={onOpacityChange}
+            onButtonActionTypeChange={onButtonActionTypeChange}
+            onButtonIconChange={onButtonIconChange}
+            onVideoControlChange={onVideoControlChange}
           />
         ) : (
           <AnimationTab

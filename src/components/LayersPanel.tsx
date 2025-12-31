@@ -158,7 +158,8 @@ export const LayersPanel = ({
                   return (
                     <button
                       key={layerType.type}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         onAddLayer(layerType.type);
                         setShowDropdown(false);
                       }}
