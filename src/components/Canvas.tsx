@@ -685,9 +685,10 @@ export const Canvas: React.FC<CanvasProps> = ({
       {mode === 'edit' ? (
         <div
           style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
             transformOrigin: 'center center',
             transition: 'none',
+            willChange: 'transform',
           }}
         >
           <div

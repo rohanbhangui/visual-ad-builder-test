@@ -412,36 +412,86 @@ const PropertySidebarComponent = ({
                 </select>
               </div>
 
-              <div>
-                <Label isSizeSpecific={true} selectedSize={selectedSize}>
-                  Loop Duration
-                </Label>
-                <div className="flex flex-col gap-1">
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>
+                    Loop Duration
+                  </Label>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex gap-1">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={loopDelayInputValue}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setLoopDelayInputValue(val);
+                          const numVal = parseFloat(val);
+                          if (!isNaN(numVal)) {
+                            handleAnimationLoopDelayChange({ ...animationLoopDelay, value: numVal });
+                          } else if (val === '') {
+                            handleAnimationLoopDelayChange({ ...animationLoopDelay, value: 0 });
+                          }
+                        }}
+                        placeholder="0"
+                        className={`w-16 h-8 px-2 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
+                          isLoopDurationTooShort ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      <select
+                        value={animationLoopDelay.unit}
+                        onChange={(e) =>
+                          handleAnimationLoopDelayChange({
+                            ...animationLoopDelay,
+                            unit: e.target.value as 'ms' | 's',
+                          })
+                        }
+                        className="w-14 h-8 px-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                      >
+                        <option value="ms">ms</option>
+                        <option value="s">s</option>
+                      </select>
+                    </div>
+                    {minLoopDuration > 0 ? (
+                      <span
+                        className={`text-xs ${isLoopDurationTooShort ? 'text-red-600' : 'text-gray-500'}`}
+                      >
+                        Min: {minLoopDuration.toFixed(2)} {animationLoopDelay.unit}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>
+                    Reset Duration
+                  </Label>
                   <div className="flex gap-1">
                     <input
                       type="number"
                       step="0.1"
-                      value={loopDelayInputValue}
+                      value={resetDurationInputValue}
                       onChange={(e) => {
                         const val = e.target.value;
-                        setLoopDelayInputValue(val);
+                        setResetDurationInputValue(val);
                         const numVal = parseFloat(val);
                         if (!isNaN(numVal)) {
-                          handleAnimationLoopDelayChange({ ...animationLoopDelay, value: numVal });
+                          handleAnimationResetDurationChange({
+                            ...animationResetDuration,
+                            value: numVal,
+                          });
                         } else if (val === '') {
-                          handleAnimationLoopDelayChange({ ...animationLoopDelay, value: 0 });
+                          handleAnimationResetDurationChange({ ...animationResetDuration, value: 0 });
                         }
                       }}
-                      placeholder="0"
-                      className={`w-16 h-8 px-2 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 ${
-                        isLoopDurationTooShort ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                      }`}
+                      placeholder="1"
+                      className="w-16 h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     />
                     <select
-                      value={animationLoopDelay.unit}
+                      value={animationResetDuration.unit}
                       onChange={(e) =>
-                        handleAnimationLoopDelayChange({
-                          ...animationLoopDelay,
+                        handleAnimationResetDurationChange({
+                          ...animationResetDuration,
                           unit: e.target.value as 'ms' | 's',
                         })
                       }
@@ -451,54 +501,6 @@ const PropertySidebarComponent = ({
                       <option value="s">s</option>
                     </select>
                   </div>
-                  {minLoopDuration > 0 ? (
-                    <span
-                      className={`text-xs ${isLoopDurationTooShort ? 'text-red-600' : 'text-gray-500'}`}
-                    >
-                      Min: {minLoopDuration.toFixed(2)} {animationLoopDelay.unit}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-
-              <div>
-                <Label isSizeSpecific={true} selectedSize={selectedSize}>
-                  Reset Duration
-                </Label>
-                <div className="flex gap-1">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={resetDurationInputValue}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setResetDurationInputValue(val);
-                      const numVal = parseFloat(val);
-                      if (!isNaN(numVal)) {
-                        handleAnimationResetDurationChange({
-                          ...animationResetDuration,
-                          value: numVal,
-                        });
-                      } else if (val === '') {
-                        handleAnimationResetDurationChange({ ...animationResetDuration, value: 0 });
-                      }
-                    }}
-                    placeholder="1"
-                    className="w-16 h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <select
-                    value={animationResetDuration.unit}
-                    onChange={(e) =>
-                      handleAnimationResetDurationChange({
-                        ...animationResetDuration,
-                        unit: e.target.value as 'ms' | 's',
-                      })
-                    }
-                    className="w-14 h-8 px-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-                  >
-                    <option value="ms">ms</option>
-                    <option value="s">s</option>
-                  </select>
                 </div>
               </div>
             </div>
