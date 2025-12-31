@@ -3,10 +3,11 @@ import { useState } from 'react';
 interface LabelProps {
   children: React.ReactNode;
   isGlobal?: boolean;
+  isSecondary?: boolean;
   htmlFor?: string;
 }
 
-export const Label = ({ children, isGlobal = false, htmlFor }: LabelProps) => {
+export const Label = ({ children, isGlobal = false, isSecondary = false, htmlFor }: LabelProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const tooltipText = isGlobal ? 'All sizes' : undefined;
 
@@ -14,7 +15,9 @@ export const Label = ({ children, isGlobal = false, htmlFor }: LabelProps) => {
     <div className="relative">
       <label
         htmlFor={htmlFor}
-        className="block text-xs font-medium text-gray-600 mb-1"
+        className={`block text-xs font-medium mb-1 ${
+          isSecondary ? 'text-gray-500' : 'text-gray-600'
+        }`}
       >
         <span
           className={`relative inline-block ${isGlobal ? 'px-0.5 bg-amber-100 text-amber-900 cursor-help' : ''}`}

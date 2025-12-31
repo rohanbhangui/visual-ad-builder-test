@@ -26,6 +26,7 @@ interface CanvasProps {
   isPanning?: boolean;
   animationKey?: number; // Key to force iframe reload for replay
   animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
+  animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Delay between loop iterations
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -50,8 +51,12 @@ export const Canvas: React.FC<CanvasProps> = ({
   isPanning = false,
   animationKey = 0,
   animationLoop = 0,
+  animationLoopDelay = { value: 0, unit: 's' as const },
 }) => {
   const generatePreviewHTML = (): string => {
+    // Calculate loop time in milliseconds for the script
+    const loopTimeMs = animationLoopDelay.unit === 's' ? animationLoopDelay.value * 1000 : animationLoopDelay.value;
+    
     const layerElements = layers
       .filter((layer) => {
         // Only render layers that have data for the selected size
@@ -69,10 +74,10 @@ export const Canvas: React.FC<CanvasProps> = ({
         
         // Get animations for this size
         const animations = config.animations || [];
-        const animationIterationCount = animationLoop === -1 ? 'infinite' : animationLoop > 0 ? animationLoop.toString() : '1';
+        // Always set iteration count to 1, JS will handle looping
         const animationStyle = animations.length > 0
           ? `animation: ${animations.map(anim => 
-              `anim-${layer.id}-${anim.id} ${anim.duration.value}${anim.duration.unit} ${anim.easing} ${anim.delay.value}${anim.delay.unit} ${animationIterationCount} forwards`
+              `anim-${layer.id}-${anim.id} ${anim.duration.value}${anim.duration.unit} ${anim.easing} ${anim.delay.value}${anim.delay.unit} 1 forwards`
             ).join(', ')};`
           : '';
 
@@ -167,7 +172,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               to { transform: scale(${animation.to ?? 1}); }
             }`;
             break;
-          case 'custom':
+          case 'custom': {
             // For custom animations, use the property specified
             const prop = animation.property || 'opacity';
             keyframes = `@keyframes anim-${layer.id}-${animation.id} {
@@ -175,6 +180,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               to { ${prop}: ${animation.to ?? 1}; }
             }`;
             break;
+          }
         }
         
         if (keyframes) {
@@ -218,6 +224,98 @@ export const Canvas: React.FC<CanvasProps> = ({
         </head>
         <body>
           ${layerElements}
+          <script>
+            (function() {
+              const loopCount = ${animationLoop};
+              const totalLoopTime = ${loopTimeMs};
+              
+              if (loopCount === 0) return; // No looping
+              
+              let currentLoop = 0;
+              
+              // Find all elements with animations
+              const animatedElements = Array.from(document.querySelectorAll('[style*="animation"]'));
+              if (animatedElements.length === 0) return;
+              
+              // Track which elements have completed all their animations in this cycle
+              const completedElements = new Set();
+              const elementAnimCounts = new Map();
+              const elementAnimEndCounts = new Map();
+              const maxAnimationDuration = new Map();
+              
+              // Setup: count animations per element and calculate max duration
+              animatedElements.forEach(el => {
+                const style = window.getComputedStyle(el);
+                const animationNames = style.animationName.split(',').filter(n => n.trim() !== 'none');
+                const durations = style.animationDuration.split(',').map(d => parseFloat(d) * 1000);
+                const delays = style.animationDelay.split(',').map(d => parseFloat(d) * 1000);
+                
+                elementAnimCounts.set(el, animationNames.length);
+                elementAnimEndCounts.set(el, 0);
+                
+                // Calculate max (duration + delay) for this element
+                let maxDuration = 0;
+                for (let i = 0; i < animationNames.length; i++) {
+                  const totalDuration = (durations[i] || 0) + (delays[i] || 0);
+                  maxDuration = Math.max(maxDuration, totalDuration);
+                }
+                maxAnimationDuration.set(el, maxDuration);
+              });
+              
+              // Calculate the longest animation across all elements
+              let globalMaxDuration = 0;
+              maxAnimationDuration.forEach(duration => {
+                globalMaxDuration = Math.max(globalMaxDuration, duration);
+              });
+              
+              function restartAllAnimations() {
+                animatedElements.forEach(el => {
+                  const currentStyle = el.style.animation;
+                  el.style.animation = 'none';
+                  void el.offsetHeight; // Force reflow
+                  el.style.animation = currentStyle;
+                });
+                
+                // Reset tracking
+                completedElements.clear();
+                elementAnimEndCounts.forEach((_, key) => {
+                  elementAnimEndCounts.set(key, 0);
+                });
+              }
+              
+              function checkAllComplete() {
+                // Check if all elements have completed all their animations
+                if (completedElements.size === animatedElements.length) {
+                  currentLoop++;
+                  
+                  // Check if we should continue looping
+                  const shouldContinue = loopCount === -1 || currentLoop < loopCount;
+                  
+                  if (shouldContinue) {
+                    // Wait for the remaining time in the loop cycle
+                    // If animations took longer than totalLoopTime, wait at least 100ms
+                    const pauseDuration = Math.max(100, totalLoopTime - globalMaxDuration);
+                    setTimeout(restartAllAnimations, pauseDuration);
+                  }
+                }
+              }
+              
+              // Listen to animationend on all animated elements
+              animatedElements.forEach(el => {
+                el.addEventListener('animationend', function(e) {
+                  const totalAnims = elementAnimCounts.get(el);
+                  const currentEndCount = elementAnimEndCounts.get(el) + 1;
+                  elementAnimEndCounts.set(el, currentEndCount);
+                  
+                  // Only mark as complete when ALL animations on this element have ended
+                  if (currentEndCount >= totalAnims) {
+                    completedElements.add(el);
+                    checkAllComplete();
+                  }
+                });
+              });
+            })();
+          </script>
         </body>
       </html>
     `;

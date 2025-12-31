@@ -23,7 +23,8 @@ const App = () => {
   const [canvasBackgroundColor, setCanvasBackgroundColor] = useState<string>(
     sampleCanvas.styles?.backgroundColor || '#ffffff'
   );
-  const [animationLoop, setAnimationLoop] = useState<number>(sampleCanvas.animationLoop || 0);
+  const [animationLoop, setAnimationLoop] = useState<number>(sampleCanvas.animationLoop ?? -1);
+  const [animationLoopDelay, setAnimationLoopDelay] = useState<{ value: number; unit: 'ms' | 's' }>(sampleCanvas.animationLoopDelay || { value: 5, unit: 's' });
 
   const [selectedLayerIds, setSelectedLayerIds] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
@@ -952,7 +953,7 @@ const App = () => {
 
   const handleExportHTML = () => {
     setSelectedLayerIds([]);
-    const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor, animationLoop);
+    const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor, animationLoop, animationLoopDelay);
     setExportedHTML(html);
     setIsExportModalOpen(true);
   };
@@ -1085,6 +1086,7 @@ const App = () => {
             isPanning={isPanning}
             animationKey={animationKey}
             animationLoop={animationLoop}
+            animationLoopDelay={animationLoopDelay}
             onLayerMouseDown={handleLayerMouseDown}
             onResizeMouseDown={handleResizeMouseDown}
             onMouseMove={(e) => {
@@ -1158,10 +1160,12 @@ const App = () => {
             canvasName={canvasName}
             canvasBackgroundColor={canvasBackgroundColor}
             animationLoop={animationLoop}
+            animationLoopDelay={animationLoopDelay}
             isClippingEnabled={isClippingEnabled}
             onClippingEnabledChange={setIsClippingEnabled}
             onCanvasNameChange={setCanvasName}
             onAnimationLoopChange={setAnimationLoop}
+            onAnimationLoopDelayChange={setAnimationLoopDelay}
             onPropertyChange={handlePropertyChange}
             onDelete={handleDeleteLayer}
             onClearSelection={() => setSelectedLayerIds([])}

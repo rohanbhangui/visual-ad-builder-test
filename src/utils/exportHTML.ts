@@ -6,8 +6,12 @@ export const generateResponsiveHTML = (
   layers: LayerContent[],
   allowedSizes: AdSize[],
   backgroundColor: string = '#ffffff',
-  animationLoop: number = 0
+  animationLoop: number = 0,
+  animationLoopDelay: { value: number; unit: 'ms' | 's' } = { value: 0, unit: 's' }
 ): string => {
+  // Calculate loop time in milliseconds for the script
+  const loopTimeMs = animationLoopDelay.unit === 's' ? animationLoopDelay.value * 1000 : animationLoopDelay.value;
+  
   // Collect all font families used in layers
   const fontFamilies = layers.flatMap((layer) => {
     if (
@@ -166,9 +170,9 @@ export const generateResponsiveHTML = (
         let animationRule = '';
         const animations = config.animations;
         if (animations && animations.length > 0) {
-          const animationIterationCount = animationLoop === -1 ? 'infinite' : animationLoop > 0 ? animationLoop.toString() : '1';
+          // Always set iteration count to 1, JS will handle looping
           const animationStrings = animations.map(animation => 
-            `anim-${layerId}-${animation.id}-${firstSize} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards`
+            `anim-${layerId}-${animation.id}-${firstSize} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} 1 forwards`
           );
           animationRule = `\n        animation: ${animationStrings.join(', ')};`;
         }
@@ -214,9 +218,9 @@ export const generateResponsiveHTML = (
             let animationRule = '';
             const animations = config.animations;
             if (animations && animations.length > 0) {
-              const animationIterationCount = animationLoop === -1 ? 'infinite' : animationLoop > 0 ? animationLoop.toString() : '1';
+              // Always set iteration count to 1, JS will handle looping
               const animationStrings = animations.map(animation => 
-                `anim-${layerId}-${animation.id}-${size} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} ${animationIterationCount} forwards`
+                `anim-${layerId}-${animation.id}-${size} ${animation.duration.value}${animation.duration.unit} ${animation.easing} ${animation.delay.value}${animation.delay.unit} 1 forwards`
               );
               animationRule = `\n          animation: ${animationStrings.join(', ')};`;
             }
@@ -308,6 +312,99 @@ ${mediaQueries}`;
     <div class="ad-container">
 ${generateLayerElements()}
     </div>
+    <script>
+      // Animation loop controller
+      (function() {
+        const loopCount = ${animationLoop};
+        const totalLoopTime = ${loopTimeMs};
+        
+        if (loopCount === 0) return; // No looping
+        
+        let currentLoop = 0;
+        
+        // Find all elements with animations
+        const animatedElements = Array.from(document.querySelectorAll('[style*="animation"]'));
+        if (animatedElements.length === 0) return;
+        
+        // Track which elements have completed all their animations in this cycle
+        const completedElements = new Set();
+        const elementAnimCounts = new Map();
+        const elementAnimEndCounts = new Map();
+        const maxAnimationDuration = new Map();
+        
+        // Setup: count animations per element and calculate max duration
+        animatedElements.forEach(element => {
+          const style = window.getComputedStyle(element);
+          const animationNames = style.animationName.split(',').filter(n => n.trim() !== 'none');
+          const durations = style.animationDuration.split(',').map(d => parseFloat(d) * 1000);
+          const delays = style.animationDelay.split(',').map(d => parseFloat(d) * 1000);
+          
+          elementAnimCounts.set(element, animationNames.length);
+          elementAnimEndCounts.set(element, 0);
+          
+          // Calculate max (duration + delay) for this element
+          let maxDuration = 0;
+          for (let i = 0; i < animationNames.length; i++) {
+            const totalDuration = (durations[i] || 0) + (delays[i] || 0);
+            maxDuration = Math.max(maxDuration, totalDuration);
+          }
+          maxAnimationDuration.set(element, maxDuration);
+        });
+        
+        // Calculate the longest animation across all elements
+        let globalMaxDuration = 0;
+        maxAnimationDuration.forEach(duration => {
+          globalMaxDuration = Math.max(globalMaxDuration, duration);
+        });
+        
+        function restartAllAnimations() {
+          animatedElements.forEach(element => {
+            const currentStyle = element.style.animation;
+            element.style.animation = 'none';
+            void element.offsetHeight; // Force reflow
+            element.style.animation = currentStyle;
+          });
+          
+          // Reset tracking
+          completedElements.clear();
+          elementAnimEndCounts.forEach((_, key) => {
+            elementAnimEndCounts.set(key, 0);
+          });
+        }
+        
+        function checkAllComplete() {
+          // Check if all elements have completed all their animations
+          if (completedElements.size === animatedElements.length) {
+            currentLoop++;
+            
+            // Check if we should continue looping
+            const shouldContinue = loopCount === -1 || currentLoop < loopCount;
+            
+            if (shouldContinue) {
+              // Wait for the remaining time in the loop cycle
+              // If animations took longer than totalLoopTime, wait at least 100ms
+              const pauseDuration = Math.max(100, totalLoopTime - globalMaxDuration);
+              setTimeout(restartAllAnimations, pauseDuration);
+            }
+          }
+        }
+        
+        // Listen to animationend on all animated elements
+        animatedElements.forEach(element => {
+          element.addEventListener('animationend', function(event) {
+            const totalAnims = elementAnimCounts.get(element);
+            const currentEndCount = elementAnimEndCounts.get(element) + 1;
+            elementAnimEndCounts.set(element, currentEndCount);
+            
+            // Only mark as complete when ALL animations on this element have ended
+            if (currentEndCount >= totalAnims) {
+              completedElements.add(element);
+              checkAllComplete();
+            }
+          });
+        });
+      })();
+    </script>
   </body>
 </html>`;
 };

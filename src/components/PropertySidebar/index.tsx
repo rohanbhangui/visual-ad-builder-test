@@ -6,6 +6,7 @@ import {
 } from '../../data';
 import { ColorInput } from '../ColorInput';
 import { PositionSizeInput } from '../PositionSizeInput';
+import { Label } from '../Label';
 import EditIcon from '../../assets/icons/edit.svg?react';
 import XIcon from '../../assets/icons/x.svg?react';
 import AlignLeftIcon from '../../assets/icons/align-left.svg?react';
@@ -35,6 +36,7 @@ interface PropertySidebarProps {
   canvasName?: string;
   canvasBackgroundColor?: string;
   animationLoop?: number;
+  animationLoopDelay?: { value: number; unit: 'ms' | 's' };
   isClippingEnabled?: boolean;
   onClippingEnabledChange?: (enabled: boolean) => void;
   onPropertyChange: (
@@ -70,6 +72,7 @@ interface PropertySidebarProps {
   onCanvasNameChange: (name: string) => void;
   onCanvasBackgroundColorChange: (color: string) => void;
   onAnimationLoopChange?: (loop: number) => void;
+  onAnimationLoopDelayChange?: (delay: { value: number; unit: 'ms' | 's' }) => void;
   onHtmlIdChange: (layerId: string, htmlId: string) => void;
   onAnimationChange: (layerId: string, size: AdSize, animations: Animation[]) => void;
 }
@@ -81,6 +84,7 @@ export const PropertySidebar = ({
   canvasName,
   canvasBackgroundColor,
   animationLoop = 0,
+  animationLoopDelay = { value: 0, unit: 's' as const },
   isClippingEnabled = false,
   onClippingEnabledChange,
   onPropertyChange,
@@ -104,6 +108,7 @@ export const PropertySidebar = ({
   onCanvasNameChange,
   onCanvasBackgroundColorChange,
   onAnimationLoopChange,
+  onAnimationLoopDelayChange,
   onHtmlIdChange,
   onAnimationChange,
 }: PropertySidebarProps) => {
@@ -282,22 +287,47 @@ export const PropertySidebar = ({
               </label>
             </div>
 
-            {/* Animation Loop Setting */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">Animation Loop</label>
-              <select
-                value={animationLoop}
-                onChange={(e) => onAnimationLoopChange?.(parseInt(e.target.value))}
-                className="w-full h-8 px-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="0">No Loop</option>
-                <option value="-1">Loop Infinitely</option>
-                <option value="1">Loop 1 time</option>
-                <option value="2">Loop 2 times</option>
-                <option value="3">Loop 3 times</option>
-                <option value="5">Loop 5 times</option>
-                <option value="10">Loop 10 times</option>
-              </select>
+            {/* Animation Loop Settings */}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Loop Count</label>
+                <select
+                  value={animationLoop}
+                  onChange={(e) => onAnimationLoopChange?.(parseInt(e.target.value))}
+                  className="w-full h-8 px-3 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                >
+                  <option value="0">No Loop</option>
+                  <option value="1">1 time</option>
+                  <option value="2">2 times</option>
+                  <option value="3">3 times</option>
+                  <option value="5">5 times</option>
+                  <option value="10">10 times</option>
+                  <option value="-1">Infinite</option>
+                </select>
+              </div>
+              
+              <div>
+                <Label isSecondary>Loop Duration <span className="font-normal">(pause between loops)</span></Label>
+                <div className="flex gap-1">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={animationLoopDelay.value}
+                    onChange={(e) => onAnimationLoopDelayChange?.({ ...animationLoopDelay, value: parseFloat(e.target.value) || 0 })}
+                    placeholder="0"
+                    className="w-16 h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <select
+                    value={animationLoopDelay.unit}
+                    onChange={(e) => onAnimationLoopDelayChange?.({ ...animationLoopDelay, unit: e.target.value as 'ms' | 's' })}
+                    className="w-14 h-8 px-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+                  >
+                    <option value="ms">ms</option>
+                    <option value="s">s</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         </div>

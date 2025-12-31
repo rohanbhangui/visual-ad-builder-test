@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Label } from './Label';
 
 interface ColorInputProps {
@@ -12,20 +12,15 @@ interface ColorInputProps {
 export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false }: ColorInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState(value || '');
-  const [dropdownValue, setDropdownValue] = useState<'transparent' | 'custom'>(
-    value === 'transparent' || value === 'rgba(0,0,0,0)' ? 'transparent' : 'custom'
-  );
+  
+  // Derive dropdown value from current value prop
+  const dropdownValue: 'transparent' | 'custom' = 
+    value === 'transparent' || value === 'rgba(0,0,0,0)' ? 'transparent' : 'custom';
 
-  // Sync input value when prop value changes
-  useEffect(() => {
-    if (inputValue !== value) {
-      setInputValue(value || '');
-    }
-    const newDropdownValue = value === 'transparent' || value === 'rgba(0,0,0,0)' ? 'transparent' : 'custom';
-    if (dropdownValue !== newDropdownValue) {
-      setDropdownValue(newDropdownValue);
-    }
-  }, [value, inputValue, dropdownValue]);
+  // Sync input value when prop value changes from outside
+  if (inputValue !== value && value !== undefined) {
+    setInputValue(value || '');
+  }
 
   const validateColor = (color: string): boolean => {
     // Allow transparent values
@@ -66,7 +61,6 @@ export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false 
           onChange={(e) => {
             setError('');
             setInputValue(e.target.value);
-            setDropdownValue('custom');
             onChange(e.target.value);
           }}
           disabled={disabled}
@@ -86,7 +80,6 @@ export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false 
             value={dropdownValue}
             onChange={(e) => {
               const newValue = e.target.value as 'transparent' | 'custom';
-              setDropdownValue(newValue);
               if (newValue === 'transparent') {
                 setInputValue('rgba(0,0,0,0)');
                 onChange('rgba(0,0,0,0)');

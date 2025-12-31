@@ -135,6 +135,8 @@ export interface Canvas {
   styles?: {
     backgroundColor?: string;
   };
+  animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
+  animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Delay between loop iterations
   createdAt: Date;
   updatedAt: Date;
 }
@@ -171,7 +173,7 @@ export const sampleCanvas: Canvas = {
               to: 1,
               duration: { value: 1, unit: 's' },
               delay: { value: 0.1, unit: 's' },
-              easing: 'ease-out',
+              easing: 'ease-in-out',
             },
           ],
         },
@@ -190,7 +192,7 @@ export const sampleCanvas: Canvas = {
               to: 1,
               duration: { value: 1, unit: 's' },
               delay: { value: 0.1, unit: 's' },
-              easing: 'ease-out',
+              easing: 'ease-in-out',
             },
           ],
         },
@@ -240,7 +242,7 @@ export const sampleCanvas: Canvas = {
               to: 1,
               duration: { value: 1, unit: 's' },
               delay: { value: 0.2, unit: 's' },
-              easing: 'ease-out',
+              easing: 'ease-in-out',
             },
           ],
         },
@@ -259,7 +261,7 @@ export const sampleCanvas: Canvas = {
               to: 1,
               duration: { value: 1, unit: 's' },
               delay: { value: 0.2, unit: 's' },
-              easing: 'ease-out',
+              easing: 'ease-in-out',
             },
           ],
         },
@@ -308,7 +310,7 @@ export const sampleCanvas: Canvas = {
               to: 1,
               duration: { value: 1, unit: 's' },
               delay: { value: 0, unit: 's' },
-              easing: 'ease-out',
+              easing: 'ease-in-out',
             },
           ],
         },
@@ -326,7 +328,7 @@ export const sampleCanvas: Canvas = {
               to: 1,
               duration: { value: 1, unit: 's' },
               delay: { value: 0, unit: 's' },
-              easing: 'ease-out',
+              easing: 'ease-in-out',
             },
           ],
         },
@@ -375,7 +377,7 @@ export const sampleCanvas: Canvas = {
               to: 1,
               duration: { value: 1, unit: 's' },
               delay: { value: 0.3, unit: 's' },
-              easing: 'ease-out',
+              easing: 'ease-in-out',
             },
           ],
         },
@@ -394,7 +396,7 @@ export const sampleCanvas: Canvas = {
               to: 1,
               duration: { value: 1, unit: 's' },
               delay: { value: 0.3, unit: 's' },
-              easing: 'ease-out',
+              easing: 'ease-in-out',
             },
           ],
         },
