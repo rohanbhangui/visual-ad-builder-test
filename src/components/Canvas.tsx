@@ -705,8 +705,32 @@ export const Canvas: React.FC<CanvasProps> = ({
             transformOrigin: 'center center',
             transition: 'none',
             willChange: 'transform',
+            position: 'relative',
           }}
         >
+          {onCanvasSettingsClick ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCanvasSettingsClick();
+              }}
+              className="absolute flex items-center gap-1 text-gray-400 hover:text-gray-900 hover:underline cursor-pointer bg-transparent"
+              style={{
+                top: `${-23 / zoom}px`,
+                right: `${-5 / zoom}px`,
+                padding: '2px 4px',
+                fontSize: '12px',
+                transform: `scale(${1 / zoom})`,
+                transformOrigin: 'top right',
+                border: 'none',
+                zIndex: 1,
+              }}
+              title="Canvas Settings"
+            >
+              <SettingsIcon style={{ width: '14px', height: '14px' }} />
+              <span>Canvas</span>
+            </button>
+          ) : null}
           <div
             className="canvas-reset"
             style={{
@@ -724,28 +748,6 @@ export const Canvas: React.FC<CanvasProps> = ({
             onMouseLeave={onMouseLeave}
             onClick={onCanvasClick}
           >
-            {mode === 'edit' && onCanvasSettingsClick ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCanvasSettingsClick();
-                }}
-                className="absolute flex items-center gap-1 text-gray-400 hover:text-gray-900 hover:underline cursor-pointer bg-transparent"
-                style={{
-                  top: `${-23 / zoom}px`,
-                  right: `${-5 / zoom}px`,
-                  padding: '2px 4px',
-                  fontSize: '12px',
-                  transform: `scale(${1 / zoom})`,
-                  transformOrigin: 'top right',
-                  border: 'none',
-                }}
-                title="Canvas Settings"
-              >
-                <SettingsIcon style={{ width: '14px', height: '14px' }} />
-                <span>Canvas</span>
-              </button>
-            ) : null}
             {snapLines.map((line, idx) => (
               <div
                 key={idx}
