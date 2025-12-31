@@ -213,6 +213,26 @@ export const ButtonLayerFields = ({
               <option value="toggle-outline">Not Filled</option>
               <option value="toggle-custom">Custom</option>
             </>
+          ) : layer.actionType === 'videoControl' && layer.videoControl?.action === 'play' ? (
+            <>
+              <option value="none">No Icon</option>
+              <option value="play">Play</option>
+              <option value="play-fill">Play (Filled)</option>
+              <option value="custom">Custom Image</option>
+            </>
+          ) : layer.actionType === 'videoControl' && layer.videoControl?.action === 'pause' ? (
+            <>
+              <option value="none">No Icon</option>
+              <option value="pause">Pause</option>
+              <option value="pause-fill">Pause (Filled)</option>
+              <option value="custom">Custom Image</option>
+            </>
+          ) : layer.actionType === 'videoControl' && layer.videoControl?.action === 'restart' ? (
+            <>
+              <option value="none">No Icon</option>
+              <option value="replay">Replay</option>
+              <option value="custom">Custom Image</option>
+            </>
           ) : (
             <>
               <option value="none">No Icon</option>

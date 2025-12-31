@@ -290,21 +290,55 @@ const App = () => {
       if (e.shiftKey) {
         // Shift + scroll = zoom
         e.preventDefault();
-        const delta = -e.deltaY * 0.01;
+        const delta = -e.deltaY * 0.005; // Reduced multiplier for smoother zoom
         const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
         handleZoomChange(newZoom, e.clientX, e.clientY);
       } else if (e.ctrlKey || e.metaKey) {
         // Trackpad pinch = zoom (browser sends ctrl+wheel)
         e.preventDefault();
-        const delta = -e.deltaY * 0.01;
+        
+        // Use deltaY for pinch zoom - preserve velocity for responsive feel
+        let delta = -e.deltaY;
+        
+        // Handle different wheel delta modes
+        if (e.deltaMode === 1) {
+          // DOM_DELTA_LINE
+          delta *= 0.05;
+        } else if (e.deltaMode === 2) {
+          // DOM_DELTA_PAGE
+          delta *= 0.5;
+        } else {
+          // DOM_DELTA_PIXEL (most common for trackpad)
+          // Scale to maintain gesture speed while keeping it smooth
+          delta *= 0.006;
+        }
+        
+        // Apply zoom - responsive to pinch speed
         const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
         handleZoomChange(newZoom, e.clientX, e.clientY);
       } else {
         // Two-finger swipe = pan (regular scroll over canvas)
         e.preventDefault();
+        
+        // Pan speed should match gesture speed for responsive feel
+        let deltaX = e.deltaX;
+        let deltaY = e.deltaY;
+        
+        // Handle different wheel delta modes for consistent panning
+        if (e.deltaMode === 1) {
+          // DOM_DELTA_LINE
+          deltaX *= 16;
+          deltaY *= 16;
+        } else if (e.deltaMode === 2) {
+          // DOM_DELTA_PAGE
+          deltaX *= 100;
+          deltaY *= 100;
+        }
+        // DOM_DELTA_PIXEL (default) - use as-is for 1:1 responsive panning
+        
         setPan((prev) => ({
-          x: prev.x - e.deltaX,
-          y: prev.y - e.deltaY,
+          x: prev.x - deltaX,
+          y: prev.y - deltaY,
         }));
       }
     };
