@@ -34,8 +34,8 @@ export const RichtextLayerFields = ({
     <>
       <div>
         {/* Font Family and Font Size */}
-        <div className="flex gap-2 mb-1">
-          <div className="flex-1">
+        <div className="flex gap-1 mb-2">
+          <div>
             <Label>Font Family</Label>
             <select
               value={layer.styles?.fontFamily || 'Arial'}
