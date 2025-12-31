@@ -359,17 +359,6 @@ export const generateResponsiveHTML = (
           return `      #${layerId} { display: none; }`;
         }
 
-        // Get loop timing from first layer's config for this size
-        const firstLayerConfig = layers[0]?.sizeConfig[firstSize];
-        const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
-        const resetDuration = firstLayerConfig?.animationResetDuration || {
-          value: 1,
-          unit: 's' as const,
-        };
-        const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
-        const resetDelayMs =
-          resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
-
         const posX = config.positionX;
         const posY = config.positionY;
         const width = config.width;
@@ -427,17 +416,7 @@ export const generateResponsiveHTML = (
           }
         }
 
-        // Add animation styles - store as data attribute, not in CSS
-        let animationDataAttr = '';
-        if (animations && animations.length > 0) {
-          const totalCycleTime = loopTimeMs + resetDelayMs;
-          const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
-          const animationStrings = animations.map(
-            (animation) =>
-              `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms ${animation.easing} 0s ${iterationCount} normal both`
-          );
-          animationDataAttr = animationStrings.join(', ');
-        }
+        // Animation styles are applied via data-animation attribute set earlier
 
         return `      #${layerId} {
         display: block;
@@ -464,20 +443,6 @@ export const generateResponsiveHTML = (
             if (!config) {
               return `        #${layerId} { display: none; }`;
             }
-
-            // Get loop timing from first layer's config for this size
-            const firstLayerConfig = layers[0]?.sizeConfig[size];
-            const loopDelay = firstLayerConfig?.animationLoopDelay || {
-              value: 5,
-              unit: 's' as const,
-            };
-            const resetDuration = firstLayerConfig?.animationResetDuration || {
-              value: 1,
-              unit: 's' as const,
-            };
-            const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
-            const resetDelayMs =
-              resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
 
             const posX = config.positionX;
             const posY = config.positionY;

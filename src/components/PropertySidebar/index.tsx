@@ -165,9 +165,6 @@ export const PropertySidebar = ({
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
   // Get the first selected layer
-  const selectedLayer =
-    selectedLayerIds.length === 1 ? layers.find((l) => l.id === selectedLayerIds[0]) : null;
-
   // Get animation loop delay and reset duration from the first layer's size config
   // These are global settings, not per-layer, but stored in first layer for convenience
   const firstLayer = layers[0];
