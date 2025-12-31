@@ -507,7 +507,7 @@ export const sampleCanvas: Canvas = {
           animationResetDuration: { value: 1, unit: 's' },
         },
         '336x280': {
-          positionX: { value: 120, unit: 'px' },
+          positionX: { value: 118, unit: 'px' },
           positionY: { value: 230, unit: 'px' },
           width: { value: 100, unit: 'px' },
           height: { value: 32, unit: 'px' },
