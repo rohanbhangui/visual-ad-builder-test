@@ -61,5 +61,4 @@ Demo: https://visual-ad-builder-test.vercel.app/
 
 <img width="1747" height="1177" alt="image" src="https://github.com/user-attachments/assets/680955cc-91d6-4923-a022-478e84d4229c" />
 
-
 <img width="1747" height="1174" alt="image" src="https://github.com/user-attachments/assets/4440b611-2050-4a1e-9bd0-95dd6d96ca2d" />
