@@ -49,11 +49,11 @@ const App = () => {
 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportedHTML, setExportedHTML] = useState('');
-  
+
   const [animationKey, setAnimationKey] = useState(0);
 
   const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
-  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });    
+  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
   const dimensions = HTML5_AD_SIZES[selectedSize];
 
@@ -87,9 +87,10 @@ const App = () => {
 
   const handleDeleteSelectedLayers = () => {
     if (selectedLayerIds.length === 0) return;
-    const message = selectedLayerIds.length === 1 
-      ? `Are you sure you want to delete "${layers.find(l => l.id === selectedLayerIds[0])?.label}"?`
-      : `Are you sure you want to delete ${selectedLayerIds.length} layers?`;
+    const message =
+      selectedLayerIds.length === 1
+        ? `Are you sure you want to delete "${layers.find((l) => l.id === selectedLayerIds[0])?.label}"?`
+        : `Are you sure you want to delete ${selectedLayerIds.length} layers?`;
     if (window.confirm(message)) {
       setLayers((prev) => prev.filter((l) => !selectedLayerIds.includes(l.id)));
       setSelectedLayerIds([]);
@@ -103,10 +104,8 @@ const App = () => {
   const handleSelectLayer = (layerId: string, isShiftPressed: boolean) => {
     if (isShiftPressed) {
       // Toggle selection
-      setSelectedLayerIds(prev => 
-        prev.includes(layerId) 
-          ? prev.filter(id => id !== layerId)
-          : [...prev, layerId]
+      setSelectedLayerIds((prev) =>
+        prev.includes(layerId) ? prev.filter((id) => id !== layerId) : [...prev, layerId]
       );
     } else {
       // Single select (replace selection)
@@ -162,7 +161,10 @@ const App = () => {
       }
 
       // Arrow key navigation for moving layers
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && selectedLayerIds.length > 0) {
+      if (
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) &&
+        selectedLayerIds.length > 0
+      ) {
         if (isTyping) {
           return;
         }
@@ -263,7 +265,7 @@ const App = () => {
           (activeElement.tagName === 'INPUT' ||
             activeElement.tagName === 'TEXTAREA' ||
             (activeElement as HTMLElement).isContentEditable);
-        
+
         if (!isTyping) {
           e.preventDefault();
           setIsSpacePressed(true);
@@ -532,7 +534,7 @@ const App = () => {
             const height = config.height;
             if (width && height && width.value > 0 && height.value > 0) {
               const aspectRatio = width.value / height.value;
-              
+
               if (property === 'width') {
                 // Width changed, update height
                 const newHeight = value / aspectRatio;
@@ -586,14 +588,22 @@ const App = () => {
       return;
     }
 
-    setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, attributes: { ...l.attributes, id: htmlId } } : l)));
+    setLayers((prev) =>
+      prev.map((l) =>
+        l.id === layerId ? { ...l, attributes: { ...l.attributes, id: htmlId } } : l
+      )
+    );
   };
 
-  const handleAnimationChange = (layerId: string, size: AdSize, animations: import('./data').Animation[]) => {
+  const handleAnimationChange = (
+    layerId: string,
+    size: AdSize,
+    animations: import('./data').Animation[]
+  ) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id !== layerId) return l;
-        
+
         const updatedSizeConfig = { ...l.sizeConfig };
         if (updatedSizeConfig[size]) {
           updatedSizeConfig[size] = {
@@ -601,17 +611,21 @@ const App = () => {
             animations: animations.length > 0 ? animations : undefined,
           };
         }
-        
+
         return { ...l, sizeConfig: updatedSizeConfig };
       })
     );
   };
 
-  const handleAnimationLoopDelayChange = (layerId: string, size: AdSize, delay: { value: number; unit: 'ms' | 's' }) => {
+  const handleAnimationLoopDelayChange = (
+    layerId: string,
+    size: AdSize,
+    delay: { value: number; unit: 'ms' | 's' }
+  ) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id !== layerId) return l;
-        
+
         const updatedSizeConfig = { ...l.sizeConfig };
         if (updatedSizeConfig[size]) {
           updatedSizeConfig[size] = {
@@ -619,17 +633,21 @@ const App = () => {
             animationLoopDelay: delay,
           };
         }
-        
+
         return { ...l, sizeConfig: updatedSizeConfig };
       })
     );
   };
 
-  const handleAnimationResetDurationChange = (layerId: string, size: AdSize, duration: { value: number; unit: 'ms' | 's' }) => {
+  const handleAnimationResetDurationChange = (
+    layerId: string,
+    size: AdSize,
+    duration: { value: number; unit: 'ms' | 's' }
+  ) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id !== layerId) return l;
-        
+
         const updatedSizeConfig = { ...l.sizeConfig };
         if (updatedSizeConfig[size]) {
           updatedSizeConfig[size] = {
@@ -637,7 +655,7 @@ const App = () => {
             animationResetDuration: duration,
           };
         }
-        
+
         return { ...l, sizeConfig: updatedSizeConfig };
       })
     );
@@ -670,7 +688,7 @@ const App = () => {
         if (l.id === layerId) {
           const currentConfig = l.sizeConfig[selectedSize];
           if (!currentConfig) return l;
-          
+
           return {
             ...l,
             sizeConfig: {
@@ -696,7 +714,7 @@ const App = () => {
         if (l.id === layerId) {
           const currentConfig = l.sizeConfig[selectedSize];
           if (!currentConfig) return l;
-          
+
           return {
             ...l,
             sizeConfig: {
@@ -815,7 +833,15 @@ const App = () => {
     );
   };
 
-  const handleButtonIconChange = (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; position?: 'before' | 'after' }) => {
+  const handleButtonIconChange = (
+    layerId: string,
+    icon: {
+      type: 'none' | 'play' | 'pause' | 'replay' | 'custom';
+      customImage?: string;
+      color?: string;
+      position?: 'before' | 'after';
+    }
+  ) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'button') {
@@ -826,7 +852,13 @@ const App = () => {
     );
   };
 
-  const handleVideoControlChange = (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => {
+  const handleVideoControlChange = (
+    layerId: string,
+    videoControl: {
+      targetElementId: string;
+      action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
+    }
+  ) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'button') {
@@ -969,12 +1001,15 @@ const App = () => {
     alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
   ) => {
     // Calculate selection bounds
-    const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id));
+    const selectedLayers = layers.filter((l) => selectedLayerIds.includes(l.id));
     if (selectedLayers.length === 0) return;
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
 
-    selectedLayers.forEach(layer => {
+    selectedLayers.forEach((layer) => {
       const config = layer.sizeConfig[selectedSize];
       if (!config) return;
 
@@ -1044,7 +1079,12 @@ const App = () => {
 
   const handleExportHTML = () => {
     setSelectedLayerIds([]);
-    const html = generateResponsiveHTML(layers, sampleCanvas.allowedSizes, canvasBackgroundColor, animationLoop);
+    const html = generateResponsiveHTML(
+      layers,
+      sampleCanvas.allowedSizes,
+      canvasBackgroundColor,
+      animationLoop
+    );
     setExportedHTML(html);
     setIsExportModalOpen(true);
   };
@@ -1062,21 +1102,27 @@ const App = () => {
           positionY: { value: 10, unit: 'px' },
           width: { value: type === 'image' ? 300 : 200, unit: 'px' },
           height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-          ...(type === 'text' || type === 'richtext' || type === 'button' ? { fontSize: '14px' } : {}),
+          ...(type === 'text' || type === 'richtext' || type === 'button'
+            ? { fontSize: '14px' }
+            : {}),
         },
         '336x280': {
           positionX: { value: 10, unit: 'px' },
           positionY: { value: 10, unit: 'px' },
           width: { value: type === 'image' ? 300 : 200, unit: 'px' },
           height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-          ...(type === 'text' || type === 'richtext' || type === 'button' ? { fontSize: '14px' } : {}),
+          ...(type === 'text' || type === 'richtext' || type === 'button'
+            ? { fontSize: '14px' }
+            : {}),
         },
         '728x90': {
           positionX: { value: 10, unit: 'px' },
           positionY: { value: 10, unit: 'px' },
           width: { value: type === 'image' ? 300 : 200, unit: 'px' },
           height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-          ...(type === 'text' || type === 'richtext' || type === 'button' ? { fontSize: '14px' } : {}),
+          ...(type === 'text' || type === 'richtext' || type === 'button'
+            ? { fontSize: '14px' }
+            : {}),
         },
       },
       ...(type === 'text' || type === 'richtext'
@@ -1086,7 +1132,7 @@ const App = () => {
           }
         : {}),
       ...(type === 'image'
-        ? { 
+        ? {
             url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg',
             styles: { opacity: 1 },
           }
@@ -1207,8 +1253,20 @@ const App = () => {
               className="absolute bottom-4 right-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded shadow-lg transition-colors cursor-pointer flex items-center gap-2"
               title="Replay Animations"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C10.3995 2 12.5 3.31 13.5 5.25M13.5 2V5.25H10.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C10.3995 2 12.5 3.31 13.5 5.25M13.5 2V5.25H10.25"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               Replay
             </button>
@@ -1234,8 +1292,8 @@ const App = () => {
 
           {/* Zoom Controls */}
           {mode === 'edit' ? (
-            <ZoomControls 
-              zoom={zoom} 
+            <ZoomControls
+              zoom={zoom}
               onZoomChange={handleZoomChange}
               onResetPan={() => {
                 setPan({ x: 0, y: 0 });

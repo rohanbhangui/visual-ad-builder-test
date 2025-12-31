@@ -41,7 +41,11 @@ export const useCanvasInteractions = ({
   const [snapLines, setSnapLines] = useState<
     Array<{ type: 'vertical' | 'horizontal'; position: number }>
   >([]);
-  const dragStartRef = useRef<{ x: number; y: number; layerPositions: Record<string, { x: number; y: number }> }>({
+  const dragStartRef = useRef<{
+    x: number;
+    y: number;
+    layerPositions: Record<string, { x: number; y: number }>;
+  }>({
     x: 0,
     y: 0,
     layerPositions: {},
@@ -72,11 +76,11 @@ export const useCanvasInteractions = ({
   // ============================================
   // EVENT HANDLERS - INITIATION
   // ============================================
-  
+
   /** Handler for starting a layer drag operation */
   const handleLayerMouseDown = (e: React.MouseEvent, layerId: string) => {
     if (mode !== 'edit') return;
-    
+
     // Prevent layer interaction when space is pressed (panning mode)
     if (isSpacePressed) return;
 
@@ -86,14 +90,12 @@ export const useCanvasInteractions = ({
     }
 
     e.stopPropagation();
-    
+
     // Handle multi-select with Shift key
     if (e.shiftKey) {
       // Toggle this layer in the selection
-      setSelectedLayerIds(prev => 
-        prev.includes(layerId) 
-          ? prev.filter(id => id !== layerId)
-          : [...prev, layerId]
+      setSelectedLayerIds((prev) =>
+        prev.includes(layerId) ? prev.filter((id) => id !== layerId) : [...prev, layerId]
       );
     } else if (!selectedLayerIds.includes(layerId)) {
       // If clicking a non-selected layer without Shift, replace selection
@@ -104,8 +106,8 @@ export const useCanvasInteractions = ({
     // Store initial positions for all selected layers
     const layerPositions: Record<string, { x: number; y: number }> = {};
     const layersToMove = selectedLayerIds.includes(layerId) ? selectedLayerIds : [layerId];
-    
-    layersToMove.forEach(id => {
+
+    layersToMove.forEach((id) => {
       const layer = layers.find((l) => l.id === id);
       if (layer) {
         const config = layer.sizeConfig[selectedSize];
@@ -136,7 +138,7 @@ export const useCanvasInteractions = ({
 
     // Resizing only works for single selection
     if (selectedLayerIds.length !== 1) return;
-    
+
     setSelectedLayerIds([layerId]);
 
     const layer = layers.find((l) => l.id === layerId);
@@ -170,24 +172,31 @@ export const useCanvasInteractions = ({
         const dy = (e.clientY - dragStartRef.current.y) / zoomRef.current;
 
         // Calculate bounding box of all selected layers for snapping
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id));
-        
-        selectedLayers.forEach(layer => {
+        let minX = Infinity,
+          minY = Infinity,
+          maxX = -Infinity,
+          maxY = -Infinity;
+        const selectedLayers = layers.filter((l) => selectedLayerIds.includes(l.id));
+
+        selectedLayers.forEach((layer) => {
           const initialPos = dragStartRef.current.layerPositions[layer.id];
           if (!initialPos) return;
-          
+
           const newX = initialPos.x + dx;
           const newY = initialPos.y + dy;
           // Convert width/height % to px for bounding box calculation
           const config = layer.sizeConfig[selectedSize];
           if (!config) return;
-          
+
           const widthData = config.width;
           const heightData = config.height;
-          const width = widthData.unit === '%' ? (widthData.value / 100) * dimensions.width : widthData.value;
-          const height = heightData.unit === '%' ? (heightData.value / 100) * dimensions.height : heightData.value;
-          
+          const width =
+            widthData.unit === '%' ? (widthData.value / 100) * dimensions.width : widthData.value;
+          const height =
+            heightData.unit === '%'
+              ? (heightData.value / 100) * dimensions.height
+              : heightData.value;
+
           minX = Math.min(minX, newX);
           minY = Math.min(minY, newY);
           maxX = Math.max(maxX, newX + width);
@@ -198,7 +207,7 @@ export const useCanvasInteractions = ({
         const boundingHeight = maxY - minY;
         const boundingCenterX = minX + boundingWidth / 2;
         const boundingCenterY = minY + boundingHeight / 2;
-        
+
         let snapDx = 0;
         let snapDy = 0;
         const guides: Array<{ type: 'vertical' | 'horizontal'; position: number }> = [];
@@ -249,12 +258,24 @@ export const useCanvasInteractions = ({
             const otherYData = otherConfig.positionY;
             const otherWidthData = otherConfig.width;
             const otherHeightData = otherConfig.height;
-            
-            const otherX = otherXData.unit === '%' ? (Number(otherXData.value) / 100) * dimensions.width : Number(otherXData.value);
-            const otherY = otherYData.unit === '%' ? (Number(otherYData.value) / 100) * dimensions.height : Number(otherYData.value);
-            const otherWidth = otherWidthData.unit === '%' ? (Number(otherWidthData.value) / 100) * dimensions.width : Number(otherWidthData.value);
-            const otherHeight = otherHeightData.unit === '%' ? (Number(otherHeightData.value) / 100) * dimensions.height : Number(otherHeightData.value);
-            
+
+            const otherX =
+              otherXData.unit === '%'
+                ? (Number(otherXData.value) / 100) * dimensions.width
+                : Number(otherXData.value);
+            const otherY =
+              otherYData.unit === '%'
+                ? (Number(otherYData.value) / 100) * dimensions.height
+                : Number(otherYData.value);
+            const otherWidth =
+              otherWidthData.unit === '%'
+                ? (Number(otherWidthData.value) / 100) * dimensions.width
+                : Number(otherWidthData.value);
+            const otherHeight =
+              otherHeightData.unit === '%'
+                ? (Number(otherHeightData.value) / 100) * dimensions.height
+                : Number(otherHeightData.value);
+
             const otherRight = otherX + otherWidth;
             const otherBottom = otherY + otherHeight;
             const otherCenterX = otherX + otherWidth / 2;
@@ -368,7 +389,7 @@ export const useCanvasInteractions = ({
           : isShiftPressed && !currentLayer.aspectRatioLocked;
 
         // ========== INITIAL RESIZE CALCULATION (before snapping) ==========
-        
+
         // CASE 1: Alt only (no aspect ratio lock) - Center resize
         if (isAltPressed && !shouldLockAspectRatio) {
           // Alt only: Center resize (both edges move equally)
@@ -573,12 +594,24 @@ export const useCanvasInteractions = ({
             const otherYData = otherConfig.positionY;
             const otherWidthData = otherConfig.width;
             const otherHeightData = otherConfig.height;
-            
-            const otherX = otherXData.unit === '%' ? (Number(otherXData.value) / 100) * dimensions.width : Number(otherXData.value);
-            const otherY = otherYData.unit === '%' ? (Number(otherYData.value) / 100) * dimensions.height : Number(otherYData.value);
-            const otherWidth = otherWidthData.unit === '%' ? (Number(otherWidthData.value) / 100) * dimensions.width : Number(otherWidthData.value);
-            const otherHeight = otherHeightData.unit === '%' ? (Number(otherHeightData.value) / 100) * dimensions.height : Number(otherHeightData.value);
-            
+
+            const otherX =
+              otherXData.unit === '%'
+                ? (Number(otherXData.value) / 100) * dimensions.width
+                : Number(otherXData.value);
+            const otherY =
+              otherYData.unit === '%'
+                ? (Number(otherYData.value) / 100) * dimensions.height
+                : Number(otherYData.value);
+            const otherWidth =
+              otherWidthData.unit === '%'
+                ? (Number(otherWidthData.value) / 100) * dimensions.width
+                : Number(otherWidthData.value);
+            const otherHeight =
+              otherHeightData.unit === '%'
+                ? (Number(otherHeightData.value) / 100) * dimensions.height
+                : Number(otherHeightData.value);
+
             const otherRight = otherX + otherWidth;
             const otherBottom = otherY + otherHeight;
             const otherCenterX = otherX + otherWidth / 2;
@@ -629,7 +662,7 @@ export const useCanvasInteractions = ({
 
           // ========== SNAPPING ADJUSTMENTS (Modify dimensions when edges snap) ==========
           // Adjust dimensions after edges snap to maintain modifier key behaviors
-          
+
           if (isAltPressed && !shouldLockAspectRatio) {
             // ADJUSTMENT CASE 1: Alt only (no aspect ratio lock)
             // Maintains center position when an edge snaps (no aspect ratio constraint)
@@ -679,7 +712,11 @@ export const useCanvasInteractions = ({
               newX = centerX - newWidth / 2;
               newY = centerY - newHeight / 2;
             }
-          } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && !isAltPressed && !isCorner) {
+          } else if (
+            (isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) &&
+            !isAltPressed &&
+            !isCorner
+          ) {
             // ADJUSTMENT CASE 3: Aspect ratio locked - EDGE resize
             // When an edge snaps, recalculate dimensions to maintain aspect ratio
             // Grows from the opposite edge's center point
@@ -712,7 +749,11 @@ export const useCanvasInteractions = ({
               const bottomEdgeCenterX = layerX + width / 2;
               newX = bottomEdgeCenterX - newWidth / 2;
             }
-          } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && !isAltPressed && isCorner) {
+          } else if (
+            (isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) &&
+            !isAltPressed &&
+            isCorner
+          ) {
             // ADJUSTMENT CASE 4: Aspect ratio locked - CORNER resize
             // When an edge snaps, freeze that dimension and adjust the perpendicular dimension
             // Grows from the opposite corner
@@ -748,7 +789,10 @@ export const useCanvasInteractions = ({
                 newY = oppositeCornerY - newHeight;
               }
             }
-          } else if ((isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) && isAltPressed) {
+          } else if (
+            (isShiftPressed || (shouldLockAspectRatio && !isShiftPressed)) &&
+            isAltPressed
+          ) {
             // ADJUSTMENT CASE 5: Aspect ratio locked + Alt (or Shift + Alt)
             // Maintains center position and aspect ratio when an edge snaps
             // Equivalent to Case 2
@@ -827,7 +871,7 @@ export const useCanvasInteractions = ({
   // ============================================
   // EVENT HANDLERS - CLEANUP
   // ============================================
-  
+
   /** Handler for ending drag or resize operations */
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -847,7 +891,7 @@ export const useCanvasInteractions = ({
   // ============================================
   // EFFECTS - GLOBAL EVENT LISTENERS
   // ============================================
-  
+
   // Update refs with latest handlers to avoid stale closures
   useEffect(() => {
     handleMouseMoveRef.current = handleMouseMove;
@@ -879,7 +923,7 @@ export const useCanvasInteractions = ({
   // ============================================
   // RETURN
   // ============================================
-  
+
   return {
     isDragging,
     isResizing,

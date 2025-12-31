@@ -9,12 +9,18 @@ interface ColorInputProps {
   isGlobal?: boolean;
 }
 
-export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false }: ColorInputProps) => {
+export const ColorInput = ({
+  label,
+  value,
+  onChange,
+  disabled,
+  isGlobal = false,
+}: ColorInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState(value || '');
-  
+
   // Derive dropdown value from current value prop
-  const dropdownValue: 'transparent' | 'custom' = 
+  const dropdownValue: 'transparent' | 'custom' =
     value === 'transparent' || value === 'rgba(0,0,0,0)' ? 'transparent' : 'custom';
 
   // Sync input value when prop value changes from outside
@@ -57,7 +63,9 @@ export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false 
       >
         <input
           type="color"
-          value={value === 'transparent' || value === 'rgba(0,0,0,0)' ? '#000000' : (value || '#000000')}
+          value={
+            value === 'transparent' || value === 'rgba(0,0,0,0)' ? '#000000' : value || '#000000'
+          }
           onChange={(e) => {
             setError('');
             setInputValue(e.target.value);
@@ -105,7 +113,12 @@ export const ColorInput = ({ label, value, onChange, disabled, isGlobal = false 
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </div>
       </div>

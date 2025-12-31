@@ -14,10 +14,35 @@ interface ButtonLayerFieldsProps {
   onFontFamilyChange: (layerId: string, fontFamily: string) => void;
   onFontSizeChange: (layerId: string, fontSize: string) => void;
   onIconSizeChange: (layerId: string, iconSize: number) => void;
-  onBackgroundColorChange: (layerId: string, color: string) => void;
   onButtonActionTypeChange: (layerId: string, actionType: 'link' | 'videoControl') => void;
-  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'play-fill' | 'pause-fill' | 'custom' | 'toggle-filled' | 'toggle-outline' | 'toggle-custom'; customImage?: string; customPlayImage?: string; customPauseImage?: string; color?: string; position?: 'before' | 'after' }) => void;
-  onVideoControlChange: (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => void;
+  onButtonIconChange: (
+    layerId: string,
+    icon: {
+      type:
+        | 'none'
+        | 'play'
+        | 'pause'
+        | 'replay'
+        | 'play-fill'
+        | 'pause-fill'
+        | 'custom'
+        | 'toggle-filled'
+        | 'toggle-outline'
+        | 'toggle-custom';
+      customImage?: string;
+      customPlayImage?: string;
+      customPauseImage?: string;
+      color?: string;
+      position?: 'before' | 'after';
+    }
+  ) => void;
+  onVideoControlChange: (
+    layerId: string,
+    videoControl: {
+      targetElementId: string;
+      action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
+    }
+  ) => void;
 }
 
 export const ButtonLayerFields = ({
@@ -30,7 +55,6 @@ export const ButtonLayerFields = ({
   onFontFamilyChange,
   onFontSizeChange,
   onIconSizeChange,
-  onBackgroundColorChange,
   onButtonActionTypeChange,
   onButtonIconChange,
   onVideoControlChange,
@@ -42,9 +66,13 @@ export const ButtonLayerFields = ({
   const iconSize = config.iconSize || 24;
 
   // Get video layers with IDs for video control dropdown
-  const videoLayers = layers.filter(l => l.type === 'video');
-  const videoLayersWithIds = videoLayers.filter(l => l.attributes?.id && l.attributes.id.trim() !== '');
-  const videoLayersWithoutIds = videoLayers.filter(l => !l.attributes?.id || l.attributes.id.trim() === '');
+  const videoLayers = layers.filter((l) => l.type === 'video');
+  const videoLayersWithIds = videoLayers.filter(
+    (l) => l.attributes?.id && l.attributes.id.trim() !== ''
+  );
+  const videoLayersWithoutIds = videoLayers.filter(
+    (l) => !l.attributes?.id || l.attributes.id.trim() === ''
+  );
 
   return (
     <>
@@ -53,7 +81,9 @@ export const ButtonLayerFields = ({
         <Label>Button Action</Label>
         <select
           value={layer.actionType || 'link'}
-          onChange={(e) => onButtonActionTypeChange(layer.id, e.target.value as 'link' | 'videoControl')}
+          onChange={(e) =>
+            onButtonActionTypeChange(layer.id, e.target.value as 'link' | 'videoControl')
+          }
           disabled={layer.locked}
           className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
@@ -65,7 +95,7 @@ export const ButtonLayerFields = ({
       </div>
 
       {/* Link URL (shown when actionType is 'link') */}
-      {layer.actionType === 'link' && (
+      {layer.actionType === 'link' ? (
         <UrlInput
           label="URL"
           value={layer.url}
@@ -73,36 +103,38 @@ export const ButtonLayerFields = ({
           placeholder="e.g. example.com"
           disabled={layer.locked}
         />
-      )}
+      ) : null}
 
       {/* Video Control Settings (shown when actionType is 'videoControl') */}
-      {layer.actionType === 'videoControl' && (
+      {layer.actionType === 'videoControl' ? (
         <>
           <div>
             <Label>Target Video Element</Label>
             <select
               value={layer.videoControl?.targetElementId || ''}
-              onChange={(e) => onVideoControlChange(layer.id, {
-                ...layer.videoControl,
-                targetElementId: e.target.value,
-                action: layer.videoControl?.action || 'play'
-              } as any)}
+              onChange={(e) =>
+                onVideoControlChange(layer.id, {
+                  ...layer.videoControl,
+                  targetElementId: e.target.value,
+                  action: layer.videoControl?.action || 'play',
+                } as any)
+              }
               disabled={layer.locked}
               className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
               }`}
             >
               <option value=""></option>
-              {videoLayersWithIds.map(l => (
+              {videoLayersWithIds.map((l) => (
                 <option key={l.id} value={l.attributes?.id}>
                   {l.label} (#{l.attributes?.id})
                 </option>
               ))}
-              {videoLayersWithoutIds.length > 0 && (
+              {videoLayersWithoutIds.length > 0 ? (
                 <option disabled className="text-gray-400">
                   ⚠️ {videoLayersWithoutIds.length} video layer(s) without IDs
                 </option>
-              )}
+              ) : null}
             </select>
           </div>
 
@@ -110,11 +142,13 @@ export const ButtonLayerFields = ({
             <Label>Action</Label>
             <select
               value={layer.videoControl?.action || 'play'}
-              onChange={(e) => onVideoControlChange(layer.id, {
-                ...layer.videoControl,
-                targetElementId: layer.videoControl?.targetElementId || '',
-                action: e.target.value as 'play' | 'pause' | 'restart' | 'togglePlayPause'
-              } as any)}
+              onChange={(e) =>
+                onVideoControlChange(layer.id, {
+                  ...layer.videoControl,
+                  targetElementId: layer.videoControl?.targetElementId || '',
+                  action: e.target.value as 'play' | 'pause' | 'restart' | 'togglePlayPause',
+                } as any)
+              }
               disabled={layer.locked}
               className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
@@ -127,7 +161,7 @@ export const ButtonLayerFields = ({
             </select>
           </div>
         </>
-      )}
+      ) : null}
 
       {/* Button Text */}
       <div>
@@ -171,7 +205,8 @@ export const ButtonLayerFields = ({
             layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
           }`}
         >
-          {layer.actionType === 'videoControl' && layer.videoControl?.action === 'togglePlayPause' ? (
+          {layer.actionType === 'videoControl' &&
+          layer.videoControl?.action === 'togglePlayPause' ? (
             <>
               <option value="none">No Icon</option>
               <option value="toggle-filled">Filled</option>
@@ -193,12 +228,14 @@ export const ButtonLayerFields = ({
       </div>
 
       {/* Icon-specific settings */}
-      {icon.type !== 'none' && (
+      {icon.type !== 'none' ? (
         <>
           {/* Icon Size, Position & Color */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label isSizeSpecific={true} selectedSize={selectedSize}>Size</Label>
+              <Label isSizeSpecific={true} selectedSize={selectedSize}>
+                Size
+              </Label>
               <select
                 value={iconSize}
                 onChange={(e) => onIconSizeChange(layer.id, parseInt(e.target.value))}
@@ -219,7 +256,12 @@ export const ButtonLayerFields = ({
               <Label>Position</Label>
               <select
                 value={icon.position || 'before'}
-                onChange={(e) => onButtonIconChange(layer.id, { ...icon, position: e.target.value as 'before' | 'after' })}
+                onChange={(e) =>
+                  onButtonIconChange(layer.id, {
+                    ...icon,
+                    position: e.target.value as 'before' | 'after',
+                  })
+                }
                 disabled={layer.locked}
                 className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
@@ -232,7 +274,7 @@ export const ButtonLayerFields = ({
           </div>
 
           {/* Custom Image URL (single icon) */}
-          {icon.type === 'custom' && (
+          {icon.type === 'custom' ? (
             <UrlInput
               label="Icon Image URL"
               value={icon.customImage || ''}
@@ -240,10 +282,10 @@ export const ButtonLayerFields = ({
               placeholder="https://example.com/icon.png"
               disabled={layer.locked}
             />
-          )}
+          ) : null}
 
           {/* Custom Toggle Icons (two URLs) */}
-          {icon.type === 'toggle-custom' && (
+          {icon.type === 'toggle-custom' ? (
             <>
               <UrlInput
                 label="Play Icon URL"
@@ -260,12 +302,12 @@ export const ButtonLayerFields = ({
                 disabled={layer.locked}
               />
             </>
-          )}
+          ) : null}
         </>
-      )}
+      ) : null}
 
       {/* Text Styling (always show if text exists) */}
-      {layer.text && (
+      {layer.text ? (
         <>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -286,7 +328,9 @@ export const ButtonLayerFields = ({
               </select>
             </div>
             <div>
-              <Label isSizeSpecific={true} selectedSize={selectedSize}>Font Size</Label>
+              <Label isSizeSpecific={true} selectedSize={selectedSize}>
+                Font Size
+              </Label>
               <select
                 value={config.fontSize || '14px'}
                 onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
@@ -304,7 +348,7 @@ export const ButtonLayerFields = ({
             </div>
           </div>
         </>
-      )}
+      ) : null}
     </>
   );
 };

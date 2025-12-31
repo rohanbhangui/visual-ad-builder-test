@@ -1,9 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { 
-  type LayerContent, 
-  type AdSize,
-  type Animation,
-} from '../../data';
+import { type LayerContent, type AdSize, type Animation } from '../../data';
 import { ColorInput } from '../ColorInput';
 import { PositionSizeInput } from '../PositionSizeInput';
 import { Label } from '../Label';
@@ -72,13 +68,35 @@ interface PropertySidebarProps {
   onCanvasNameChange: (name: string) => void;
   onCanvasBackgroundColorChange: (color: string) => void;
   onAnimationLoopChange?: (loop: number) => void;
-  onAnimationLoopDelayChange?: (layerId: string, size: AdSize, delay: { value: number; unit: 'ms' | 's' }) => void;
-  onAnimationResetDurationChange?: (layerId: string, size: AdSize, duration: { value: number; unit: 'ms' | 's' }) => void;
+  onAnimationLoopDelayChange?: (
+    layerId: string,
+    size: AdSize,
+    delay: { value: number; unit: 'ms' | 's' }
+  ) => void;
+  onAnimationResetDurationChange?: (
+    layerId: string,
+    size: AdSize,
+    duration: { value: number; unit: 'ms' | 's' }
+  ) => void;
   onHtmlIdChange: (layerId: string, htmlId: string) => void;
   onAnimationChange: (layerId: string, size: AdSize, animations: Animation[]) => void;
   onButtonActionTypeChange: (layerId: string, actionType: 'link' | 'videoControl') => void;
-  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; position?: 'before' | 'after' }) => void;
-  onVideoControlChange: (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => void;
+  onButtonIconChange: (
+    layerId: string,
+    icon: {
+      type: 'none' | 'play' | 'pause' | 'replay' | 'custom';
+      customImage?: string;
+      color?: string;
+      position?: 'before' | 'after';
+    }
+  ) => void;
+  onVideoControlChange: (
+    layerId: string,
+    videoControl: {
+      targetElementId: string;
+      action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
+    }
+  ) => void;
 }
 
 export const PropertySidebar = ({
@@ -128,13 +146,16 @@ export const PropertySidebar = ({
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
   // Get the first selected layer
-  const selectedLayer = selectedLayerIds.length === 1 
-    ? layers.find(l => l.id === selectedLayerIds[0]) 
-    : null;
+  const selectedLayer =
+    selectedLayerIds.length === 1 ? layers.find((l) => l.id === selectedLayerIds[0]) : null;
 
   // Get animation loop delay and reset duration from the selected size config
-  const animationLoopDelay = selectedLayer?.sizeConfig[selectedSize]?.animationLoopDelay || { value: 5, unit: 's' as const };
-  const animationResetDuration = selectedLayer?.sizeConfig[selectedSize]?.animationResetDuration || { value: 1, unit: 's' as const };
+  const animationLoopDelay = selectedLayer?.sizeConfig[selectedSize]?.animationLoopDelay || {
+    value: 5,
+    unit: 's' as const,
+  };
+  const animationResetDuration = selectedLayer?.sizeConfig[selectedSize]
+    ?.animationResetDuration || { value: 1, unit: 's' as const };
 
   // Update local input values when layer or size changes
   useEffect(() => {
@@ -145,25 +166,30 @@ export const PropertySidebar = ({
   // Calculate minimum loop duration based on animations for the selected size across all layers
   const calculateMinLoopDuration = (): number => {
     let maxEndTimeMs = 0;
-    
-    layers.forEach(layer => {
+
+    layers.forEach((layer) => {
       const config = layer.sizeConfig[selectedSize];
       if (config?.animations) {
-        config.animations.forEach(anim => {
-          const durationMs = anim.duration.unit === 's' ? anim.duration.value * 1000 : anim.duration.value;
+        config.animations.forEach((anim) => {
+          const durationMs =
+            anim.duration.unit === 's' ? anim.duration.value * 1000 : anim.duration.value;
           const delayMs = anim.delay.unit === 's' ? anim.delay.value * 1000 : anim.delay.value;
           const endTime = durationMs + delayMs;
           maxEndTimeMs = Math.max(maxEndTimeMs, endTime);
         });
       }
     });
-    
+
     // Convert to same unit as animationLoopDelay
     return animationLoopDelay.unit === 's' ? maxEndTimeMs / 1000 : maxEndTimeMs;
   };
 
   const minLoopDuration = calculateMinLoopDuration();
-  const isLoopDurationTooShort = animationLoopDelay.value < minLoopDuration;
+
+  // Check if current input value is below minimum (validate the input value being typed)
+  const currentLoopDelayValue = parseFloat(loopDelayInputValue);
+  const isLoopDurationTooShort =
+    !isNaN(currentLoopDelayValue) && currentLoopDelayValue < minLoopDuration;
 
   // Handlers to update animation loop timing for the selected layer's size config
   const handleAnimationLoopDelayChange = (delay: { value: number; unit: 'ms' | 's' }) => {
@@ -192,18 +218,18 @@ export const PropertySidebar = ({
 
   // Multi-select mode
   if (selectedLayerIds.length > 1) {
-    const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id));
-    
+    const selectedLayers = layers.filter((l) => selectedLayerIds.includes(l.id));
+
     // Helper to get common value or "-" if values differ
     const getCommonValue = (property: 'positionX' | 'positionY' | 'width' | 'height') => {
-      const values = selectedLayers.map(l => l.sizeConfig[selectedSize]?.[property]?.value);
-      const allSame = values.every(v => v === values[0]);
+      const values = selectedLayers.map((l) => l.sizeConfig[selectedSize]?.[property]?.value);
+      const allSame = values.every((v) => v === values[0]);
       return allSame ? values[0] : undefined;
     };
 
     const getCommonUnit = (property: 'positionX' | 'positionY' | 'width' | 'height') => {
-      const units = selectedLayers.map(l => l.sizeConfig[selectedSize]?.[property]?.unit || 'px');
-      const allSame = units.every(u => u === units[0]);
+      const units = selectedLayers.map((l) => l.sizeConfig[selectedSize]?.[property]?.unit || 'px');
+      const allSame = units.every((u) => u === units[0]);
       return allSame ? units[0] : undefined;
     };
 
@@ -221,7 +247,9 @@ export const PropertySidebar = ({
         <div className="p-4">
           {/* Multi-select header */}
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">{selectedLayerIds.length} items selected</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              {selectedLayerIds.length} items selected
+            </h2>
             <button
               onClick={onClearSelection}
               className="text-gray-900 hover:text-gray-700 p-1 transition-colors cursor-pointer"
@@ -256,7 +284,7 @@ export const PropertySidebar = ({
                 value={commonX !== undefined ? commonX : 0}
                 unit={commonXUnit}
                 onChange={(value, unit) => {
-                  selectedLayerIds.forEach(id => onPropertyChange(id, 'positionX', value, unit));
+                  selectedLayerIds.forEach((id) => onPropertyChange(id, 'positionX', value, unit));
                 }}
                 disabled={false}
                 placeholder={commonX === undefined ? '-' : undefined}
@@ -266,7 +294,7 @@ export const PropertySidebar = ({
                 value={commonY !== undefined ? commonY : 0}
                 unit={commonYUnit}
                 onChange={(value, unit) => {
-                  selectedLayerIds.forEach(id => onPropertyChange(id, 'positionY', value, unit));
+                  selectedLayerIds.forEach((id) => onPropertyChange(id, 'positionY', value, unit));
                 }}
                 disabled={false}
                 placeholder={commonY === undefined ? '-' : undefined}
@@ -280,7 +308,7 @@ export const PropertySidebar = ({
                 value={commonWidth !== undefined ? commonWidth : 0}
                 unit={commonWidthUnit}
                 onChange={(value, unit) => {
-                  selectedLayerIds.forEach(id => onPropertyChange(id, 'width', value, unit));
+                  selectedLayerIds.forEach((id) => onPropertyChange(id, 'width', value, unit));
                 }}
                 disabled={false}
                 placeholder={commonWidth === undefined ? '-' : undefined}
@@ -290,7 +318,7 @@ export const PropertySidebar = ({
                 value={commonHeight !== undefined ? commonHeight : 0}
                 unit={commonHeightUnit}
                 onChange={(value, unit) => {
-                  selectedLayerIds.forEach(id => onPropertyChange(id, 'height', value, unit));
+                  selectedLayerIds.forEach((id) => onPropertyChange(id, 'height', value, unit));
                 }}
                 disabled={false}
                 placeholder={commonHeight === undefined ? '-' : undefined}
@@ -364,9 +392,11 @@ export const PropertySidebar = ({
                   <option value="-1">Infinite</option>
                 </select>
               </div>
-              
+
               <div>
-                <Label isSizeSpecific={true} selectedSize={selectedSize}>Loop Duration</Label>
+                <Label isSizeSpecific={true} selectedSize={selectedSize}>
+                  Loop Duration
+                </Label>
                 <div className="flex flex-col gap-1">
                   <div className="flex gap-1">
                     <input
@@ -390,7 +420,12 @@ export const PropertySidebar = ({
                     />
                     <select
                       value={animationLoopDelay.unit}
-                      onChange={(e) => handleAnimationLoopDelayChange({ ...animationLoopDelay, unit: e.target.value as 'ms' | 's' })}
+                      onChange={(e) =>
+                        handleAnimationLoopDelayChange({
+                          ...animationLoopDelay,
+                          unit: e.target.value as 'ms' | 's',
+                        })
+                      }
                       className="w-14 h-8 px-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                     >
                       <option value="ms">ms</option>
@@ -398,15 +433,19 @@ export const PropertySidebar = ({
                     </select>
                   </div>
                   {minLoopDuration > 0 && (
-                    <span className={`text-xs ${isLoopDurationTooShort ? 'text-red-600' : 'text-gray-500'}`}>
+                    <span
+                      className={`text-xs ${isLoopDurationTooShort ? 'text-red-600' : 'text-gray-500'}`}
+                    >
                       Min: {minLoopDuration.toFixed(2)} {animationLoopDelay.unit}
                     </span>
                   )}
                 </div>
               </div>
-              
+
               <div>
-                <Label isSizeSpecific={true} selectedSize={selectedSize}>Reset Duration</Label>
+                <Label isSizeSpecific={true} selectedSize={selectedSize}>
+                  Reset Duration
+                </Label>
                 <div className="flex gap-1">
                   <input
                     type="number"
@@ -417,7 +456,10 @@ export const PropertySidebar = ({
                       setResetDurationInputValue(val);
                       const numVal = parseFloat(val);
                       if (!isNaN(numVal)) {
-                        handleAnimationResetDurationChange({ ...animationResetDuration, value: numVal });
+                        handleAnimationResetDurationChange({
+                          ...animationResetDuration,
+                          value: numVal,
+                        });
                       } else if (val === '') {
                         handleAnimationResetDurationChange({ ...animationResetDuration, value: 0 });
                       }
@@ -427,7 +469,12 @@ export const PropertySidebar = ({
                   />
                   <select
                     value={animationResetDuration.unit}
-                    onChange={(e) => handleAnimationResetDurationChange({ ...animationResetDuration, unit: e.target.value as 'ms' | 's' })}
+                    onChange={(e) =>
+                      handleAnimationResetDurationChange({
+                        ...animationResetDuration,
+                        unit: e.target.value as 'ms' | 's',
+                      })
+                    }
                     className="w-14 h-8 px-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                   >
                     <option value="ms">ms</option>
@@ -481,7 +528,9 @@ export const PropertySidebar = ({
           ) : (
             <div className="flex items-center gap-2 w-full">
               <div className="flex-1 min-w-0 relative overflow-hidden">
-                <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">{layer.label}</h2>
+                <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap">
+                  {layer.label}
+                </h2>
                 <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none" />
               </div>
               <button
@@ -528,39 +577,39 @@ export const PropertySidebar = ({
       <div className="px-4 pb-4 flex-1 overflow-y-auto">
         <div className="mt-4">
           {activeTab === 'properties' ? (
-          <PropertyTab
-            layer={layer}
-            layers={layers}
-            selectedSize={selectedSize}
-            contentEditableRef={contentEditableRef}
-            onPropertyChange={onPropertyChange}
-            onHtmlIdChange={onHtmlIdChange}
-            onAlignLayer={onAlignLayer}
-            onAspectRatioLockToggle={onAspectRatioLockToggle}
-            onContentChange={onContentChange}
-            onColorChange={onColorChange}
-            onFontSizeChange={onFontSizeChange}
-            onIconSizeChange={onIconSizeChange}
-            onFontFamilyChange={onFontFamilyChange}
-            onTextAlignChange={onTextAlignChange}
-            onTextChange={onTextChange}
-            onBackgroundColorChange={onBackgroundColorChange}
-            onImageUrlChange={onImageUrlChange}
-            onObjectFitChange={onObjectFitChange}
-            onVideoUrlChange={onVideoUrlChange}
-            onVideoPropertyChange={onVideoPropertyChange}
-            onOpacityChange={onOpacityChange}
-            onButtonActionTypeChange={onButtonActionTypeChange}
-            onButtonIconChange={onButtonIconChange}
-            onVideoControlChange={onVideoControlChange}
-          />
-        ) : (
-          <AnimationTab
-            layer={layer}
-            selectedSize={selectedSize}
-            onAnimationChange={onAnimationChange}
-          />
-        )}
+            <PropertyTab
+              layer={layer}
+              layers={layers}
+              selectedSize={selectedSize}
+              contentEditableRef={contentEditableRef}
+              onPropertyChange={onPropertyChange}
+              onHtmlIdChange={onHtmlIdChange}
+              onAlignLayer={onAlignLayer}
+              onAspectRatioLockToggle={onAspectRatioLockToggle}
+              onContentChange={onContentChange}
+              onColorChange={onColorChange}
+              onFontSizeChange={onFontSizeChange}
+              onIconSizeChange={onIconSizeChange}
+              onFontFamilyChange={onFontFamilyChange}
+              onTextAlignChange={onTextAlignChange}
+              onTextChange={onTextChange}
+              onBackgroundColorChange={onBackgroundColorChange}
+              onImageUrlChange={onImageUrlChange}
+              onObjectFitChange={onObjectFitChange}
+              onVideoUrlChange={onVideoUrlChange}
+              onVideoPropertyChange={onVideoPropertyChange}
+              onOpacityChange={onOpacityChange}
+              onButtonActionTypeChange={onButtonActionTypeChange}
+              onButtonIconChange={onButtonIconChange}
+              onVideoControlChange={onVideoControlChange}
+            />
+          ) : (
+            <AnimationTab
+              layer={layer}
+              selectedSize={selectedSize}
+              onAnimationChange={onAnimationChange}
+            />
+          )}
         </div>
       </div>
 

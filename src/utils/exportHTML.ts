@@ -23,10 +23,20 @@ export const generateResponsiveHTML = (
   // Get loop timing from first layer's config for the first size
   const firstSize = allowedSizes[0];
   const firstLayerConfigForTiming = layers[0]?.sizeConfig[firstSize];
-  const loopDelayForScript = firstLayerConfigForTiming?.animationLoopDelay || { value: 5, unit: 's' as const };
-  const resetDurationForScript = firstLayerConfigForTiming?.animationResetDuration || { value: 1, unit: 's' as const };
-  const loopTimeMs = loopDelayForScript.unit === 's' ? loopDelayForScript.value * 1000 : loopDelayForScript.value;
-  const resetDelayMs = resetDurationForScript.unit === 's' ? resetDurationForScript.value * 1000 : resetDurationForScript.value;
+  const loopDelayForScript = firstLayerConfigForTiming?.animationLoopDelay || {
+    value: 5,
+    unit: 's' as const,
+  };
+  const resetDurationForScript = firstLayerConfigForTiming?.animationResetDuration || {
+    value: 1,
+    unit: 's' as const,
+  };
+  const loopTimeMs =
+    loopDelayForScript.unit === 's' ? loopDelayForScript.value * 1000 : loopDelayForScript.value;
+  const resetDelayMs =
+    resetDurationForScript.unit === 's'
+      ? resetDurationForScript.value * 1000
+      : resetDurationForScript.value;
 
   // Generate single set of layer elements
   const generateLayerElements = (): string => {
@@ -34,13 +44,13 @@ export const generateResponsiveHTML = (
       .map((layer, index) => {
         const zIndex = layers.length - index;
         const opacity = layer.styles.opacity;
-        
+
         // Use attributes.id if set, otherwise fall back to UUID
         const layerId = layer.attributes.id || layer.id;
-        
+
         // Check if opacity is animated in any size config
-        const hasOpacityAnimation = Object.values(layer.sizeConfig).some(config => 
-          config?.animations?.some(a => a.type === 'fadeIn')
+        const hasOpacityAnimation = Object.values(layer.sizeConfig).some((config) =>
+          config?.animations?.some((a) => a.type === 'fadeIn')
         );
 
         // Base styles that don't change - exclude opacity if it's animated
@@ -77,17 +87,17 @@ export const generateResponsiveHTML = (
             // Actual size will be set per ad size in CSS
             const iconSize = 24;
             const iconColor = icon.color || layer.styles?.color || '#ffffff';
-            
+
             // For toggle icons, generate both play and pause SVGs
             const playIconFilled = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
             const pauseIconFilled = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
             const playIconOutline = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
             const pauseIconOutline = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
-            
+
             let iconHtml = '';
             let isToggleIcon = false;
             let toggleIconData = '';
-            
+
             if (icon.type === 'play') {
               iconHtml = playIconOutline;
             } else if (icon.type === 'pause') {
@@ -100,28 +110,44 @@ export const generateResponsiveHTML = (
               iconHtml = pauseIconFilled;
             } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
               // Find target video to check autoplay status
-              const targetVideo = layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
-                ? layers.find(l => l.type === 'video' && l.attributes?.id === layer.videoControl?.targetElementId)
-                : null;
-              const hasAutoplay = targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
-              
+              const targetVideo =
+                layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                  ? layers.find(
+                      (l) =>
+                        l.type === 'video' &&
+                        l.attributes?.id === layer.videoControl?.targetElementId
+                    )
+                  : null;
+              const hasAutoplay =
+                targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+
               // Set initial icon based on autoplay (pause if autoplay, play if not)
               const isFilled = icon.type === 'toggle-filled';
               const playIcon = isFilled ? playIconFilled : playIconOutline;
               const pauseIcon = isFilled ? pauseIconFilled : pauseIconOutline;
-              
+
               iconHtml = hasAutoplay ? pauseIcon : playIcon;
               isToggleIcon = true;
               toggleIconData = ` data-play-icon="${playIcon.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIcon.replace(/"/g, '&quot;')}"`;
-            } else if (icon.type === 'toggle-custom' && icon.customPlayImage && icon.customPauseImage) {
+            } else if (
+              icon.type === 'toggle-custom' &&
+              icon.customPlayImage &&
+              icon.customPauseImage
+            ) {
               // Find target video to check autoplay status
-              const targetVideo = layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
-                ? layers.find(l => l.type === 'video' && l.attributes?.id === layer.videoControl?.targetElementId)
-                : null;
-              const hasAutoplay = targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
-              
+              const targetVideo =
+                layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                  ? layers.find(
+                      (l) =>
+                        l.type === 'video' &&
+                        l.attributes?.id === layer.videoControl?.targetElementId
+                    )
+                  : null;
+              const hasAutoplay =
+                targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+
               // Set initial icon based on autoplay (pause if autoplay, play if not)
-              iconHtml = hasAutoplay 
+              iconHtml = hasAutoplay
                 ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
                 : `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
               isToggleIcon = true;
@@ -129,43 +155,51 @@ export const generateResponsiveHTML = (
             } else if (icon.type === 'custom' && icon.customImage) {
               iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
             }
-            
+
             const hasText = layer.text && layer.text.trim().length > 0;
             const hasIcon = icon.type !== 'none' && iconHtml;
             const gap = hasText && hasIcon ? '6px' : '0';
-            
+
             let contentHtml = '';
             if (hasIcon && hasText) {
               if (isToggleIcon) {
-                contentHtml = icon.position === 'before' 
-                  ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span><span style="margin-left: ${gap};">${layer.text}</span>`
-                  : `<span style="margin-right: ${gap};">${layer.text}</span><span class="btn-icon"${toggleIconData}>${iconHtml}</span>`;
+                contentHtml =
+                  icon.position === 'before'
+                    ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span><span style="margin-left: ${gap};">${layer.text}</span>`
+                    : `<span style="margin-right: ${gap};">${layer.text}</span><span class="btn-icon"${toggleIconData}>${iconHtml}</span>`;
               } else {
-                contentHtml = icon.position === 'before' 
-                  ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
-                  : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
+                contentHtml =
+                  icon.position === 'before'
+                    ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
+                    : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
               }
             } else if (hasIcon) {
-              contentHtml = isToggleIcon ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span>` : iconHtml;
+              contentHtml = isToggleIcon
+                ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span>`
+                : iconHtml;
             } else {
               contentHtml = layer.text;
             }
-            
+
             const baseButtonStyle = `${baseStyle} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
-            
+
             // Use button for video controls, anchor for links
             if (layer.actionType === 'videoControl' && layer.videoControl) {
-              const iconToggleLogic = isToggleIcon 
+              const iconToggleLogic = isToggleIcon
                 ? `const iconEl = this.querySelector('.btn-icon'); if (iconEl && v) { setTimeout(() => { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; }, 0); }`
                 : '';
-              
-              const videoAction = layer.videoControl.action === 'play' ? 'v.play();' :
-                layer.videoControl.action === 'pause' ? 'v.pause();' :
-                layer.videoControl.action === 'restart' ? 'v.currentTime = 0; v.play();' :
-                'v.paused ? v.play() : v.pause();';
-              
+
+              const videoAction =
+                layer.videoControl.action === 'play'
+                  ? 'v.play();'
+                  : layer.videoControl.action === 'pause'
+                    ? 'v.pause();'
+                    : layer.videoControl.action === 'restart'
+                      ? 'v.currentTime = 0; v.play();'
+                      : 'v.paused ? v.play() : v.pause();';
+
               const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${videoAction} ${iconToggleLogic} }`;
-              
+
               content = `<button id="${layerId}" onclick="${onclickHandler}" style="${baseButtonStyle}">${contentHtml}</button>`;
             } else {
               const href = layer.actionType === 'link' ? layer.url : '#';
@@ -185,35 +219,43 @@ export const generateResponsiveHTML = (
   // Generate CSS keyframes for animations per size
   const generateAnimationKeyframes = (size: AdSize): string => {
     const allKeyframes: string[] = [];
-    
+
     // Get loop delay and reset duration from first layer's size config (or defaults)
     const firstLayerConfig = layers[0]?.sizeConfig[size];
     const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
-    const resetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
-    
+    const resetDuration = firstLayerConfig?.animationResetDuration || {
+      value: 1,
+      unit: 's' as const,
+    };
+
     const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
-    const resetDelayMs = resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
+    const resetDelayMs =
+      resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
     const totalCycleTime = loopTimeMs + resetDelayMs;
-    
+
     layers.forEach((layer) => {
       const layerId = layer.attributes.id || layer.id;
       const config = layer.sizeConfig[size];
       const animations = config?.animations;
-      
+
       if (!animations || animations.length === 0 || animationLoop === 0) return;
-      
+
       const resetStartPercent = (loopTimeMs / totalCycleTime) * 100;
-      
+
       animations.forEach((animation) => {
-        const duration = animation.duration.unit === 's' ? animation.duration.value * 1000 : animation.duration.value;
-        const delay = animation.delay.unit === 's' ? animation.delay.value * 1000 : animation.delay.value;
+        const duration =
+          animation.duration.unit === 's'
+            ? animation.duration.value * 1000
+            : animation.duration.value;
+        const delay =
+          animation.delay.unit === 's' ? animation.delay.value * 1000 : animation.delay.value;
         const animStartPercent = (delay / totalCycleTime) * 100;
         const animEndPercent = ((delay + duration) / totalCycleTime) * 100;
-        
+
         let keyframes = '';
         let fromValue = '';
         let toValue = '';
-        
+
         switch (animation.type) {
           case 'fadeIn':
             fromValue = `opacity: ${animation.from ?? 0}`;
@@ -246,7 +288,7 @@ export const generateResponsiveHTML = (
             break;
           }
         }
-        
+
         if (fromValue && toValue) {
           keyframes = `@keyframes anim-${layerId}-${animation.id}-${size} {
             0% { ${fromValue}; }
@@ -260,7 +302,7 @@ export const generateResponsiveHTML = (
         }
       });
     });
-    
+
     return allKeyframes.join('\n        ');
   };
 
@@ -283,21 +325,28 @@ export const generateResponsiveHTML = (
         // Get loop timing from first layer's config for this size
         const firstLayerConfig = layers[0]?.sizeConfig[firstSize];
         const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
-        const resetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
+        const resetDuration = firstLayerConfig?.animationResetDuration || {
+          value: 1,
+          unit: 's' as const,
+        };
         const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
-        const resetDelayMs = resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
+        const resetDelayMs =
+          resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
 
         const posX = config.positionX;
         const posY = config.positionY;
         const width = config.width;
         const height = config.height;
-        
+
         // Add fontSize for text, richtext, and button layers
         let fontSizeRule = '';
-        if ((layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') && config.fontSize) {
+        if (
+          (layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') &&
+          config.fontSize
+        ) {
           fontSizeRule = `\n        font-size: ${config.fontSize};`;
         }
-        
+
         // Add icon size for button layers (applied to SVG children)
         let iconSizeRule = '';
         if (layer.type === 'button' && config.iconSize) {
@@ -309,7 +358,7 @@ export const generateResponsiveHTML = (
         const animations = config.animations;
         if (animations && animations.length > 0) {
           const initialStates: string[] = [];
-          animations.forEach(animation => {
+          animations.forEach((animation) => {
             switch (animation.type) {
               case 'fadeIn':
                 initialStates.push(`opacity: ${animation.from ?? 0}`);
@@ -346,8 +395,9 @@ export const generateResponsiveHTML = (
         if (animations && animations.length > 0 && animationLoop !== 0) {
           const totalCycleTime = loopTimeMs + resetDelayMs;
           const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop.toString();
-          const animationStrings = animations.map(animation => 
-            `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
+          const animationStrings = animations.map(
+            (animation) =>
+              `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
           );
           animationRule = `\n        animation: ${animationStrings.join(', ')};`;
         }
@@ -380,22 +430,32 @@ export const generateResponsiveHTML = (
 
             // Get loop timing from first layer's config for this size
             const firstLayerConfig = layers[0]?.sizeConfig[size];
-            const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
-            const resetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
+            const loopDelay = firstLayerConfig?.animationLoopDelay || {
+              value: 5,
+              unit: 's' as const,
+            };
+            const resetDuration = firstLayerConfig?.animationResetDuration || {
+              value: 1,
+              unit: 's' as const,
+            };
             const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
-            const resetDelayMs = resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
+            const resetDelayMs =
+              resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
 
             const posX = config.positionX;
             const posY = config.positionY;
             const width = config.width;
             const height = config.height;
-            
+
             // Add fontSize for text, richtext, and button layers
             let fontSizeRule = '';
-            if ((layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') && config.fontSize) {
+            if (
+              (layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') &&
+              config.fontSize
+            ) {
               fontSizeRule = `\n          font-size: ${config.fontSize};`;
             }
-            
+
             // Add icon size for button layers (applied to SVG children)
             let iconSizeRule = '';
             if (layer.type === 'button' && config.iconSize) {
@@ -407,7 +467,7 @@ export const generateResponsiveHTML = (
             const animations = config.animations;
             if (animations && animations.length > 0) {
               const initialStates: string[] = [];
-              animations.forEach(animation => {
+              animations.forEach((animation) => {
                 switch (animation.type) {
                   case 'fadeIn':
                     initialStates.push(`opacity: ${animation.from ?? 0}`);
@@ -444,8 +504,9 @@ export const generateResponsiveHTML = (
             if (animations && animations.length > 0 && animationLoop !== 0) {
               const totalCycleTime = loopTimeMs + resetDelayMs;
               const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop.toString();
-              const animationStrings = animations.map(animation => 
-                `anim-${layerId}-${animation.id}-${size} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
+              const animationStrings = animations.map(
+                (animation) =>
+                  `anim-${layerId}-${animation.id}-${size} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
               );
               animationRule = `\n          animation: ${animationStrings.join(', ')};`;
             }

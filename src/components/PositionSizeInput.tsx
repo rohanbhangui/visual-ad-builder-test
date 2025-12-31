@@ -46,12 +46,12 @@ export const PositionSizeInput = ({
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputVal = e.target.value;
-    
+
     // Allow only numbers, minus sign, and decimal point
     if (inputVal !== '' && inputVal !== '-' && !/^-?\d*\.?\d*$/.test(inputVal)) {
       return;
     }
-    
+
     setInputValue(inputVal);
 
     if (inputVal === '' || inputVal === '-') {
@@ -89,7 +89,7 @@ export const PositionSizeInput = ({
       const step = e.shiftKey ? 10 : 1;
       const increment = e.key === 'ArrowUp' ? step : -step;
       const newValue = value + increment;
-      
+
       if (validateValue(newValue, unit)) {
         onChange(newValue);
         setInputValue(newValue.toString());

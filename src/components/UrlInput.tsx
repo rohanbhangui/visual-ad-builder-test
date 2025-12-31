@@ -10,7 +10,14 @@ interface UrlInputProps {
   isGlobal?: boolean;
 }
 
-export const UrlInput = ({ label, value, onChange, placeholder, disabled, isGlobal = false }: UrlInputProps) => {
+export const UrlInput = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  isGlobal = false,
+}: UrlInputProps) => {
   const [inputValue, setInputValue] = useState(value);
   const [error, setError] = useState(false);
   const onChangeRef = useRef(onChange);
@@ -49,7 +56,7 @@ export const UrlInput = ({ label, value, onChange, placeholder, disabled, isGlob
 
   return (
     <div>
-      {label !== "" ? <Label isGlobal={isGlobal}>{label}</Label> : null }
+      {label !== '' ? <Label isGlobal={isGlobal}>{label}</Label> : null}
       <input
         type="text"
         value={inputValue}
@@ -57,7 +64,7 @@ export const UrlInput = ({ label, value, onChange, placeholder, disabled, isGlob
         disabled={disabled}
         className={`w-full h-8 px-2 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           error ? 'border-red-500' : 'border-gray-300'
-        } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''} ${label === "" ? 'mt-1' : ''}`}
+        } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''} ${label === '' ? 'mt-1' : ''}`}
         placeholder={placeholder}
       />
     </div>

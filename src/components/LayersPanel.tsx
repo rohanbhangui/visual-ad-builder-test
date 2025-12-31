@@ -120,7 +120,10 @@ export const LayersPanel = ({
           !isCollapsed ? 'border-b border-gray-200' : ''
         }`}
       >
-        <div onMouseDown={onMouseDown} className="flex items-center gap-2 flex-1 cursor-grab active:cursor-grabbing">
+        <div
+          onMouseDown={onMouseDown}
+          className="flex items-center gap-2 flex-1 cursor-grab active:cursor-grabbing"
+        >
           <span>Layers</span>
           <button
             onClick={(e) => {
@@ -193,118 +196,124 @@ export const LayersPanel = ({
           {layers.map((layer, index) => {
             const isSelected = selectedLayerIds.includes(layer.id);
             return (
-            <div
-              key={layer.id}
-              onDragOver={(e) => onLayerDragOver(e, index)}
-              onDrop={(e) => onLayerDrop(e, index)}
-              className={`layer-item group/layer relative flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
-                isSelected
-                  ? `${UI_COLORS.SELECTED_LAYER_BG} hover:bg-blue-200`
-                  : 'hover:bg-gray-50'
-              }`}
-              style={{
-                opacity: draggedLayerIndex === index ? 0.4 : 1,
-                ...(dragOverLayerIndex === index && draggedLayerIndex !== index
-                  ? {
-                      borderTop: `1px solid ${COLORS.BLUE_PRIMARY}`,
-                    }
-                  : {}),
-                ...(dragOverLayerIndex === index + 1 && draggedLayerIndex !== index
-                  ? {
-                      borderBottom: `1px solid ${COLORS.BLUE_PRIMARY}`,
-                    }
-                  : {}),
-              }}
-            >
-              {/* Selected indicator - solid line on left edge */}
-              {isSelected ? (
-                <div className={`absolute left-0 top-0 bottom-0 w-1 z-10 ${UI_COLORS.SELECTED_INDICATOR}`} />
-              ) : null}
               <div
-                draggable
-                onDragStart={(e) => {
-                  onLayerDragStart(e, index);
-
-                  // Create a custom drag image
-                  const layerItem = (e.target as HTMLElement).closest('.layer-item') as HTMLElement;
-                  if (layerItem) {
-                    const clone = layerItem.cloneNode(true) as HTMLElement;
-                    clone.style.position = 'absolute';
-                    clone.style.top = '-9999px';
-                    clone.style.left = '-9999px';
-                    clone.style.width = `${layerItem.offsetWidth}px`;
-                    clone.style.height = `${layerItem.offsetHeight}px`;
-                    clone.style.backgroundColor = 'white';
-                    clone.style.border = `2px solid ${COLORS.BLUE_PRIMARY}`;
-                    clone.style.borderRadius = '4px';
-                    clone.style.opacity = '0.95';
-                    clone.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                    document.body.appendChild(clone);
-
-                    const rect = layerItem.getBoundingClientRect();
-                    // Set drag image offset to grab from left edge (where handle is)
-                    e.dataTransfer.setDragImage(clone, 25, rect.height / 2);
-
-                    setTimeout(() => {
-                      if (document.body.contains(clone)) {
-                        document.body.removeChild(clone);
-                      }
-                    }, 0);
-                  }
-                }}
-                onDragEnd={onLayerDragEnd}
-                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 flex items-center justify-center text-lg w-5 h-full"
-              >
-                <DragHandleIcon />
-              </div>
-              <div
-                className="flex-1 cursor-pointer -my-2 py-2 pr-2 -mr-[72px] rounded-r"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectLayer(layer.id, e.shiftKey);
-                }}
-              >
-                <div className="relative overflow-hidden max-w-[205px]">
-                  <div className='text-sm font-medium text-gray-900 whitespace-nowrap'>{layer.label}</div>
-                  
-                  {/* Gradient fades based on state - positioned below icons (z-10) */}
-                  {/* Not selected, not hovered */}
-                  {!isSelected ? (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none group-hover/layer:opacity-0" />
-                  ): null}
-                  
-                  {/* Not selected, hovered */}
-                  {!isSelected ? (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100" />
-                  ): null}
-                  
-                  {/* Selected, not hovered */}
-                  {isSelected ? (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-100 to-transparent pointer-events-none group-hover/layer:opacity-0" />
-                  ): null}
-                  
-                  {/* Selected, hovered */}
-                  {isSelected ? (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-200 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100" />
-                  ): null}
-                </div>
-                <div className="text-xs text-gray-500">{layer.type}</div>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleLock(layer.id);
-                }}
-                className={`p-1 transition-colors cursor-pointer relative z-10 ${
-                  layer.locked
-                    ? 'text-gray-600 hover:text-gray-800'
-                    : 'text-gray-400 opacity-0 group-hover/layer:opacity-100 hover:text-gray-600'
+                key={layer.id}
+                onDragOver={(e) => onLayerDragOver(e, index)}
+                onDrop={(e) => onLayerDrop(e, index)}
+                className={`layer-item group/layer relative flex items-center gap-2 px-4 py-2 border-b border-gray-100 ${
+                  isSelected
+                    ? `${UI_COLORS.SELECTED_LAYER_BG} hover:bg-blue-200`
+                    : 'hover:bg-gray-50'
                 }`}
-                title={layer.locked ? 'Unlock layer' : 'Lock layer'}
+                style={{
+                  opacity: draggedLayerIndex === index ? 0.4 : 1,
+                  ...(dragOverLayerIndex === index && draggedLayerIndex !== index
+                    ? {
+                        borderTop: `1px solid ${COLORS.BLUE_PRIMARY}`,
+                      }
+                    : {}),
+                  ...(dragOverLayerIndex === index + 1 && draggedLayerIndex !== index
+                    ? {
+                        borderBottom: `1px solid ${COLORS.BLUE_PRIMARY}`,
+                      }
+                    : {}),
+                }}
               >
-                {layer.locked ? <LockIcon /> : <UnlockIcon />}
-              </button>
-            </div>
+                {/* Selected indicator - solid line on left edge */}
+                {isSelected ? (
+                  <div
+                    className={`absolute left-0 top-0 bottom-0 w-1 z-10 ${UI_COLORS.SELECTED_INDICATOR}`}
+                  />
+                ) : null}
+                <div
+                  draggable
+                  onDragStart={(e) => {
+                    onLayerDragStart(e, index);
+
+                    // Create a custom drag image
+                    const layerItem = (e.target as HTMLElement).closest(
+                      '.layer-item'
+                    ) as HTMLElement;
+                    if (layerItem) {
+                      const clone = layerItem.cloneNode(true) as HTMLElement;
+                      clone.style.position = 'absolute';
+                      clone.style.top = '-9999px';
+                      clone.style.left = '-9999px';
+                      clone.style.width = `${layerItem.offsetWidth}px`;
+                      clone.style.height = `${layerItem.offsetHeight}px`;
+                      clone.style.backgroundColor = 'white';
+                      clone.style.border = `2px solid ${COLORS.BLUE_PRIMARY}`;
+                      clone.style.borderRadius = '4px';
+                      clone.style.opacity = '0.95';
+                      clone.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                      document.body.appendChild(clone);
+
+                      const rect = layerItem.getBoundingClientRect();
+                      // Set drag image offset to grab from left edge (where handle is)
+                      e.dataTransfer.setDragImage(clone, 25, rect.height / 2);
+
+                      setTimeout(() => {
+                        if (document.body.contains(clone)) {
+                          document.body.removeChild(clone);
+                        }
+                      }, 0);
+                    }
+                  }}
+                  onDragEnd={onLayerDragEnd}
+                  className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 flex items-center justify-center text-lg w-5 h-full"
+                >
+                  <DragHandleIcon />
+                </div>
+                <div
+                  className="flex-1 cursor-pointer -my-2 py-2 pr-2 -mr-[72px] rounded-r"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectLayer(layer.id, e.shiftKey);
+                  }}
+                >
+                  <div className="relative overflow-hidden max-w-[205px]">
+                    <div className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                      {layer.label}
+                    </div>
+
+                    {/* Gradient fades based on state - positioned below icons (z-10) */}
+                    {/* Not selected, not hovered */}
+                    {!isSelected ? (
+                      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none group-hover/layer:opacity-0" />
+                    ) : null}
+
+                    {/* Not selected, hovered */}
+                    {!isSelected ? (
+                      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100" />
+                    ) : null}
+
+                    {/* Selected, not hovered */}
+                    {isSelected ? (
+                      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-100 to-transparent pointer-events-none group-hover/layer:opacity-0" />
+                    ) : null}
+
+                    {/* Selected, hovered */}
+                    {isSelected ? (
+                      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-200 to-transparent pointer-events-none opacity-0 group-hover/layer:opacity-100" />
+                    ) : null}
+                  </div>
+                  <div className="text-xs text-gray-500">{layer.type}</div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleLock(layer.id);
+                  }}
+                  className={`p-1 transition-colors cursor-pointer relative z-10 ${
+                    layer.locked
+                      ? 'text-gray-600 hover:text-gray-800'
+                      : 'text-gray-400 opacity-0 group-hover/layer:opacity-100 hover:text-gray-600'
+                  }`}
+                  title={layer.locked ? 'Unlock layer' : 'Lock layer'}
+                >
+                  {layer.locked ? <LockIcon /> : <UnlockIcon />}
+                </button>
+              </div>
             );
           })}
           {/* Drop zone for end of list */}

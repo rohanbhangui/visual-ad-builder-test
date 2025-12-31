@@ -88,7 +88,9 @@ export const ZoomControls = ({ zoom, onZoomChange, onResetPan }: ZoomControlsPro
                   key={level}
                   onClick={() => handleZoomLevelClick(level)}
                   className={`w-full px-2.5 py-1 text-xs text-left hover:bg-gray-100 ${
-                    Math.abs(zoom - level) < 0.01 ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+                    Math.abs(zoom - level) < 0.01
+                      ? 'bg-blue-50 text-blue-600 font-medium'
+                      : 'text-gray-700'
                   }`}
                 >
                   {Math.round(level * 100)}%

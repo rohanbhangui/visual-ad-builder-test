@@ -126,7 +126,17 @@ export interface ButtonLayer extends BaseLayer {
     action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
   };
   icon?: {
-    type: 'none' | 'play' | 'pause' | 'replay' | 'play-fill' | 'pause-fill' | 'custom' | 'toggle-filled' | 'toggle-outline' | 'toggle-custom';
+    type:
+      | 'none'
+      | 'play'
+      | 'pause'
+      | 'replay'
+      | 'play-fill'
+      | 'pause-fill'
+      | 'custom'
+      | 'toggle-filled'
+      | 'toggle-outline'
+      | 'toggle-custom';
     customImage?: string; // For single custom image
     customPlayImage?: string; // For toggle custom play icon
     customPauseImage?: string; // For toggle custom pause icon

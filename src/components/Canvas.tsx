@@ -59,14 +59,24 @@ export const Canvas: React.FC<CanvasProps> = ({
   const generatePreviewHTML = (): string => {
     // Get loop delay and reset duration from the first layer's selected size config (or defaults)
     const firstLayerConfig = layers[0]?.sizeConfig[selectedSize];
-    const animationLoopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
-    const animationResetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
-    
+    const animationLoopDelay = firstLayerConfig?.animationLoopDelay || {
+      value: 5,
+      unit: 's' as const,
+    };
+    const animationResetDuration = firstLayerConfig?.animationResetDuration || {
+      value: 1,
+      unit: 's' as const,
+    };
+
     // Calculate cycle timing for keyframes (needed for layer mapping)
-    const loopTimeMs = animationLoopDelay.unit === 's' ? animationLoopDelay.value * 1000 : animationLoopDelay.value;
-    const resetDelayMs = animationResetDuration.unit === 's' ? animationResetDuration.value * 1000 : animationResetDuration.value;
+    const loopTimeMs =
+      animationLoopDelay.unit === 's' ? animationLoopDelay.value * 1000 : animationLoopDelay.value;
+    const resetDelayMs =
+      animationResetDuration.unit === 's'
+        ? animationResetDuration.value * 1000
+        : animationResetDuration.value;
     const totalCycleTime = loopTimeMs + resetDelayMs; // in ms
-    
+
     const layerElements = layers
       .filter((layer) => {
         // Only render layers that have data for the selected size
@@ -81,22 +91,27 @@ export const Canvas: React.FC<CanvasProps> = ({
         const height = config.height;
         const zIndex = layers.length - index;
         const opacity = layer.styles.opacity;
-        
+
         // Get animations for this size
         const animations = config.animations || [];
-        
+
         // Check if properties are animated
-        const hasOpacityAnimation = animations.some(a => a.type === 'fadeIn');
-        
+        const hasOpacityAnimation = animations.some((a) => a.type === 'fadeIn');
+
         // Calculate iteration count: -1 = infinite, 0 = run once (no loop), >0 = that many times
-        const iterationCount = animationLoop === -1 ? 'infinite' : (animationLoop === 0 ? '1' : animationLoop.toString());
-        
+        const iterationCount =
+          animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
+
         // Use totalCycleTime as duration, keyframes handle internal timing including delay
-        const animationStyle = animations.length > 0 && animationLoop !== 0
-          ? `animation: ${animations.map(anim => 
-              `anim-${layer.id}-${anim.id} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
-            ).join(', ')};`
-          : '';
+        const animationStyle =
+          animations.length > 0 && animationLoop !== 0
+            ? `animation: ${animations
+                .map(
+                  (anim) =>
+                    `anim-${layer.id}-${anim.id} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
+                )
+                .join(', ')};`
+            : '';
 
         // Build style, excluding animated properties
         const opacityStyle = !hasOpacityAnimation ? `opacity: ${opacity};` : '';
@@ -125,10 +140,10 @@ export const Canvas: React.FC<CanvasProps> = ({
             const icon = layer.icon || { type: 'none', position: 'before' };
             const iconSize = config.iconSize || 24;
             const iconColor = icon.color || layer.styles?.color || '#ffffff';
-            
+
             let iconHtml = '';
             let isToggleIcon = false;
-            
+
             if (icon.type === 'play') {
               iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
             } else if (icon.type === 'pause') {
@@ -142,11 +157,17 @@ export const Canvas: React.FC<CanvasProps> = ({
             } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
               isToggleIcon = true;
               // Find target video to check autoplay status
-              const targetVideo = layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
-                ? layers.find(l => l.type === 'video' && l.attributes?.id === layer.videoControl?.targetElementId)
-                : null;
-              const hasAutoplay = targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
-              
+              const targetVideo =
+                layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                  ? layers.find(
+                      (l) =>
+                        l.type === 'video' &&
+                        l.attributes?.id === layer.videoControl?.targetElementId
+                    )
+                  : null;
+              const hasAutoplay =
+                targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+
               // Generate both play and pause icons
               const isFilled = icon.type === 'toggle-filled';
               const playIcon = isFilled
@@ -155,55 +176,71 @@ export const Canvas: React.FC<CanvasProps> = ({
               const pauseIcon = isFilled
                 ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`
                 : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
-              
+
               // Show pause icon if autoplay is on, play icon if off
               const initialIcon = hasAutoplay ? pauseIcon : playIcon;
               iconHtml = `<span class="btn-icon" data-play-icon="${playIcon.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIcon.replace(/"/g, '&quot;')}">${initialIcon}</span>`;
             } else if (icon.type === 'toggle-custom') {
               isToggleIcon = true;
               // Find target video to check autoplay status
-              const targetVideo = layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
-                ? layers.find(l => l.type === 'video' && l.attributes?.id === layer.videoControl?.targetElementId)
-                : null;
-              const hasAutoplay = targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
-              
-              const playImg = icon.customPlayImage ? `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />` : '';
-              const pauseImg = icon.customPauseImage ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />` : '';
-              
+              const targetVideo =
+                layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                  ? layers.find(
+                      (l) =>
+                        l.type === 'video' &&
+                        l.attributes?.id === layer.videoControl?.targetElementId
+                    )
+                  : null;
+              const hasAutoplay =
+                targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+
+              const playImg = icon.customPlayImage
+                ? `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
+                : '';
+              const pauseImg = icon.customPauseImage
+                ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
+                : '';
+
               // Show pause image if autoplay is on, play image if off
-              const initialIcon = (hasAutoplay && pauseImg) ? pauseImg : playImg;
+              const initialIcon = hasAutoplay && pauseImg ? pauseImg : playImg;
               iconHtml = `<span class="btn-icon" data-play-icon="${playImg.replace(/"/g, '&quot;')}" data-pause-icon="${pauseImg.replace(/"/g, '&quot;')}">${initialIcon}</span>`;
             } else if (icon.type === 'custom' && icon.customImage) {
               iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
             }
-            
+
             const hasText = layer.text && layer.text.trim().length > 0;
             const hasIcon = icon.type !== 'none' && iconHtml;
             const gap = hasText && hasIcon ? '6px' : '0';
-            
+
             let contentHtml = '';
             if (hasIcon && hasText) {
-              contentHtml = icon.position === 'before' 
-                ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
-                : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
+              contentHtml =
+                icon.position === 'before'
+                  ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
+                  : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
             } else if (hasIcon) {
               contentHtml = iconHtml;
             } else {
               contentHtml = layer.text;
             }
-            
+
             const baseStyle = `${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
-            
+
             // Use button for video controls, anchor for links
             if (layer.actionType === 'videoControl' && layer.videoControl) {
-              const iconToggleLogic = isToggleIcon ? ` setTimeout(() => { const iconEl = this.querySelector('.btn-icon'); if (iconEl) { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; } }, 0);` : '';
+              const iconToggleLogic = isToggleIcon
+                ? ` setTimeout(() => { const iconEl = this.querySelector('.btn-icon'); if (iconEl) { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; } }, 0);`
+                : '';
               const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${
-                layer.videoControl.action === 'play' ? `v.play();${iconToggleLogic}` :
-                layer.videoControl.action === 'pause' ? `v.pause();${iconToggleLogic}` :
-                layer.videoControl.action === 'restart' ? `v.currentTime = 0; v.play();${iconToggleLogic}` :
-                `if (v.paused) { v.play(); } else { v.pause(); }${iconToggleLogic}`
+                layer.videoControl.action === 'play'
+                  ? `v.play();${iconToggleLogic}`
+                  : layer.videoControl.action === 'pause'
+                    ? `v.pause();${iconToggleLogic}`
+                    : layer.videoControl.action === 'restart'
+                      ? `v.currentTime = 0; v.play();${iconToggleLogic}`
+                      : `if (v.paused) { v.play(); } else { v.pause(); }${iconToggleLogic}`
               } }`;
-              
+
               content = `<button ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} onclick="${onclickHandler}" style="${baseStyle}">${contentHtml}</button>`;
             } else {
               const href = layer.actionType === 'link' ? layer.url : '#';
@@ -233,16 +270,16 @@ export const Canvas: React.FC<CanvasProps> = ({
     // Generate CSS keyframes and initial states for animations
     const animationKeyframes: string[] = [];
     const initialAnimationStates: string[] = [];
-    
+
     layers.forEach((layer) => {
       const config = layer.sizeConfig[selectedSize];
       const animations = config?.animations;
-      
+
       if (!animations || animations.length === 0 || animationLoop === 0) return;
-      
+
       // Calculate keyframe percentages
       const resetStartPercent = (loopTimeMs / totalCycleTime) * 100;
-      
+
       // Generate initial state CSS for elements with animations
       const layerId = layer.attributes.id || layer.id;
       const initialStates: string[] = [];
@@ -277,17 +314,21 @@ export const Canvas: React.FC<CanvasProps> = ({
         const selector = layerId ? `#${layerId}` : `[data-layer-id="${layer.id}"]`;
         initialAnimationStates.push(`${selector} { ${initialStates.join('; ')}; }`);
       }
-      
+
       animations.forEach((animation) => {
-        const duration = animation.duration.unit === 's' ? animation.duration.value * 1000 : animation.duration.value;
-        const delay = animation.delay.unit === 's' ? animation.delay.value * 1000 : animation.delay.value;
+        const duration =
+          animation.duration.unit === 's'
+            ? animation.duration.value * 1000
+            : animation.duration.value;
+        const delay =
+          animation.delay.unit === 's' ? animation.delay.value * 1000 : animation.delay.value;
         const animStartPercent = (delay / totalCycleTime) * 100;
         const animEndPercent = ((delay + duration) / totalCycleTime) * 100;
-        
+
         let keyframes = '';
         let fromValue = '';
         let toValue = '';
-        
+
         switch (animation.type) {
           case 'fadeIn':
             fromValue = `opacity: ${animation.from ?? 0}`;
@@ -320,7 +361,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             break;
           }
         }
-        
+
         if (fromValue && toValue) {
           // Option B: 0% = from, delay% = hold from, delay+duration% = to, loopTime% = hold to, then snap back
           keyframes = `@keyframes anim-${layer.id}-${animation.id} {
@@ -471,18 +512,28 @@ export const Canvas: React.FC<CanvasProps> = ({
         const icon = layer.icon || { type: 'none', position: 'before' };
         const iconSize = config.iconSize || 24;
         const iconColor = icon.color || layer.styles?.color || '#ffffff';
-        
+
         let iconElement: React.ReactNode = null;
         if (icon.type === 'play') {
-          iconElement = <PlayIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
+          iconElement = (
+            <PlayIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
+          );
         } else if (icon.type === 'pause') {
-          iconElement = <PauseIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
+          iconElement = (
+            <PauseIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
+          );
         } else if (icon.type === 'replay') {
-          iconElement = <ReplayIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
+          iconElement = (
+            <ReplayIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
+          );
         } else if (icon.type === 'play-fill') {
-          iconElement = <PlayFilledIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
+          iconElement = (
+            <PlayFilledIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
+          );
         } else if (icon.type === 'pause-fill') {
-          iconElement = <PauseFilledIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />;
+          iconElement = (
+            <PauseFilledIcon width={iconSize} height={iconSize} style={{ color: iconColor }} />
+          );
         } else if (icon.type === 'toggle-filled') {
           // Show play or pause icon based on toggle state (defaulting to play)
           const isPaused = false;
@@ -504,15 +555,31 @@ export const Canvas: React.FC<CanvasProps> = ({
           const isPaused = false;
           const imageSrc = isPaused ? icon.customPauseImage : icon.customPlayImage;
           if (imageSrc) {
-            iconElement = <img src={imageSrc} width={iconSize} height={iconSize} alt="" style={{ objectFit: 'contain' }} />;
+            iconElement = (
+              <img
+                src={imageSrc}
+                width={iconSize}
+                height={iconSize}
+                alt=""
+                style={{ objectFit: 'contain' }}
+              />
+            );
           }
         } else if (icon.type === 'custom' && icon.customImage) {
-          iconElement = <img src={icon.customImage} width={iconSize} height={iconSize} alt="" style={{ objectFit: 'contain' }} />;
+          iconElement = (
+            <img
+              src={icon.customImage}
+              width={iconSize}
+              height={iconSize}
+              alt=""
+              style={{ objectFit: 'contain' }}
+            />
+          );
         }
-        
+
         const hasText = layer.text && layer.text.trim().length > 0;
         const hasIcon = icon.type !== 'none' && iconElement;
-        
+
         content = (
           <div
             {...(layer.attributes.id && { id: layer.attributes.id })}
@@ -554,7 +621,9 @@ export const Canvas: React.FC<CanvasProps> = ({
             ? 'group hover:outline hover:outline-2 hover:outline-blue-400'
             : ''
         }
-        data-layer-hover={!layer.locked && !isSelected && !isSpacePressed && !isPanning ? 'true' : undefined}
+        data-layer-hover={
+          !layer.locked && !isSelected && !isSpacePressed && !isPanning ? 'true' : undefined
+        }
         onMouseEnter={(e) => {
           if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
             (e.currentTarget as HTMLElement).style.outline = '2px solid rgba(59, 130, 246, 0.5)';
@@ -574,10 +643,10 @@ export const Canvas: React.FC<CanvasProps> = ({
   };
 
   return (
-    <div 
-      className="flex-1 flex items-center justify-center w-full" 
+    <div
+      className="flex-1 flex items-center justify-center w-full"
       data-canvas-container
-      style={{ 
+      style={{
         cursor: isPanning ? 'grabbing' : isSpacePressed ? 'grab' : 'default',
       }}
     >
@@ -606,206 +675,221 @@ export const Canvas: React.FC<CanvasProps> = ({
             onMouseLeave={onMouseLeave}
             onClick={onCanvasClick}
           >
-          {mode === 'edit' && onCanvasSettingsClick ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onCanvasSettingsClick();
-              }}
-              className="absolute flex items-center gap-1 text-gray-400 hover:text-gray-900 hover:underline cursor-pointer bg-transparent"
-              style={{
-                top: `${-23/zoom}px`,
-                right: `${-5/zoom}px`,
-                padding: '2px 4px',
-                fontSize: '12px',
-                transform: `scale(${1/zoom})`,
-                transformOrigin: 'top right',
-                border: 'none'
-              }}
-              title="Canvas Settings"
-            >
-              <SettingsIcon style={{ width: '14px', height: '14px' }} />
-              <span>Canvas</span>
-            </button>
-          ) : null}
-          {snapLines.map((line, idx) => (
-            <div
-              key={idx}
-              className="absolute pointer-events-none z-[9999]"
-              style={{
-                backgroundColor: COLORS.RED_GUIDELINE,
-                ...(line.type === 'vertical'
-                  ? { left: `${line.position}px`, top: 0, width: `${1/zoom}px`, height: '100%' }
-                  : { top: `${line.position}px`, left: 0, height: `${1/zoom}px`, width: '100%' }),
-              }}
-            />
-          ))}
-          {layers.map((layer, index) => renderLayer(layer, index))}
-          {/* Selection outline overlay - rendered on top of all layers */}
-          {selectedLayerIds.length > 0 ?
-            (() => {
-              // Calculate unified bounding box for all selected layers
-              const selectedLayers = layers.filter(l => selectedLayerIds.includes(l.id) && !l.locked);
-              if (selectedLayers.length === 0) return null;
+            {mode === 'edit' && onCanvasSettingsClick ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCanvasSettingsClick();
+                }}
+                className="absolute flex items-center gap-1 text-gray-400 hover:text-gray-900 hover:underline cursor-pointer bg-transparent"
+                style={{
+                  top: `${-23 / zoom}px`,
+                  right: `${-5 / zoom}px`,
+                  padding: '2px 4px',
+                  fontSize: '12px',
+                  transform: `scale(${1 / zoom})`,
+                  transformOrigin: 'top right',
+                  border: 'none',
+                }}
+                title="Canvas Settings"
+              >
+                <SettingsIcon style={{ width: '14px', height: '14px' }} />
+                <span>Canvas</span>
+              </button>
+            ) : null}
+            {snapLines.map((line, idx) => (
+              <div
+                key={idx}
+                className="absolute pointer-events-none z-[9999]"
+                style={{
+                  backgroundColor: COLORS.RED_GUIDELINE,
+                  ...(line.type === 'vertical'
+                    ? { left: `${line.position}px`, top: 0, width: `${1 / zoom}px`, height: '100%' }
+                    : {
+                        top: `${line.position}px`,
+                        left: 0,
+                        height: `${1 / zoom}px`,
+                        width: '100%',
+                      }),
+                }}
+              />
+            ))}
+            {layers.map((layer, index) => renderLayer(layer, index))}
+            {/* Selection outline overlay - rendered on top of all layers */}
+            {selectedLayerIds.length > 0
+              ? (() => {
+                  // Calculate unified bounding box for all selected layers
+                  const selectedLayers = layers.filter(
+                    (l) => selectedLayerIds.includes(l.id) && !l.locked
+                  );
+                  if (selectedLayers.length === 0) return null;
 
-              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                  let minX = Infinity,
+                    minY = Infinity,
+                    maxX = -Infinity,
+                    maxY = -Infinity;
 
-              selectedLayers.forEach(layer => {
-                const config = layer.sizeConfig[selectedSize];
-                if (!config) return;
+                  selectedLayers.forEach((layer) => {
+                    const config = layer.sizeConfig[selectedSize];
+                    if (!config) return;
 
-                const posX = config.positionX;
-                const posY = config.positionY;
-                const width = config.width;
-                const height = config.height;
+                    const posX = config.positionX;
+                    const posY = config.positionY;
+                    const width = config.width;
+                    const height = config.height;
 
-                // Convert to pixels if using percentage
-                const x = posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
-                const y = posY.unit === '%' ? (posY.value / 100) * dimensions.height : posY.value;
-                const w = width.unit === '%' ? (width.value / 100) * dimensions.width : width.value;
-                const h = height.unit === '%' ? (height.value / 100) * dimensions.height : height.value;
+                    // Convert to pixels if using percentage
+                    const x =
+                      posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
+                    const y =
+                      posY.unit === '%' ? (posY.value / 100) * dimensions.height : posY.value;
+                    const w =
+                      width.unit === '%' ? (width.value / 100) * dimensions.width : width.value;
+                    const h =
+                      height.unit === '%' ? (height.value / 100) * dimensions.height : height.value;
 
-                minX = Math.min(minX, x);
-                minY = Math.min(minY, y);
-                maxX = Math.max(maxX, x + w);
-                maxY = Math.max(maxY, y + h);
-              });
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x + w);
+                    maxY = Math.max(maxY, y + h);
+                  });
 
-              if (minX === Infinity) return null;
+                  if (minX === Infinity) return null;
 
-              const boundingWidth = maxX - minX;
-              const boundingHeight = maxY - minY;
+                  const boundingWidth = maxX - minX;
+                  const boundingHeight = maxY - minY;
 
-              // For single selection, show resize handles. For multi-select, just the bounding box
-              const showResizeHandles = selectedLayerIds.length === 1;
+                  // For single selection, show resize handles. For multi-select, just the bounding box
+                  const showResizeHandles = selectedLayerIds.length === 1;
 
-              return (
-                <>
-                  <div
-                    className="absolute pointer-events-none"
-                    style={{
-                      left: `${minX}px`,
-                      top: `${minY}px`,
-                      width: `${boundingWidth}px`,
-                      height: `${boundingHeight}px`,
-                      outline: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
-                      outlineOffset: `${-2/zoom}px`,
-                      zIndex: 999,
-                    }}
-                  />
-                  {/* Resize handles - only for single selection */}
-                  {showResizeHandles ? (
-                    <div
-                      className="absolute"
-                      style={{
-                        left: `${minX}px`,
-                        top: `${minY}px`,
-                        width: `${boundingWidth}px`,
-                        height: `${boundingHeight}px`,
-                        zIndex: 999,
-                        pointerEvents: 'none',
-                      }}
-                    >
-                      {/* Corner handles */}
+                  return (
+                    <>
                       <div
-                        className="absolute bg-white rounded-full cursor-nw-resize"
+                        className="absolute pointer-events-none"
                         style={{
-                          top: `${-6/zoom}px`,
-                          left: `${-6/zoom}px`,
-                          width: `${12/zoom}px`,
-                          height: `${12/zoom}px`,
-                          border: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
-                          pointerEvents: 'auto',
+                          left: `${minX}px`,
+                          top: `${minY}px`,
+                          width: `${boundingWidth}px`,
+                          height: `${boundingHeight}px`,
+                          outline: `${2 / zoom}px solid ${COLORS.BLUE_SELECTED}`,
+                          outlineOffset: `${-2 / zoom}px`,
+                          zIndex: 999,
                         }}
-                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'nw')}
                       />
-                      <div
-                        className="absolute bg-white rounded-full cursor-ne-resize"
-                        style={{
-                          top: `${-6/zoom}px`,
-                          right: `${-6/zoom}px`,
-                          width: `${12/zoom}px`,
-                          height: `${12/zoom}px`,
-                          border: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
-                          pointerEvents: 'auto',
-                        }}
-                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'ne')}
-                      />
-                      <div
-                        className="absolute bg-white rounded-full cursor-sw-resize"
-                        style={{
-                          bottom: `${-6/zoom}px`,
-                          left: `${-6/zoom}px`,
-                          width: `${12/zoom}px`,
-                          height: `${12/zoom}px`,
-                          border: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
-                          pointerEvents: 'auto',
-                        }}
-                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'sw')}
-                      />
-                      <div
-                        className="absolute bg-white rounded-full cursor-se-resize"
-                        style={{
-                          bottom: `${-6/zoom}px`,
-                          right: `${-6/zoom}px`,
-                          width: `${12/zoom}px`,
-                          height: `${12/zoom}px`,
-                          border: `${2/zoom}px solid ${COLORS.BLUE_SELECTED}`,
-                          pointerEvents: 'auto',
-                        }}
-                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'se')}
-                      />
-                      {/* Edge resize areas (invisible) */}
-                      <div
-                        className="absolute cursor-n-resize"
-                        style={{
-                          top: `${-4/zoom}px`,
-                          left: `${12/zoom}px`,
-                          right: `${12/zoom}px`,
-                          height: `${8/zoom}px`,
-                          pointerEvents: 'auto',
-                        }}
-                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'n')}
-                      />
-                      <div
-                        className="absolute cursor-e-resize"
-                        style={{
-                          right: `${-4/zoom}px`,
-                          top: `${12/zoom}px`,
-                          bottom: `${12/zoom}px`,
-                          width: `${8/zoom}px`,
-                          pointerEvents: 'auto',
-                        }}
-                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'e')}
-                      />
-                      <div
-                        className="absolute cursor-s-resize"
-                        style={{
-                          bottom: `${-4/zoom}px`,
-                          left: `${12/zoom}px`,
-                          right: `${12/zoom}px`,
-                          height: `${8/zoom}px`,
-                          pointerEvents: 'auto',
-                        }}
-                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 's')}
-                      />
-                      <div
-                        className="absolute cursor-w-resize"
-                        style={{
-                          left: `${-4/zoom}px`,
-                          top: `${12/zoom}px`,
-                          bottom: `${12/zoom}px`,
-                          width: `${8/zoom}px`,
-                          pointerEvents: 'auto',
-                        }}
-                        onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'w')}
-                      />
-                    </div>
-                  ): null}
-                </>
-              );
-            })() : null}
-        </div>
+                      {/* Resize handles - only for single selection */}
+                      {showResizeHandles ? (
+                        <div
+                          className="absolute"
+                          style={{
+                            left: `${minX}px`,
+                            top: `${minY}px`,
+                            width: `${boundingWidth}px`,
+                            height: `${boundingHeight}px`,
+                            zIndex: 999,
+                            pointerEvents: 'none',
+                          }}
+                        >
+                          {/* Corner handles */}
+                          <div
+                            className="absolute bg-white rounded-full cursor-nw-resize"
+                            style={{
+                              top: `${-6 / zoom}px`,
+                              left: `${-6 / zoom}px`,
+                              width: `${12 / zoom}px`,
+                              height: `${12 / zoom}px`,
+                              border: `${2 / zoom}px solid ${COLORS.BLUE_SELECTED}`,
+                              pointerEvents: 'auto',
+                            }}
+                            onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'nw')}
+                          />
+                          <div
+                            className="absolute bg-white rounded-full cursor-ne-resize"
+                            style={{
+                              top: `${-6 / zoom}px`,
+                              right: `${-6 / zoom}px`,
+                              width: `${12 / zoom}px`,
+                              height: `${12 / zoom}px`,
+                              border: `${2 / zoom}px solid ${COLORS.BLUE_SELECTED}`,
+                              pointerEvents: 'auto',
+                            }}
+                            onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'ne')}
+                          />
+                          <div
+                            className="absolute bg-white rounded-full cursor-sw-resize"
+                            style={{
+                              bottom: `${-6 / zoom}px`,
+                              left: `${-6 / zoom}px`,
+                              width: `${12 / zoom}px`,
+                              height: `${12 / zoom}px`,
+                              border: `${2 / zoom}px solid ${COLORS.BLUE_SELECTED}`,
+                              pointerEvents: 'auto',
+                            }}
+                            onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'sw')}
+                          />
+                          <div
+                            className="absolute bg-white rounded-full cursor-se-resize"
+                            style={{
+                              bottom: `${-6 / zoom}px`,
+                              right: `${-6 / zoom}px`,
+                              width: `${12 / zoom}px`,
+                              height: `${12 / zoom}px`,
+                              border: `${2 / zoom}px solid ${COLORS.BLUE_SELECTED}`,
+                              pointerEvents: 'auto',
+                            }}
+                            onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'se')}
+                          />
+                          {/* Edge resize areas (invisible) */}
+                          <div
+                            className="absolute cursor-n-resize"
+                            style={{
+                              top: `${-4 / zoom}px`,
+                              left: `${12 / zoom}px`,
+                              right: `${12 / zoom}px`,
+                              height: `${8 / zoom}px`,
+                              pointerEvents: 'auto',
+                            }}
+                            onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'n')}
+                          />
+                          <div
+                            className="absolute cursor-e-resize"
+                            style={{
+                              right: `${-4 / zoom}px`,
+                              top: `${12 / zoom}px`,
+                              bottom: `${12 / zoom}px`,
+                              width: `${8 / zoom}px`,
+                              pointerEvents: 'auto',
+                            }}
+                            onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'e')}
+                          />
+                          <div
+                            className="absolute cursor-s-resize"
+                            style={{
+                              bottom: `${-4 / zoom}px`,
+                              left: `${12 / zoom}px`,
+                              right: `${12 / zoom}px`,
+                              height: `${8 / zoom}px`,
+                              pointerEvents: 'auto',
+                            }}
+                            onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 's')}
+                          />
+                          <div
+                            className="absolute cursor-w-resize"
+                            style={{
+                              left: `${-4 / zoom}px`,
+                              top: `${12 / zoom}px`,
+                              bottom: `${12 / zoom}px`,
+                              width: `${8 / zoom}px`,
+                              pointerEvents: 'auto',
+                            }}
+                            onMouseDown={(e) => onResizeMouseDown(e, selectedLayerIds[0], 'w')}
+                          />
+                        </div>
+                      ) : null}
+                    </>
+                  );
+                })()
+              : null}
+          </div>
         </div>
       ) : (
         <iframe

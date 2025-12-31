@@ -69,8 +69,22 @@ interface PropertyTabProps {
   ) => void;
   onOpacityChange: (layerId: string, opacity: number) => void;
   onButtonActionTypeChange: (layerId: string, actionType: 'link' | 'videoControl') => void;
-  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; position?: 'before' | 'after' }) => void;
-  onVideoControlChange: (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => void;
+  onButtonIconChange: (
+    layerId: string,
+    icon: {
+      type: 'none' | 'play' | 'pause' | 'replay' | 'custom';
+      customImage?: string;
+      color?: string;
+      position?: 'before' | 'after';
+    }
+  ) => void;
+  onVideoControlChange: (
+    layerId: string,
+    videoControl: {
+      targetElementId: string;
+      action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
+    }
+  ) => void;
 }
 
 export const PropertyTab = ({
@@ -111,9 +125,7 @@ export const PropertyTab = ({
     <div className="space-y-3">
       {/* HTML ID */}
       <div>
-        <Label htmlFor="element-id">
-          Element ID
-        </Label>
+        <Label htmlFor="element-id">Element ID</Label>
         <input
           id="element-id"
           type="text"
@@ -283,7 +295,6 @@ export const PropertyTab = ({
           value={layer.styles?.backgroundColor || 'transparent'}
           onChange={(color) => onBackgroundColorChange(layer.id, color)}
           disabled={layer.locked}
-
         />
       </div>
 
