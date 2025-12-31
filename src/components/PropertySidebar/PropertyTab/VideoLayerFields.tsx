@@ -23,7 +23,7 @@ export const VideoLayerFields = ({
   return (
     <>
       <div>
-        <Label isGlobal={true}>Video URL</Label>
+        <Label>Video URL</Label>
         <div>
           {layer.url && !videoLoadError ? (
             <video
@@ -56,7 +56,6 @@ export const VideoLayerFields = ({
           onChange={(url) => onVideoUrlChange(layer.id, url)}
           placeholder="https://example.com/video.mp4"
           disabled={layer.locked}
-          isGlobal={true}
         />
       </div>
 

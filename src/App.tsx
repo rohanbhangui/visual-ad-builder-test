@@ -655,6 +655,29 @@ const App = () => {
     );
   };
 
+  const handleIconSizeChange = (layerId: string, iconSize: number) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId) {
+          const currentConfig = l.sizeConfig[selectedSize];
+          if (!currentConfig) return l;
+          
+          return {
+            ...l,
+            sizeConfig: {
+              ...l.sizeConfig,
+              [selectedSize]: {
+                ...currentConfig,
+                iconSize: iconSize,
+              },
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
+
   const handleFontFamilyChange = (layerId: string, fontFamily: string) => {
     setLayers((prev) =>
       prev.map((l) => {
@@ -757,7 +780,7 @@ const App = () => {
     );
   };
 
-  const handleButtonIconChange = (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; size?: number; position?: 'before' | 'after' }) => {
+  const handleButtonIconChange = (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; position?: 'before' | 'after' }) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'button') {
@@ -1209,6 +1232,7 @@ const App = () => {
             onContentChange={handleContentChange}
             onColorChange={handleColorChange}
             onFontSizeChange={handleFontSizeChange}
+            onIconSizeChange={handleIconSizeChange}
             onFontFamilyChange={handleFontFamilyChange}
             onTextAlignChange={handleTextAlignChange}
             onTextChange={handleTextChange}

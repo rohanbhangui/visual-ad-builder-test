@@ -59,8 +59,8 @@ export const generateResponsiveHTML = (
             content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}></video>`;
             break;
           case 'button': {
-            const icon = layer.icon || { type: 'none', size: 24, position: 'before' };
-            const iconSize = icon.size || 24;
+            const icon = layer.icon || { type: 'none', position: 'before' };
+            const iconSize = config.iconSize || 24;
             const iconColor = icon.color || layer.styles?.color || '#ffffff';
             
             // For toggle icons, generate both play and pause SVGs
@@ -83,16 +83,32 @@ export const generateResponsiveHTML = (
               iconHtml = playIconFilled;
             } else if (icon.type === 'pause-fill') {
               iconHtml = pauseIconFilled;
-            } else if (icon.type === 'toggle-filled') {
-              iconHtml = playIconFilled;
+            } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
+              // Find target video to check autoplay status
+              const targetVideo = layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                ? layers.find(l => l.type === 'video' && l.attributes?.id === layer.videoControl?.targetElementId)
+                : null;
+              const hasAutoplay = targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+              
+              // Set initial icon based on autoplay (pause if autoplay, play if not)
+              const isFilled = icon.type === 'toggle-filled';
+              const playIcon = isFilled ? playIconFilled : playIconOutline;
+              const pauseIcon = isFilled ? pauseIconFilled : pauseIconOutline;
+              
+              iconHtml = hasAutoplay ? pauseIcon : playIcon;
               isToggleIcon = true;
-              toggleIconData = ` data-play-icon="${playIconFilled.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIconFilled.replace(/"/g, '&quot;')}"`;
-            } else if (icon.type === 'toggle-outline') {
-              iconHtml = playIconOutline;
-              isToggleIcon = true;
-              toggleIconData = ` data-play-icon="${playIconOutline.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIconOutline.replace(/"/g, '&quot;')}"`;
+              toggleIconData = ` data-play-icon="${playIcon.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIcon.replace(/"/g, '&quot;')}"`;
             } else if (icon.type === 'toggle-custom' && icon.customPlayImage && icon.customPauseImage) {
-              iconHtml = `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+              // Find target video to check autoplay status
+              const targetVideo = layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                ? layers.find(l => l.type === 'video' && l.attributes?.id === layer.videoControl?.targetElementId)
+                : null;
+              const hasAutoplay = targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+              
+              // Set initial icon based on autoplay (pause if autoplay, play if not)
+              iconHtml = hasAutoplay 
+                ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
+                : `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
               isToggleIcon = true;
               toggleIconData = ` data-play-icon="<img src='${icon.customPlayImage}' width='${iconSize}' height='${iconSize}' style='object-fit: contain;' />" data-pause-icon="<img src='${icon.customPauseImage}' width='${iconSize}' height='${iconSize}' style='object-fit: contain;' />"`;
             } else if (icon.type === 'custom' && icon.customImage) {
@@ -105,37 +121,42 @@ export const generateResponsiveHTML = (
             
             let contentHtml = '';
             if (hasIcon && hasText) {
-              contentHtml = icon.position === 'before' 
-                ? `<span class="btn-icon">${iconHtml}</span><span style="margin-left: ${gap};">${layer.text}</span>`
-                : `<span style="margin-right: ${gap};">${layer.text}</span><span class="btn-icon">${iconHtml}</span>`;
+              if (isToggleIcon) {
+                contentHtml = icon.position === 'before' 
+                  ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span><span style="margin-left: ${gap};">${layer.text}</span>`
+                  : `<span style="margin-right: ${gap};">${layer.text}</span><span class="btn-icon"${toggleIconData}>${iconHtml}</span>`;
+              } else {
+                contentHtml = icon.position === 'before' 
+                  ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
+                  : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
+              }
             } else if (hasIcon) {
-              contentHtml = `<span class="btn-icon">${iconHtml}</span>`;
+              contentHtml = isToggleIcon ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span>` : iconHtml;
             } else {
               contentHtml = layer.text;
             }
             
-            // Create onclick handler for video controls with icon toggle support
-            let onclickHandler = '';
+            const baseButtonStyle = `${baseStyle} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
+            
+            // Use button for video controls, anchor for links
             if (layer.actionType === 'videoControl' && layer.videoControl) {
+              const iconToggleLogic = isToggleIcon 
+                ? `const iconEl = this.querySelector('.btn-icon'); if (iconEl && v) { setTimeout(() => { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; }, 0); }`
+                : '';
+              
               const videoAction = layer.videoControl.action === 'play' ? 'v.play();' :
                 layer.videoControl.action === 'pause' ? 'v.pause();' :
                 layer.videoControl.action === 'restart' ? 'v.currentTime = 0; v.play();' :
                 'v.paused ? v.play() : v.pause();';
               
-              const iconToggle = isToggleIcon 
-                ? `const btn = event.currentTarget; const iconEl = btn.querySelector('.btn-icon'); if (iconEl && v) { iconEl.innerHTML = v.paused ? btn.dataset.playIcon : btn.dataset.pauseIcon; }`
-                : '';
+              const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${videoAction} ${iconToggleLogic} }`;
               
-              onclickHandler = `event.preventDefault(); const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${videoAction} ${iconToggle} }`;
+              content = `<button id="${layerId}" onclick="${onclickHandler}" style="${baseButtonStyle}">${contentHtml}</button>`;
+            } else {
+              const href = layer.actionType === 'link' ? layer.url : '#';
+              const target = layer.actionType === 'link' ? ' target="_blank"' : '';
+              content = `<a id="${layerId}" href="${href}"${target} style="${baseButtonStyle} text-decoration: none;">${contentHtml}</a>`;
             }
-            
-            const href = layer.actionType === 'link' ? layer.url : '#';
-            const target = layer.actionType === 'link' ? ' target="_blank"' : '';
-            const onclick = onclickHandler ? ` onclick="${onclickHandler}"` : '';
-            const dataAttrs = isToggleIcon ? toggleIconData : '';
-            
-            additionalStyles = `display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;`;
-            content = `<a id="${layerId}" href="${href}"${target}${onclick}${dataAttrs} style="${baseStyle} ${additionalStyles}">${contentHtml}</a>`;
             break;
           }
         }

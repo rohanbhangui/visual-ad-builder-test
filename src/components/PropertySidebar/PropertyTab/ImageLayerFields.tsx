@@ -19,7 +19,7 @@ export const ImageLayerFields = ({
   return (
     <>
       <div>
-        <Label isGlobal={true}>Image URL</Label>
+        <Label>Image URL</Label>
         <div>
           {layer.url && !imageLoadError ? (
             <img
@@ -53,7 +53,6 @@ export const ImageLayerFields = ({
           onChange={(url) => onImageUrlChange(layer.id, url)}
           placeholder="https://example.com/image.jpg"
           disabled={layer.locked}
-          isGlobal={true}
         />
       </div>
 

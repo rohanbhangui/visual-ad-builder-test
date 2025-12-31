@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { type LayerContent, type AdSize } from '../data';
 import { COLORS } from '../consts';
 import { getGoogleFontsLink } from '../utils/googleFonts';
@@ -53,6 +53,9 @@ export const Canvas: React.FC<CanvasProps> = ({
   animationLoop = 0,
   animationLoopDelay = { value: 0, unit: 's' as const },
 }) => {
+  // Track which toggle buttons are in "paused" state (true = paused/showing pause icon)
+  const [toggleButtonStates, setToggleButtonStates] = React.useState<Record<string, boolean>>({});
+
   const generatePreviewHTML = (): string => {
     // Calculate loop time in milliseconds for the script
     const loopTimeMs = animationLoopDelay.unit === 's' ? animationLoopDelay.value * 1000 : animationLoopDelay.value;
@@ -103,11 +106,13 @@ export const Canvas: React.FC<CanvasProps> = ({
             }
             break;
           case 'button': {
-            const icon = layer.icon || { type: 'none', size: 24, position: 'before' };
-            const iconSize = icon.size || 24;
+            const icon = layer.icon || { type: 'none', position: 'before' };
+            const iconSize = config.iconSize || 24;
             const iconColor = icon.color || layer.styles?.color || '#ffffff';
             
             let iconHtml = '';
+            let isToggleIcon = false;
+            
             if (icon.type === 'play') {
               iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
             } else if (icon.type === 'pause') {
@@ -118,15 +123,40 @@ export const Canvas: React.FC<CanvasProps> = ({
               iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
             } else if (icon.type === 'pause-fill') {
               iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
-            } else if (icon.type === 'toggle-filled') {
-              // Start with play icon (will toggle in exported version)
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-            } else if (icon.type === 'toggle-outline') {
-              // Start with play icon (will toggle in exported version)
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-            } else if (icon.type === 'toggle-custom' && icon.customPlayImage) {
-              // Start with play icon (will toggle in exported version)
-              iconHtml = `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+            } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
+              isToggleIcon = true;
+              // Find target video to check autoplay status
+              const targetVideo = layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                ? layers.find(l => l.type === 'video' && l.attributes?.id === layer.videoControl?.targetElementId)
+                : null;
+              const hasAutoplay = targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+              
+              // Generate both play and pause icons
+              const isFilled = icon.type === 'toggle-filled';
+              const playIcon = isFilled
+                ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
+                : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+              const pauseIcon = isFilled
+                ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`
+                : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+              
+              // Show pause icon if autoplay is on, play icon if off
+              const initialIcon = hasAutoplay ? pauseIcon : playIcon;
+              iconHtml = `<span class="btn-icon" data-play-icon="${playIcon.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIcon.replace(/"/g, '&quot;')}">${initialIcon}</span>`;
+            } else if (icon.type === 'toggle-custom') {
+              isToggleIcon = true;
+              // Find target video to check autoplay status
+              const targetVideo = layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                ? layers.find(l => l.type === 'video' && l.attributes?.id === layer.videoControl?.targetElementId)
+                : null;
+              const hasAutoplay = targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+              
+              const playImg = icon.customPlayImage ? `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />` : '';
+              const pauseImg = icon.customPauseImage ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />` : '';
+              
+              // Show pause image if autoplay is on, play image if off
+              const initialIcon = (hasAutoplay && pauseImg) ? pauseImg : playImg;
+              iconHtml = `<span class="btn-icon" data-play-icon="${playImg.replace(/"/g, '&quot;')}" data-pause-icon="${pauseImg.replace(/"/g, '&quot;')}">${initialIcon}</span>`;
             } else if (icon.type === 'custom' && icon.customImage) {
               iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
             }
@@ -146,21 +176,24 @@ export const Canvas: React.FC<CanvasProps> = ({
               contentHtml = layer.text;
             }
             
-            // Create onclick handler for video controls
-            const onclickHandler = layer.actionType === 'videoControl' && layer.videoControl 
-              ? `event.preventDefault(); const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${
-                  layer.videoControl.action === 'play' ? 'v.play();' :
-                  layer.videoControl.action === 'pause' ? 'v.pause();' :
-                  layer.videoControl.action === 'restart' ? 'v.currentTime = 0; v.play();' :
-                  'v.paused ? v.play() : v.pause();'
-                } }`
-              : '';
+            const baseStyle = `${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
             
-            const href = layer.actionType === 'link' ? layer.url : '#';
-            const target = layer.actionType === 'link' ? ' target="_blank"' : '';
-            const onclick = onclickHandler ? ` onclick="${onclickHandler}"` : '';
-            
-            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${href}"${target}${onclick} style="${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; text-decoration: none; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer;">${contentHtml}</a>`;
+            // Use button for video controls, anchor for links
+            if (layer.actionType === 'videoControl' && layer.videoControl) {
+              const iconToggleLogic = isToggleIcon ? ` setTimeout(() => { const iconEl = this.querySelector('.btn-icon'); if (iconEl) { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; } }, 0);` : '';
+              const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${
+                layer.videoControl.action === 'play' ? `v.play();${iconToggleLogic}` :
+                layer.videoControl.action === 'pause' ? `v.pause();${iconToggleLogic}` :
+                layer.videoControl.action === 'restart' ? `v.currentTime = 0; v.play();${iconToggleLogic}` :
+                `if (v.paused) { v.play(); } else { v.pause(); }${iconToggleLogic}`
+              } }`;
+              
+              content = `<button ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} onclick="${onclickHandler}" style="${baseStyle}">${contentHtml}</button>`;
+            } else {
+              const href = layer.actionType === 'link' ? layer.url : '#';
+              const target = layer.actionType === 'link' ? ' target="_blank"' : '';
+              content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${href}"${target} style="${baseStyle} text-decoration: none;">${contentHtml}</a>`;
+            }
             break;
           }
         }
@@ -475,8 +508,8 @@ export const Canvas: React.FC<CanvasProps> = ({
         }
         break;
       case 'button': {
-        const icon = layer.icon || { type: 'none', size: 24, position: 'before' };
-        const iconSize = icon.size || 24;
+        const icon = layer.icon || { type: 'none', position: 'before' };
+        const iconSize = config.iconSize || 24;
         const iconColor = icon.color || layer.styles?.color || '#ffffff';
         
         let iconElement: React.ReactNode = null;
@@ -514,22 +547,38 @@ export const Canvas: React.FC<CanvasProps> = ({
             </svg>
           );
         } else if (icon.type === 'toggle-filled') {
-          // Show play icon in edit mode
-          iconElement = (
+          // Show play or pause icon based on toggle state
+          const isPaused = toggleButtonStates[layer.id];
+          iconElement = isPaused ? (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          ) : (
             <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill={iconColor} stroke="none">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
           );
         } else if (icon.type === 'toggle-outline') {
-          // Show play icon in edit mode
-          iconElement = (
+          // Show play or pause icon based on toggle state
+          const isPaused = toggleButtonStates[layer.id];
+          iconElement = isPaused ? (
+            <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
+              <rect x="6" y="4" width="4" height="16"></rect>
+              <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+          ) : (
             <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
           );
-        } else if (icon.type === 'toggle-custom' && icon.customPlayImage) {
-          // Show play icon in edit mode
-          iconElement = <img src={icon.customPlayImage} width={iconSize} height={iconSize} alt="" style={{ objectFit: 'contain' }} />;
+        } else if (icon.type === 'toggle-custom') {
+          // Show play or pause image based on toggle state
+          const isPaused = toggleButtonStates[layer.id];
+          const imageSrc = isPaused ? icon.customPauseImage : icon.customPlayImage;
+          if (imageSrc) {
+            iconElement = <img src={imageSrc} width={iconSize} height={iconSize} alt="" style={{ objectFit: 'contain' }} />;
+          }
         } else if (icon.type === 'custom' && icon.customImage) {
           iconElement = <img src={icon.customImage} width={iconSize} height={iconSize} alt="" style={{ objectFit: 'contain' }} />;
         }

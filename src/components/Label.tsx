@@ -1,15 +1,18 @@
 import { useState } from 'react';
+import type { AdSize } from '../data';
 
 interface LabelProps {
   children: React.ReactNode;
   isGlobal?: boolean;
+  isSizeSpecific?: boolean;
+  selectedSize?: AdSize;
   isSecondary?: boolean;
   htmlFor?: string;
 }
 
-export const Label = ({ children, isGlobal = false, isSecondary = false, htmlFor }: LabelProps) => {
+export const Label = ({ children, isGlobal = false, isSizeSpecific = false, selectedSize, isSecondary = false, htmlFor }: LabelProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const tooltipText = isGlobal ? 'All sizes' : undefined;
+  const tooltipText = isGlobal ? 'All sizes' : isSizeSpecific && selectedSize ? `${selectedSize} only` : undefined;
 
   return (
     <div className="relative">
@@ -20,8 +23,11 @@ export const Label = ({ children, isGlobal = false, isSecondary = false, htmlFor
         }`}
       >
         <span
-          className={`relative inline-block ${isGlobal ? 'px-0.5 bg-amber-100 text-amber-900 cursor-help' : ''}`}
-          onMouseEnter={() => isGlobal && setShowTooltip(true)}
+          className={`relative inline-block ${
+            isGlobal ? 'px-0.5 bg-amber-100 text-amber-900 cursor-help' : 
+            isSizeSpecific ? 'px-0.5 bg-amber-100 text-amber-900 cursor-help' : ''
+          }`}
+          onMouseEnter={() => (isGlobal || isSizeSpecific) && setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
         >
           {children}

@@ -259,7 +259,7 @@ export const AnimationTab = ({
       <>
         {/* Animation Type */}
         <div>
-          <Label>Animation Type</Label>
+          <Label isSizeSpecific={true} selectedSize={selectedSize}>Animation Type</Label>
           <select
             value={animation.type}
             onChange={(e) => handleTypeChange(animation.id, e.target.value as Animation['type'])}
@@ -278,7 +278,7 @@ export const AnimationTab = ({
 
         {/* Easing */}
         <div>
-          <Label>Easing</Label>
+          <Label isSizeSpecific={true} selectedSize={selectedSize}>Easing</Label>
           <select
             value={animation.easing}
             onChange={(e) =>
@@ -302,7 +302,7 @@ export const AnimationTab = ({
         {/* Slide Start Point */}
         {['slideLeft', 'slideRight', 'slideUp', 'slideDown'].includes(animation.type) ? (
           <div>
-            <Label>Start Point</Label>
+            <Label isSizeSpecific={true} selectedSize={selectedSize}>Start Point</Label>
             <div className="flex gap-1">
               <input
                 type="number"
@@ -348,7 +348,7 @@ export const AnimationTab = ({
         {/* Scale Start Value */}
         {animation.type === 'scale' ? (
           <div>
-            <Label>Start Scale</Label>
+            <Label isSizeSpecific={true} selectedSize={selectedSize}>Start Scale</Label>
             <div className="flex gap-1">
               <input
                 type="number"
@@ -376,7 +376,7 @@ export const AnimationTab = ({
         {animation.type === 'custom' ? (
           <>
             <div>
-              <Label>Property</Label>
+              <Label isSizeSpecific={true} selectedSize={selectedSize}>Property</Label>
               <select
                 value={animation.property || 'opacity'}
                 onChange={(e) =>
@@ -405,7 +405,7 @@ export const AnimationTab = ({
               /* Color inputs */
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label>From {animation.property === 'backgroundColor' ? 'BG' : 'Color'}</Label>
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>From {animation.property === 'backgroundColor' ? 'BG' : 'Color'}</Label>
                   <input
                     type="color"
                     value={typeof animation.from === 'string' ? animation.from : '#000000'}
@@ -417,7 +417,7 @@ export const AnimationTab = ({
                   />
                 </div>
                 <div>
-                  <Label>To {animation.property === 'backgroundColor' ? 'BG' : 'Color'}</Label>
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>To {animation.property === 'backgroundColor' ? 'BG' : 'Color'}</Label>
                   <input
                     type="color"
                     value={typeof animation.to === 'string' ? animation.to : '#ffffff'}
@@ -433,7 +433,7 @@ export const AnimationTab = ({
               /* Scale inputs (percentage) */
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label>From Scale</Label>
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>From Scale</Label>
                   <div className="flex gap-1">
                     <input
                       type="number"
@@ -455,7 +455,7 @@ export const AnimationTab = ({
                   </div>
                 </div>
                 <div>
-                  <Label>To Scale</Label>
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>To Scale</Label>
                   <div className="flex gap-1">
                     <input
                       type="number"
@@ -481,7 +481,7 @@ export const AnimationTab = ({
               /* Position/Size inputs with units */
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label>From</Label>
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>From</Label>
                   <div className="flex gap-1">
                     <input
                       type="number"
@@ -530,7 +530,7 @@ export const AnimationTab = ({
                   </div>
                 </div>
                 <div>
-                  <Label>To</Label>
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>To</Label>
                   <div className="flex gap-1">
                     <input
                       type="number"
@@ -575,7 +575,7 @@ export const AnimationTab = ({
               /* Opacity - simple number input */
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label>From</Label>
+                  <Label isSizeSpecific={true} selectedSize={selectedSize}>From</Label>
                   <input
                     type="number"
                     min="0"
@@ -592,7 +592,7 @@ export const AnimationTab = ({
                   />
                 </div>
                 <div>
-                  <Label>To</Label>
+                  <Label isSizeSpecific={true}>To</Label>
                   <input
                     type="number"
                     min="0"
@@ -617,7 +617,7 @@ export const AnimationTab = ({
         <div className="grid grid-cols-2 gap-3">
           {/* Duration */}
           <div>
-            <Label>Duration</Label>
+            <Label isSizeSpecific={true} selectedSize={selectedSize}>Duration</Label>
             <div className="flex gap-1">
               <input
                 type="number"
@@ -660,7 +660,7 @@ export const AnimationTab = ({
 
           {/* Delay */}
           <div>
-            <Label>Delay</Label>
+            <Label isSizeSpecific={true} selectedSize={selectedSize}>Delay</Label>
             <div className="flex gap-1">
               <input
                 type="number"

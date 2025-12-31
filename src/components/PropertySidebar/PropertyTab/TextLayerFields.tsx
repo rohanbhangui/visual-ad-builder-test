@@ -36,7 +36,7 @@ export const TextLayerFields = ({
   return (
     <>
       <div className="flex items-center justify-between mb-1">
-        <Label isGlobal={true}>Content</Label>
+        <Label>Content</Label>
         <span
           className={`text-xs ${
             layer.content.length > MAX_TEXT_CONTENT_LENGTH ? 'text-red-500' : 'text-gray-500'
@@ -64,11 +64,10 @@ export const TextLayerFields = ({
           value={layer.styles?.color || '#000000'}
           onChange={(color) => onColorChange(layer.id, color)}
           disabled={layer.locked}
-          isGlobal={true}
         />
 
         <div>
-          <Label isGlobal={true}>Text Align</Label>
+          <Label>Text Align</Label>
           <div className="inline-flex border border-gray-300 rounded overflow-hidden">
             <button
               onClick={() => onTextAlignChange(layer.id, 'left')}
@@ -113,7 +112,7 @@ export const TextLayerFields = ({
       {/* Font Family and Font Size side by side */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label isGlobal={true}>Font Family</Label>
+          <Label>Font Family</Label>
           <select
             value={layer.styles?.fontFamily || 'Arial'}
             onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
@@ -131,7 +130,7 @@ export const TextLayerFields = ({
         </div>
 
         <div>
-          <Label>
+          <Label isSizeSpecific={true} selectedSize={selectedSize}>
             Font Size
           </Label>
           <select

@@ -36,12 +36,12 @@ export const RichtextLayerFields = ({
         {/* Font Family and Font Size */}
         <div className="flex gap-2 mb-1">
           <div className="flex-1">
-            <Label isGlobal={true}>Font Family</Label>
+            <Label>Font Family</Label>
             <select
               value={layer.styles?.fontFamily || 'Arial'}
               onChange={(e) => onFontFamilyChange(layer.id, e.target.value)}
               disabled={layer.locked}
-              className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
               }`}
             >
@@ -53,7 +53,7 @@ export const RichtextLayerFields = ({
             </select>
           </div>
           <div>
-            <Label>
+            <Label isSizeSpecific={true} selectedSize={selectedSize}>
               Font Size
             </Label>
             <select
@@ -176,7 +176,6 @@ export const RichtextLayerFields = ({
         value={layer.styles?.color || '#000000'}
         onChange={(color) => onColorChange(layer.id, color)}
         disabled={layer.locked}
-        isGlobal={true}
       />
     </>
   );

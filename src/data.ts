@@ -43,6 +43,7 @@ export interface SizeConfig {
   width: Size;
   height: Size;
   fontSize?: string; // Font size specific to this ad size (e.g., '14px')
+  iconSize?: number; // Icon size in pixels (for button layers)
   animations?: Animation[]; // Animations for this size
 }
 
@@ -128,7 +129,6 @@ export interface ButtonLayer extends BaseLayer {
     customPlayImage?: string; // For toggle custom play icon
     customPauseImage?: string; // For toggle custom pause icon
     color?: string; // For SVG icons
-    size?: number; // Size in pixels
     position?: 'before' | 'after'; // Relative to text
   };
   styles: {
@@ -311,28 +311,32 @@ export const sampleCanvas: Canvas = {
       attributes: { id: 'play-pause-btn' },
       sizeConfig: {
         '300x250': {
-          positionX: { value: 80, unit: 'px' },
-          positionY: { value: 31, unit: 'px' },
+          positionX: { value: 68, unit: 'px' },
+          positionY: { value: 87, unit: 'px' },
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
+          iconSize: 16,
         },
         '336x280': {
-          positionX: { value: 81, unit: 'px' },
-          positionY: { value: 31, unit: 'px' },
+          positionX: { value: 73, unit: 'px' },
+          positionY: { value: 97, unit: 'px' },
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
+          iconSize: 16,
         },
         '728x90': {
-          positionX: { value: 580, unit: 'px' },
-          positionY: { value: 12, unit: 'px' },
+          positionX: { value: 573, unit: 'px' },
+          positionY: { value: 62, unit: 'px' },
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
+          iconSize: 16,
         },
         '160x600': {
-          positionX: { value: 10, unit: 'px' },
-          positionY: { value: 12, unit: 'px' },
+          positionX: { value: 3, unit: 'px' },
+          positionY: { value: 173, unit: 'px' },
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
+          iconSize: 16,
         },
       },
       text: '',
@@ -344,7 +348,6 @@ export const sampleCanvas: Canvas = {
       },
       icon: {
         type: 'toggle-filled',
-        size: 16,
         position: 'before',
         color: '#ffffff',
       },
@@ -484,7 +487,7 @@ export const sampleCanvas: Canvas = {
       text: 'Shop Now',
       actionType: 'link' as const,
       url: 'https://www.google.com',
-      icon: { type: 'none' as const, size: 24, position: 'before' as const },
+      icon: { type: 'none' as const, position: 'before' as const },
       styles: {
         backgroundColor: '#0d821b',
         color: '#ffffff',

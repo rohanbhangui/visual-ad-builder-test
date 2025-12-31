@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Label } from './Label';
+import type { AdSize } from '../data';
 
 interface PositionSizeInputProps {
   label: string;
@@ -8,6 +9,8 @@ interface PositionSizeInputProps {
   onChange: (value: number, unit?: 'px' | '%') => void;
   disabled?: boolean;
   placeholder?: string;
+  isSizeSpecific?: boolean;
+  selectedSize?: AdSize;
 }
 
 export const PositionSizeInput = ({
@@ -17,6 +20,8 @@ export const PositionSizeInput = ({
   onChange,
   disabled,
   placeholder,
+  isSizeSpecific = false,
+  selectedSize,
 }: PositionSizeInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>(placeholder || value.toString());
@@ -78,6 +83,21 @@ export const PositionSizeInput = ({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const step = e.shiftKey ? 10 : 1;
+      const increment = e.key === 'ArrowUp' ? step : -step;
+      const newValue = value + increment;
+      
+      if (validateValue(newValue, unit)) {
+        onChange(newValue);
+        setInputValue(newValue.toString());
+        setError('');
+      }
+    }
+  };
+
   const handleUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newUnit = e.target.value as 'px' | '%';
     if (!validateValue(value, newUnit)) {
@@ -94,7 +114,7 @@ export const PositionSizeInput = ({
 
   return (
     <div>
-      <Label>
+      <Label isSizeSpecific={isSizeSpecific} selectedSize={selectedSize}>
         {label}
       </Label>
       <div className="flex gap-1">
@@ -103,6 +123,7 @@ export const PositionSizeInput = ({
           value={inputValue}
           onChange={handleValueChange}
           onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           onFocus={() => {
             if (inputValue === placeholder) {
               setInputValue('');

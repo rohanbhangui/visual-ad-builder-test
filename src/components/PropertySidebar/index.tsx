@@ -51,6 +51,7 @@ interface PropertySidebarProps {
   onContentChange: (layerId: string, content: string) => void;
   onColorChange: (layerId: string, color: string) => void;
   onFontSizeChange: (layerId: string, fontSize: string) => void;
+  onIconSizeChange: (layerId: string, iconSize: number) => void;
   onFontFamilyChange: (layerId: string, fontFamily: string) => void;
   onTextAlignChange: (layerId: string, textAlign: 'left' | 'center' | 'right') => void;
   onTextChange: (layerId: string, text: string) => void;
@@ -76,7 +77,7 @@ interface PropertySidebarProps {
   onHtmlIdChange: (layerId: string, htmlId: string) => void;
   onAnimationChange: (layerId: string, size: AdSize, animations: Animation[]) => void;
   onButtonActionTypeChange: (layerId: string, actionType: 'link' | 'videoControl') => void;
-  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; size?: number; position?: 'before' | 'after' }) => void;
+  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; position?: 'before' | 'after' }) => void;
   onVideoControlChange: (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => void;
 }
 
@@ -97,6 +98,7 @@ export const PropertySidebar = ({
   onContentChange,
   onColorChange,
   onFontSizeChange,
+  onIconSizeChange,
   onFontFamilyChange,
   onTextAlignChange,
   onTextChange,
@@ -439,6 +441,7 @@ export const PropertySidebar = ({
             onContentChange={onContentChange}
             onColorChange={onColorChange}
             onFontSizeChange={onFontSizeChange}
+            onIconSizeChange={onIconSizeChange}
             onFontFamilyChange={onFontFamilyChange}
             onTextAlignChange={onTextAlignChange}
             onTextChange={onTextChange}

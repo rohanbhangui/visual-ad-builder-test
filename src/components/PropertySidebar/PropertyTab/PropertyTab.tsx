@@ -54,6 +54,7 @@ interface PropertyTabProps {
   onContentChange: (layerId: string, content: string) => void;
   onColorChange: (layerId: string, color: string) => void;
   onFontSizeChange: (layerId: string, fontSize: string) => void;
+  onIconSizeChange: (layerId: string, iconSize: number) => void;
   onFontFamilyChange: (layerId: string, fontFamily: string) => void;
   onTextAlignChange: (layerId: string, textAlign: 'left' | 'center' | 'right') => void;
   onTextChange: (layerId: string, text: string) => void;
@@ -68,7 +69,7 @@ interface PropertyTabProps {
   ) => void;
   onOpacityChange: (layerId: string, opacity: number) => void;
   onButtonActionTypeChange: (layerId: string, actionType: 'link' | 'videoControl') => void;
-  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; size?: number; position?: 'before' | 'after' }) => void;
+  onButtonIconChange: (layerId: string, icon: { type: 'none' | 'play' | 'pause' | 'replay' | 'custom'; customImage?: string; color?: string; position?: 'before' | 'after' }) => void;
   onVideoControlChange: (layerId: string, videoControl: { targetElementId: string; action: 'play' | 'pause' | 'restart' | 'togglePlayPause' }) => void;
 }
 
@@ -84,6 +85,7 @@ export const PropertyTab = ({
   onContentChange,
   onColorChange,
   onFontSizeChange,
+  onIconSizeChange,
   onFontFamilyChange,
   onTextAlignChange,
   onTextChange,
@@ -109,7 +111,7 @@ export const PropertyTab = ({
     <div className="space-y-3">
       {/* HTML ID */}
       <div>
-        <Label isGlobal={true} htmlFor="element-id">
+        <Label htmlFor="element-id">
           Element ID
         </Label>
         <input
@@ -159,6 +161,8 @@ export const PropertyTab = ({
           unit={posX.unit || 'px'}
           onChange={(value, unit) => onPropertyChange(layer.id, 'positionX', value, unit)}
           disabled={layer.locked}
+          isSizeSpecific={true}
+          selectedSize={selectedSize}
         />
         <PositionSizeInput
           label="Y"
@@ -166,6 +170,8 @@ export const PropertyTab = ({
           unit={posY.unit || 'px'}
           onChange={(value, unit) => onPropertyChange(layer.id, 'positionY', value, unit)}
           disabled={layer.locked}
+          isSizeSpecific={true}
+          selectedSize={selectedSize}
         />
       </div>
 
@@ -178,6 +184,8 @@ export const PropertyTab = ({
             unit={width.unit || 'px'}
             onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
             disabled={layer.locked}
+            isSizeSpecific={true}
+            selectedSize={selectedSize}
           />
           <PositionSizeInput
             label="Height"
@@ -185,6 +193,8 @@ export const PropertyTab = ({
             unit={height.unit || 'px'}
             onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
             disabled={layer.locked}
+            isSizeSpecific={true}
+            selectedSize={selectedSize}
           />
         </div>
         <button
@@ -232,6 +242,7 @@ export const PropertyTab = ({
           onColorChange={onColorChange}
           onFontFamilyChange={onFontFamilyChange}
           onFontSizeChange={onFontSizeChange}
+          onIconSizeChange={onIconSizeChange}
           onBackgroundColorChange={onBackgroundColorChange}
           onButtonActionTypeChange={onButtonActionTypeChange}
           onButtonIconChange={onButtonIconChange}
@@ -272,13 +283,13 @@ export const PropertyTab = ({
           value={layer.styles?.backgroundColor || 'transparent'}
           onChange={(color) => onBackgroundColorChange(layer.id, color)}
           disabled={layer.locked}
-          isGlobal={true}
+
         />
       </div>
 
       {/* Layer Opacity */}
       <div className="mt-4">
-        <Label isGlobal={true}>Layer Opacity</Label>
+        <Label>Layer Opacity</Label>
         <div className="flex items-center gap-3">
           <div
             className="flex-1 relative h-1 bg-gray-200 rounded-full cursor-pointer"
