@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../../data';
 import { Label } from '../../Label';
+import { ColorInput } from '../../ColorInput';
 import TrashIcon from '../../../assets/icons/trash.svg?react';
 import EditIcon from '../../../assets/icons/edit.svg?react';
 import ChevronDownIcon from '../../../assets/icons/chevron-down.svg?react';
@@ -35,6 +36,11 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(animations.map((a) => a.id)));
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  
+  // Local state for numeric inputs to allow typing
+  const [durationInputs, setDurationInputs] = useState<Map<string, string>>(new Map());
+  const [delayInputs, setDelayInputs] = useState<Map<string, string>>(new Map());
+  const [startPointInputs, setStartPointInputs] = useState<Map<string, string>>(new Map());
 
   if (!config) return null;
 
@@ -44,8 +50,8 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
       id: `sa-${crypto.randomUUID()}`,
       name: `Animation ${animationNumber}`,
       type: 'fadeIn',
-      from: 0,
-      to: 1,
+      from: { value: 0, unit: '' },
+      to: { value: 1, unit: '' },
       duration: { value: 0.3, unit: 's' },
       delay: { value: 0, unit: 's' },
       easing: 'linear',
@@ -93,45 +99,45 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
     const animation = animations.find((a) => a.id === animationId);
     if (!animation) return;
 
-    let from: string | number = 0;
-    let to: string | number = 1;
+    let from: string | { value: number; unit: string } = { value: 0, unit: '' };
+    let to: string | { value: number; unit: string } = { value: 1, unit: '' };
     let property: Animation['property'] = undefined;
 
     // Set default from/to values based on type
     switch (type) {
       case 'fadeIn':
-        from = 0;
-        to = 1;
+        from = { value: 0, unit: '' };
+        to = { value: 1, unit: '' };
         property = 'opacity';
         break;
       case 'slideLeft':
-        from = '100%';
-        to = '0%';
+        from = { value: 100, unit: '%' };
+        to = { value: 0, unit: '%' };
         property = 'x';
         break;
       case 'slideRight':
-        from = '-100%';
-        to = '0%';
+        from = { value: -100, unit: '%' };
+        to = { value: 0, unit: '%' };
         property = 'x';
         break;
       case 'slideUp':
-        from = '100%';
-        to = '0%';
+        from = { value: 100, unit: '%' };
+        to = { value: 0, unit: '%' };
         property = 'y';
         break;
       case 'slideDown':
-        from = '-100%';
-        to = '0%';
+        from = { value: -100, unit: '%' };
+        to = { value: 0, unit: '%' };
         property = 'y';
         break;
       case 'scale':
-        from = 0;
-        to = 1;
+        from = { value: 0, unit: '' };
+        to = { value: 1, unit: '' };
         property = 'scale';
         break;
       case 'custom':
-        from = animation.from ?? 0;
-        to = animation.to ?? 1;
+        from = animation.from ?? { value: 0, unit: '' };
+        to = animation.to ?? { value: 1, unit: '' };
         property = animation.property ?? 'opacity';
         break;
     }
@@ -295,27 +301,42 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
           </select>
         </div>
 
-        {/* Slide Start Point */}
+        {/* Slide From */}
         {['slideLeft', 'slideRight', 'slideUp', 'slideDown'].includes(animation.type) ? (
           <div>
             <Label isSizeSpecific={true} selectedSize={selectedSize}>
-              Start Point
+              From
             </Label>
             <div className="flex gap-1">
               <input
-                type="number"
-                min="0"
-                step="1"
+                type="text"
                 value={
-                  typeof animation.from === 'string'
-                    ? parseFloat(animation.from) || 100
-                    : animation.from
+                  startPointInputs.has(animation.id)
+                    ? startPointInputs.get(animation.id)
+                    : typeof animation.from === 'object' && animation.from !== null
+                      ? animation.from.value
+                      : typeof animation.from === 'string'
+                        ? parseFloat(animation.from) || 100
+                        : animation.from || 100
                 }
                 onChange={(e) => {
-                  const value = parseFloat(e.target.value) || 0;
-                  const unit =
-                    typeof animation.from === 'string' && animation.from.includes('%') ? '%' : 'px';
-                  handleUpdateAnimation(animation.id, { from: `${value}${unit}` });
+                  const val = e.target.value;
+                  setStartPointInputs(new Map(startPointInputs.set(animation.id, val)));
+                }}
+                onBlur={(e) => {
+                  const val = e.target.value;
+                  const numValue = val === '' ? 0 : parseFloat(val) || 0;
+                  const currentUnit =
+                    typeof animation.from === 'object' && animation.from !== null
+                      ? animation.from.unit
+                      : typeof animation.from === 'string' && animation.from.includes('%')
+                        ? '%'
+                        : 'px';
+                  handleUpdateAnimation(animation.id, {
+                    from: { value: numValue, unit: currentUnit },
+                  });
+                  startPointInputs.delete(animation.id);
+                  setStartPointInputs(new Map(startPointInputs));
                 }}
                 disabled={layer.locked}
                 className={`w-16 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -324,12 +345,22 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
               />
               <select
                 value={
-                  typeof animation.from === 'string' && animation.from.includes('%') ? '%' : 'px'
+                  typeof animation.from === 'object' && animation.from !== null
+                    ? animation.from.unit
+                    : typeof animation.from === 'string' && animation.from.includes('%')
+                      ? '%'
+                      : 'px'
                 }
                 onChange={(e) => {
                   const currentValue =
-                    typeof animation.from === 'string' ? parseFloat(animation.from) || 100 : 100;
-                  handleUpdateAnimation(animation.id, { from: `${currentValue}${e.target.value}` });
+                    typeof animation.from === 'object' && animation.from !== null
+                      ? animation.from.value
+                      : typeof animation.from === 'string'
+                        ? parseFloat(animation.from) || 100
+                        : animation.from || 100;
+                  handleUpdateAnimation(animation.id, {
+                    from: { value: currentValue, unit: e.target.value as 'px' | '%' },
+                  });
                 }}
                 disabled={layer.locked}
                 className={`w-14 px-1 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -354,11 +385,17 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                 type="number"
                 min="0"
                 step="10"
-                value={typeof animation.from === 'number' ? animation.from * 100 : 0}
+                value={
+                  typeof animation.from === 'object' && animation.from !== null
+                    ? animation.from.value * 100
+                    : typeof animation.from === 'number'
+                      ? animation.from * 100
+                      : 0
+                }
                 onChange={(e) => {
                   const percentValue = parseFloat(e.target.value) || 0;
                   const scaleValue = percentValue / 100;
-                  handleUpdateAnimation(animation.id, { from: scaleValue });
+                  handleUpdateAnimation(animation.id, { from: { value: scaleValue, unit: '' } });
                 }}
                 disabled={layer.locked}
                 className={`w-16 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -406,34 +443,18 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
             {animation.property === 'color' || animation.property === 'backgroundColor' ? (
               /* Color inputs */
               <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label isSizeSpecific={true} selectedSize={selectedSize}>
-                    From {animation.property === 'backgroundColor' ? 'BG' : 'Color'}
-                  </Label>
-                  <input
-                    type="color"
-                    value={typeof animation.from === 'string' ? animation.from : '#000000'}
-                    onChange={(e) => handleUpdateAnimation(animation.id, { from: e.target.value })}
-                    disabled={layer.locked}
-                    className={`w-full h-8 border border-gray-300 rounded ${
-                      layer.locked ? 'cursor-not-allowed' : 'cursor-pointer'
-                    }`}
-                  />
-                </div>
-                <div>
-                  <Label isSizeSpecific={true} selectedSize={selectedSize}>
-                    To {animation.property === 'backgroundColor' ? 'BG' : 'Color'}
-                  </Label>
-                  <input
-                    type="color"
-                    value={typeof animation.to === 'string' ? animation.to : '#ffffff'}
-                    onChange={(e) => handleUpdateAnimation(animation.id, { to: e.target.value })}
-                    disabled={layer.locked}
-                    className={`w-full h-8 border border-gray-300 rounded ${
-                      layer.locked ? 'cursor-not-allowed' : 'cursor-pointer'
-                    }`}
-                  />
-                </div>
+                <ColorInput
+                  label="From"
+                  value={typeof animation.from === 'string' ? animation.from : '#000000'}
+                  onChange={(color) => handleUpdateAnimation(animation.id, { from: color })}
+                  disabled={layer.locked}
+                />
+                <ColorInput
+                  label="To"
+                  value={typeof animation.to === 'string' ? animation.to : '#ffffff'}
+                  onChange={(color) => handleUpdateAnimation(animation.id, { to: color })}
+                  disabled={layer.locked}
+                />
               </div>
             ) : animation.property === 'scale' ? (
               /* Scale inputs (percentage) */
@@ -447,10 +468,18 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                       type="number"
                       min="0"
                       step="10"
-                      value={typeof animation.from === 'number' ? animation.from * 100 : 0}
+                      value={
+                        typeof animation.from === 'object' && animation.from !== null
+                          ? animation.from.value * 100
+                          : typeof animation.from === 'number'
+                            ? animation.from * 100
+                            : 0
+                      }
                       onChange={(e) => {
                         const percentValue = parseFloat(e.target.value) || 0;
-                        handleUpdateAnimation(animation.id, { from: percentValue / 100 });
+                        handleUpdateAnimation(animation.id, {
+                          from: { value: percentValue / 100, unit: '' },
+                        });
                       }}
                       disabled={layer.locked}
                       className={`w-16 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -471,10 +500,18 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                       type="number"
                       min="0"
                       step="10"
-                      value={typeof animation.to === 'number' ? animation.to * 100 : 100}
+                      value={
+                        typeof animation.to === 'object' && animation.to !== null
+                          ? animation.to.value * 100
+                          : typeof animation.to === 'number'
+                            ? animation.to * 100
+                            : 100
+                      }
                       onChange={(e) => {
                         const percentValue = parseFloat(e.target.value) || 0;
-                        handleUpdateAnimation(animation.id, { to: percentValue / 100 });
+                        handleUpdateAnimation(animation.id, {
+                          to: { value: percentValue / 100, unit: '' },
+                        });
                       }}
                       disabled={layer.locked}
                       className={`w-16 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -499,17 +536,23 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                       type="number"
                       step="1"
                       value={
-                        typeof animation.from === 'string'
-                          ? parseFloat(animation.from) || 0
-                          : animation.from
+                        typeof animation.from === 'object' && animation.from !== null
+                          ? animation.from.value
+                          : typeof animation.from === 'string'
+                            ? parseFloat(animation.from) || 0
+                            : animation.from || 0
                       }
                       onChange={(e) => {
                         const value = parseFloat(e.target.value) || 0;
-                        const unit =
-                          typeof animation.from === 'string' && animation.from.includes('%')
-                            ? '%'
-                            : 'px';
-                        handleUpdateAnimation(animation.id, { from: `${value}${unit}` });
+                        const currentUnit =
+                          typeof animation.from === 'object' && animation.from !== null
+                            ? animation.from.unit
+                            : typeof animation.from === 'string' && animation.from.includes('%')
+                              ? '%'
+                              : 'px';
+                        handleUpdateAnimation(animation.id, {
+                          from: { value, unit: currentUnit },
+                        });
                       }}
                       disabled={layer.locked}
                       className={`w-16 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -518,17 +561,21 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                     />
                     <select
                       value={
-                        typeof animation.from === 'string' && animation.from.includes('%')
-                          ? '%'
-                          : 'px'
+                        typeof animation.from === 'object' && animation.from !== null
+                          ? animation.from.unit
+                          : typeof animation.from === 'string' && animation.from.includes('%')
+                            ? '%'
+                            : 'px'
                       }
                       onChange={(e) => {
                         const currentValue =
-                          typeof animation.from === 'string'
-                            ? parseFloat(animation.from) || 0
-                            : animation.from;
+                          typeof animation.from === 'object' && animation.from !== null
+                            ? animation.from.value
+                            : typeof animation.from === 'string'
+                              ? parseFloat(animation.from) || 0
+                              : animation.from || 0;
                         handleUpdateAnimation(animation.id, {
-                          from: `${currentValue}${e.target.value}`,
+                          from: { value: currentValue, unit: e.target.value as 'px' | '%' },
                         });
                       }}
                       disabled={layer.locked}
@@ -550,17 +597,21 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                       type="number"
                       step="1"
                       value={
-                        typeof animation.to === 'string'
-                          ? parseFloat(animation.to) || 0
-                          : animation.to
+                        typeof animation.to === 'object' && animation.to !== null
+                          ? animation.to.value
+                          : typeof animation.to === 'string'
+                            ? parseFloat(animation.to) || 0
+                            : animation.to || 0
                       }
                       onChange={(e) => {
                         const value = parseFloat(e.target.value) || 0;
-                        const unit =
-                          typeof animation.to === 'string' && animation.to.includes('%')
-                            ? '%'
-                            : 'px';
-                        handleUpdateAnimation(animation.id, { to: `${value}${unit}` });
+                        const currentUnit =
+                          typeof animation.to === 'object' && animation.to !== null
+                            ? animation.to.unit
+                            : typeof animation.to === 'string' && animation.to.includes('%')
+                              ? '%'
+                              : 'px';
+                        handleUpdateAnimation(animation.id, { to: { value, unit: currentUnit } });
                       }}
                       disabled={layer.locked}
                       className={`w-16 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -569,15 +620,21 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                     />
                     <select
                       value={
-                        typeof animation.to === 'string' && animation.to.includes('%') ? '%' : 'px'
+                        typeof animation.to === 'object' && animation.to !== null
+                          ? animation.to.unit
+                          : typeof animation.to === 'string' && animation.to.includes('%')
+                            ? '%'
+                            : 'px'
                       }
                       onChange={(e) => {
                         const currentValue =
-                          typeof animation.to === 'string'
-                            ? parseFloat(animation.to) || 0
-                            : animation.to;
+                          typeof animation.to === 'object' && animation.to !== null
+                            ? animation.to.value
+                            : typeof animation.to === 'string'
+                              ? parseFloat(animation.to) || 0
+                              : animation.to || 0;
                         handleUpdateAnimation(animation.id, {
-                          to: `${currentValue}${e.target.value}`,
+                          to: { value: currentValue, unit: e.target.value as 'px' | '%' },
                         });
                       }}
                       disabled={layer.locked}
@@ -603,9 +660,17 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                     min="0"
                     max="1"
                     step="0.1"
-                    value={typeof animation.from === 'number' ? animation.from : 0}
+                    value={
+                      typeof animation.from === 'object' && animation.from !== null
+                        ? animation.from.value
+                        : typeof animation.from === 'number'
+                          ? animation.from
+                          : 0
+                    }
                     onChange={(e) =>
-                      handleUpdateAnimation(animation.id, { from: parseFloat(e.target.value) || 0 })
+                      handleUpdateAnimation(animation.id, {
+                        from: { value: parseFloat(e.target.value) || 0, unit: '' },
+                      })
                     }
                     disabled={layer.locked}
                     className={`w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -620,9 +685,17 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
                     min="0"
                     max="1"
                     step="0.1"
-                    value={typeof animation.to === 'number' ? animation.to : 1}
+                    value={
+                      typeof animation.to === 'object' && animation.to !== null
+                        ? animation.to.value
+                        : typeof animation.to === 'number'
+                          ? animation.to
+                          : 1
+                    }
                     onChange={(e) =>
-                      handleUpdateAnimation(animation.id, { to: parseFloat(e.target.value) || 1 })
+                      handleUpdateAnimation(animation.id, {
+                        to: { value: parseFloat(e.target.value) || 1, unit: '' },
+                      })
                     }
                     disabled={layer.locked}
                     className={`w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -644,18 +717,28 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
             </Label>
             <div className="flex gap-1">
               <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={animation.duration.value}
-                onChange={(e) =>
+                type="text"
+                value={
+                  durationInputs.has(animation.id)
+                    ? durationInputs.get(animation.id)
+                    : animation.duration.value
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDurationInputs(new Map(durationInputs.set(animation.id, val)));
+                }}
+                onBlur={(e) => {
+                  const val = e.target.value;
+                  const numValue = val === '' ? 0 : parseFloat(val) || 0;
                   handleUpdateAnimation(animation.id, {
                     duration: {
                       ...animation.duration,
-                      value: parseFloat(e.target.value) || 0,
+                      value: numValue,
                     },
-                  })
-                }
+                  });
+                  durationInputs.delete(animation.id);
+                  setDurationInputs(new Map(durationInputs));
+                }}
                 disabled={layer.locked}
                 className={`w-16 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
@@ -689,18 +772,28 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
             </Label>
             <div className="flex gap-1">
               <input
-                type="number"
-                min="0"
-                step="0.1"
-                value={animation.delay.value}
-                onChange={(e) =>
+                type="text"
+                value={
+                  delayInputs.has(animation.id)
+                    ? delayInputs.get(animation.id)
+                    : animation.delay.value
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDelayInputs(new Map(delayInputs.set(animation.id, val)));
+                }}
+                onBlur={(e) => {
+                  const val = e.target.value;
+                  const numValue = val === '' ? 0 : parseFloat(val) || 0;
                   handleUpdateAnimation(animation.id, {
                     delay: {
                       ...animation.delay,
-                      value: parseFloat(e.target.value) || 0,
+                      value: numValue,
                     },
-                  })
-                }
+                  });
+                  delayInputs.delete(animation.id);
+                  setDelayInputs(new Map(delayInputs));
+                }}
                 disabled={layer.locked}
                 className={`w-16 px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'

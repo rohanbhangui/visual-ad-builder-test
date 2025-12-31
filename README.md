@@ -56,3 +56,4 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Animations have a duration and a reset period before restarting the animation
 - Buttons can control urls and can act as video controllers
 - Arrow key support for position, width and height
+- Animation Loop Duration will hint what is the minimum animation length required to fulfill all animations

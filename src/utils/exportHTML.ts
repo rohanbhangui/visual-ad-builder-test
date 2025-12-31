@@ -2,6 +2,19 @@ import { type LayerContent, type AdSize } from '../data';
 import { HTML5_AD_SIZES } from '../consts';
 import { getGoogleFontsLink } from './googleFonts';
 
+// Helper function to convert animation value to CSS string
+function formatAnimationValue(
+  value: string | { value: number; unit: string } | undefined,
+  defaultValue: string | number
+): string {
+  if (value === undefined) return String(defaultValue);
+  if (typeof value === 'object') {
+    // Empty unit means it's a unitless value (opacity, scale)
+    return value.unit === '' ? String(value.value) : `${value.value}${value.unit}`;
+  }
+  return String(value);
+}
+
 export const generateResponsiveHTML = (
   layers: LayerContent[],
   allowedSizes: AdSize[],
@@ -40,7 +53,7 @@ export const generateResponsiveHTML = (
       
       const animationStrings = animations.map(
         (animation) =>
-          `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
+          `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms ${animation.easing} 0s ${iterationCount} normal both`
       );
       animationDataMap.set(layerId, animationStrings.join(', '));
     }
@@ -270,33 +283,33 @@ export const generateResponsiveHTML = (
 
         switch (animation.type) {
           case 'fadeIn':
-            fromValue = `opacity: ${animation.from ?? 0}`;
-            toValue = `opacity: ${animation.to ?? layer.styles.opacity ?? 1}`;
+            fromValue = `opacity: ${formatAnimationValue(animation.from, 0)}`;
+            toValue = `opacity: ${formatAnimationValue(animation.to, layer.styles.opacity ?? 1)}`;
             break;
           case 'slideLeft':
-            fromValue = `transform: translateX(${animation.from ?? '100%'})`;
-            toValue = `transform: translateX(${animation.to ?? '0%'})`;
+            fromValue = `transform: translateX(${formatAnimationValue(animation.from, '100%')})`;
+            toValue = `transform: translateX(${formatAnimationValue(animation.to, '0%')})`;
             break;
           case 'slideRight':
-            fromValue = `transform: translateX(${animation.from ?? '-100%'})`;
-            toValue = `transform: translateX(${animation.to ?? '0%'})`;
+            fromValue = `transform: translateX(${formatAnimationValue(animation.from, '-100%')})`;
+            toValue = `transform: translateX(${formatAnimationValue(animation.to, '0%')})`;
             break;
           case 'slideUp':
-            fromValue = `transform: translateY(${animation.from ?? '100%'})`;
-            toValue = `transform: translateY(${animation.to ?? '0%'})`;
+            fromValue = `transform: translateY(${formatAnimationValue(animation.from, '100%')})`;
+            toValue = `transform: translateY(${formatAnimationValue(animation.to, '0%')})`;
             break;
           case 'slideDown':
-            fromValue = `transform: translateY(${animation.from ?? '-100%'})`;
-            toValue = `transform: translateY(${animation.to ?? '0%'})`;
+            fromValue = `transform: translateY(${formatAnimationValue(animation.from, '-100%')})`;
+            toValue = `transform: translateY(${formatAnimationValue(animation.to, '0%')})`;
             break;
           case 'scale':
-            fromValue = `transform: scale(${animation.from ?? 0})`;
-            toValue = `transform: scale(${animation.to ?? 1})`;
+            fromValue = `transform: scale(${formatAnimationValue(animation.from, 0)})`;
+            toValue = `transform: scale(${formatAnimationValue(animation.to, 1)})`;
             break;
           case 'custom': {
             const prop = animation.property || 'opacity';
-            fromValue = `${prop}: ${animation.from ?? 0}`;
-            toValue = `${prop}: ${animation.to ?? 1}`;
+            fromValue = `${prop}: ${formatAnimationValue(animation.from, 0)}`;
+            toValue = `${prop}: ${formatAnimationValue(animation.to, 1)}`;
             break;
           }
         }
@@ -385,26 +398,26 @@ export const generateResponsiveHTML = (
           animations.forEach((animation) => {
             switch (animation.type) {
               case 'fadeIn':
-                initialStates.push(`opacity: ${animation.from ?? 0}`);
+                initialStates.push(`opacity: ${formatAnimationValue(animation.from, 0)}`);
                 break;
               case 'slideLeft':
-                initialStates.push(`transform: translateX(${animation.from ?? '100%'})`);
+                initialStates.push(`transform: translateX(${formatAnimationValue(animation.from, '100%')})`);
                 break;
               case 'slideRight':
-                initialStates.push(`transform: translateX(${animation.from ?? '-100%'})`);
+                initialStates.push(`transform: translateX(${formatAnimationValue(animation.from, '-100%')})`);
                 break;
               case 'slideUp':
-                initialStates.push(`transform: translateY(${animation.from ?? '100%'})`);
+                initialStates.push(`transform: translateY(${formatAnimationValue(animation.from, '100%')})`);
                 break;
               case 'slideDown':
-                initialStates.push(`transform: translateY(${animation.from ?? '-100%'})`);
+                initialStates.push(`transform: translateY(${formatAnimationValue(animation.from, '-100%')})`);
                 break;
               case 'scale':
-                initialStates.push(`transform: scale(${animation.from ?? 0})`);
+                initialStates.push(`transform: scale(${formatAnimationValue(animation.from, 0)})`);
                 break;
               case 'custom': {
                 const prop = animation.property || 'opacity';
-                initialStates.push(`${prop}: ${animation.from ?? 0}`);
+                initialStates.push(`${prop}: ${formatAnimationValue(animation.from, 0)}`);
                 break;
               }
             }
@@ -421,7 +434,7 @@ export const generateResponsiveHTML = (
           const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
           const animationStrings = animations.map(
             (animation) =>
-              `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms linear 0s ${iterationCount} normal both`
+              `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms ${animation.easing} 0s ${iterationCount} normal both`
           );
           animationDataAttr = animationStrings.join(', ');
         }

@@ -34,6 +34,7 @@ const App = () => {
 
   const [isSnappingEnabled, setIsSnappingEnabled] = useState(true);
   const [isClippingEnabled, setIsClippingEnabled] = useState(false);
+  const [activePropertyTab, setActivePropertyTab] = useState<'properties' | 'animations'>('properties');
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -1327,6 +1328,8 @@ const App = () => {
             animationLoop={animationLoop}
             isClippingEnabled={isClippingEnabled}
             onClippingEnabledChange={setIsClippingEnabled}
+            activeTab={activePropertyTab}
+            onActiveTabChange={setActivePropertyTab}
             onCanvasNameChange={setCanvasName}
             onAnimationLoopChange={setAnimationLoop}
             onPropertyChange={handlePropertyChange}

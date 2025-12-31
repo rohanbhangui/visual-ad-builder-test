@@ -33,8 +33,8 @@ interface PropertySidebarProps {
   canvasBackgroundColor?: string;
   animationLoop?: number;
   isClippingEnabled?: boolean;
-  onClippingEnabledChange?: (enabled: boolean) => void;
-  onPropertyChange: (
+  onClippingEnabledChange?: (enabled: boolean) => void;  activeTab?: 'properties' | 'animations';
+  onActiveTabChange?: (tab: 'properties' | 'animations') => void;  onPropertyChange: (
     layerId: string,
     property: 'positionX' | 'positionY' | 'width' | 'height',
     value: number,
@@ -149,10 +149,17 @@ export const PropertySidebar = ({
   onButtonActionTypeChange,
   onButtonIconChange,
   onVideoControlChange,
+  activeTab: activeTabProp = 'properties',
+  onActiveTabChange,
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('properties');
+  const activeTab = activeTabProp;
+  const setActiveTab = (tab: TabType) => {
+    if (onActiveTabChange) {
+      onActiveTabChange(tab);
+    }
+  };
   const [loopDelayInputValue, setLoopDelayInputValue] = useState('');
   const [resetDurationInputValue, setResetDurationInputValue] = useState('');
   const contentEditableRef = useRef<HTMLDivElement>(null);
@@ -161,19 +168,21 @@ export const PropertySidebar = ({
   const selectedLayer =
     selectedLayerIds.length === 1 ? layers.find((l) => l.id === selectedLayerIds[0]) : null;
 
-  // Get animation loop delay and reset duration from the selected size config
-  const animationLoopDelay = selectedLayer?.sizeConfig[selectedSize]?.animationLoopDelay || {
+  // Get animation loop delay and reset duration from the first layer's size config
+  // These are global settings, not per-layer, but stored in first layer for convenience
+  const firstLayer = layers[0];
+  const animationLoopDelay = firstLayer?.sizeConfig[selectedSize]?.animationLoopDelay || {
     value: 5,
     unit: 's' as const,
   };
-  const animationResetDuration = selectedLayer?.sizeConfig[selectedSize]
+  const animationResetDuration = firstLayer?.sizeConfig[selectedSize]
     ?.animationResetDuration || { value: 1, unit: 's' as const };
 
   // Update local input values when layer or size changes
   useEffect(() => {
     setLoopDelayInputValue(animationLoopDelay.value.toString());
     setResetDurationInputValue(animationResetDuration.value.toString());
-  }, [selectedLayer?.id, selectedSize, animationLoopDelay.value, animationResetDuration.value]);
+  }, [selectedSize, animationLoopDelay.value, animationResetDuration.value]);
 
   // Calculate minimum loop duration based on animations for the selected size across all layers
   const calculateMinLoopDuration = (): number => {
@@ -203,15 +212,16 @@ export const PropertySidebar = ({
   const isLoopDurationTooShort =
     !isNaN(currentLoopDelayValue) && currentLoopDelayValue < minLoopDuration;
 
-  // Handlers to update animation loop timing for the selected layer's size config
+  // Handlers to update animation loop timing for the first layer's size config
+  // (these are global settings stored in first layer)
   const handleAnimationLoopDelayChange = (delay: { value: number; unit: 'ms' | 's' }) => {
-    if (!selectedLayer) return;
-    onAnimationLoopDelayChange?.(selectedLayer.id, selectedSize, delay);
+    if (!firstLayer) return;
+    onAnimationLoopDelayChange?.(firstLayer.id, selectedSize, delay);
   };
 
   const handleAnimationResetDurationChange = (duration: { value: number; unit: 'ms' | 's' }) => {
-    if (!selectedLayer) return;
-    onAnimationResetDurationChange?.(selectedLayer.id, selectedSize, duration);
+    if (!firstLayer) return;
+    onAnimationResetDurationChange?.(firstLayer.id, selectedSize, duration);
   };
 
   // Update contentEditable when layer selection changes (not when content changes)
@@ -444,13 +454,13 @@ export const PropertySidebar = ({
                       <option value="s">s</option>
                     </select>
                   </div>
-                  {minLoopDuration > 0 && (
+                  {minLoopDuration > 0 ? (
                     <span
                       className={`text-xs ${isLoopDurationTooShort ? 'text-red-600' : 'text-gray-500'}`}
                     >
                       Min: {minLoopDuration.toFixed(2)} {animationLoopDelay.unit}
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
