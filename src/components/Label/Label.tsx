@@ -26,9 +26,7 @@ export const Label = ({
   className = '',
 }: LabelProps) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const tooltipText = isSizeSpecific && selectedSize
-    ? `${selectedSize} only`
-    : undefined;
+  const tooltipText = isSizeSpecific && selectedSize ? `${selectedSize} only` : undefined;
 
   return (
     <div className={`relative flex items-center justify-between mb-1 ${className}`}>
@@ -40,9 +38,7 @@ export const Label = ({
       >
         <span
           className={`relative inline-block ${
-            isSizeSpecific
-              ? 'px-0.5 bg-amber-100 text-amber-900 cursor-help'
-              : ''
+            isSizeSpecific ? 'px-0.5 bg-amber-100 text-amber-900 cursor-help' : ''
           }`}
           onMouseEnter={() => isSizeSpecific && setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}

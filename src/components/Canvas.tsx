@@ -309,16 +309,24 @@ export const Canvas: React.FC<CanvasProps> = ({
             initialStates.push(`opacity: ${formatAnimationValue(animation.from, 0)}`);
             break;
           case 'slideLeft':
-            initialStates.push(`transform: translateX(${formatAnimationValue(animation.from, '100%')})`);
+            initialStates.push(
+              `transform: translateX(${formatAnimationValue(animation.from, '100%')})`
+            );
             break;
           case 'slideRight':
-            initialStates.push(`transform: translateX(${formatAnimationValue(animation.from, '-100%')})`);
+            initialStates.push(
+              `transform: translateX(${formatAnimationValue(animation.from, '-100%')})`
+            );
             break;
           case 'slideUp':
-            initialStates.push(`transform: translateY(${formatAnimationValue(animation.from, '100%')})`);
+            initialStates.push(
+              `transform: translateY(${formatAnimationValue(animation.from, '100%')})`
+            );
             break;
           case 'slideDown':
-            initialStates.push(`transform: translateY(${formatAnimationValue(animation.from, '-100%')})`);
+            initialStates.push(
+              `transform: translateY(${formatAnimationValue(animation.from, '-100%')})`
+            );
             break;
           case 'scale':
             initialStates.push(`transform: scale(${formatAnimationValue(animation.from, 0)})`);

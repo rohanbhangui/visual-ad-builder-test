@@ -36,21 +36,26 @@ export const generateResponsiveHTML = (
   // Pre-compute animation data for each layer for first size
   const firstSize = allowedSizes[0];
   const animationDataMap = new Map<string, string>();
-  
+
   layers.forEach((layer) => {
     const layerId = layer.attributes.id || layer.id;
     const config = layer.sizeConfig[firstSize];
     const animations = config?.animations;
-    
+
     if (animations && animations.length > 0) {
       const firstLayerConfig = layers[0]?.sizeConfig[firstSize];
       const loopDelay = firstLayerConfig?.animationLoopDelay || { value: 5, unit: 's' as const };
-      const resetDuration = firstLayerConfig?.animationResetDuration || { value: 1, unit: 's' as const };
+      const resetDuration = firstLayerConfig?.animationResetDuration || {
+        value: 1,
+        unit: 's' as const,
+      };
       const loopTimeMs = loopDelay.unit === 's' ? loopDelay.value * 1000 : loopDelay.value;
-      const resetDelayMs = resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
+      const resetDelayMs =
+        resetDuration.unit === 's' ? resetDuration.value * 1000 : resetDuration.value;
       const totalCycleTime = loopTimeMs + resetDelayMs;
-      const iterationCount = animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
-      
+      const iterationCount =
+        animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
+
       const animationStrings = animations.map(
         (animation) =>
           `anim-${layerId}-${animation.id}-${firstSize} ${totalCycleTime}ms ${animation.easing} 0s ${iterationCount} normal both`
@@ -382,9 +387,10 @@ export const generateResponsiveHTML = (
         // Add border-radius for layers
         let borderRadiusRule = '';
         if (config.borderRadius) {
-          const borderRadius = typeof config.borderRadius === 'number'
-            ? `${config.borderRadius}px`
-            : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`;
+          const borderRadius =
+            typeof config.borderRadius === 'number'
+              ? `${config.borderRadius}px`
+              : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`;
           borderRadiusRule = `\n        border-radius: ${borderRadius};`;
           if (layer.type === 'image' || layer.type === 'video') {
             borderRadiusRule += '\n        overflow: hidden;';
@@ -402,16 +408,24 @@ export const generateResponsiveHTML = (
                 initialStates.push(`opacity: ${formatAnimationValue(animation.from, 0)}`);
                 break;
               case 'slideLeft':
-                initialStates.push(`transform: translateX(${formatAnimationValue(animation.from, '100%')})`);
+                initialStates.push(
+                  `transform: translateX(${formatAnimationValue(animation.from, '100%')})`
+                );
                 break;
               case 'slideRight':
-                initialStates.push(`transform: translateX(${formatAnimationValue(animation.from, '-100%')})`);
+                initialStates.push(
+                  `transform: translateX(${formatAnimationValue(animation.from, '-100%')})`
+                );
                 break;
               case 'slideUp':
-                initialStates.push(`transform: translateY(${formatAnimationValue(animation.from, '100%')})`);
+                initialStates.push(
+                  `transform: translateY(${formatAnimationValue(animation.from, '100%')})`
+                );
                 break;
               case 'slideDown':
-                initialStates.push(`transform: translateY(${formatAnimationValue(animation.from, '-100%')})`);
+                initialStates.push(
+                  `transform: translateY(${formatAnimationValue(animation.from, '-100%')})`
+                );
                 break;
               case 'scale':
                 initialStates.push(`transform: scale(${formatAnimationValue(animation.from, 0)})`);
@@ -479,9 +493,10 @@ export const generateResponsiveHTML = (
             // Add border-radius for layers
             let borderRadiusRule = '';
             if (config.borderRadius) {
-              const borderRadius = typeof config.borderRadius === 'number'
-                ? `${config.borderRadius}px`
-                : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`;
+              const borderRadius =
+                typeof config.borderRadius === 'number'
+                  ? `${config.borderRadius}px`
+                  : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`;
               borderRadiusRule = `\n          border-radius: ${borderRadius};`;
               if (layer.type === 'image' || layer.type === 'video') {
                 borderRadiusRule += '\n          overflow: hidden;';

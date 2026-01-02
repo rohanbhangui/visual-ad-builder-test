@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../../data';
 import { Label } from '../../Label/Label';
+import { CopySizePopover } from '../../Label/CopySizePopover';
 import { ColorInput } from '../../ColorInput';
 import TrashIcon from '../../../assets/icons/trash.svg?react';
 import EditIcon from '../../../assets/icons/edit.svg?react';
+import CopyIcon from '../../../assets/icons/copy.svg?react';
 import ChevronDownIcon from '../../../assets/icons/chevron-down.svg?react';
 
 interface AnimationTabProps {
@@ -39,7 +41,7 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [userHasInteracted, setUserHasInteracted] = useState(false);
-  
+
   // Local state for numeric inputs to allow typing
   const [durationInputs, setDurationInputs] = useState<Map<string, string>>(new Map());
   const [delayInputs, setDelayInputs] = useState<Map<string, string>>(new Map());
@@ -85,6 +87,25 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
     });
   };
 
+  const handleCopyToSizes = (animationId: string, targetSizes: AdSize[]) => {
+    const animationToCopy = animations.find((a) => a.id === animationId);
+    if (!animationToCopy) return;
+
+    // Copy to each selected target size
+    targetSizes.forEach((targetSize) => {
+      const targetConfig = layer.sizeConfig[targetSize];
+      if (!targetConfig) return;
+
+      const targetAnimations = targetConfig.animations || [];
+      const copiedAnimation: Animation = {
+        ...animationToCopy,
+        id: `sa-${crypto.randomUUID()}`,
+      };
+
+      onAnimationChange(layer.id, targetSize, [...targetAnimations, copiedAnimation]);
+    });
+  };
+
   const handleUpdateAnimation = (animationId: string, updates: Partial<Animation>) => {
     onAnimationChange(
       layer.id,
@@ -125,7 +146,7 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (draggedIndex === null || draggedIndex === dropIndex) {
       setDraggedIndex(null);
       setDragOverIndex(null);
@@ -222,16 +243,18 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
         const isExpanded = expandedIds.has(animation.id);
         const isEditingName = editingNameId === animation.id;
         const isDragging = draggedIndex === index;
-        const showDropLineAbove = dragOverIndex === index && draggedIndex !== null && draggedIndex > index;
-        const showDropLineBelow = dragOverIndex === index && draggedIndex !== null && draggedIndex < index;
+        const showDropLineAbove =
+          dragOverIndex === index && draggedIndex !== null && draggedIndex > index;
+        const showDropLineBelow =
+          dragOverIndex === index && draggedIndex !== null && draggedIndex < index;
 
         return (
           <div key={animation.id} className="relative">
             {/* Drop indicator line above */}
-            {showDropLineAbove && (
+            {showDropLineAbove ? (
               <div className="absolute -top-1.5 left-0 right-0 h-0.5 bg-blue-500 z-10" />
-            )}
-            
+            ) : null}
+
             <div
               className={`border border-gray-300 rounded transition-opacity ${
                 isDragging ? 'opacity-50' : ''
@@ -243,78 +266,86 @@ export const AnimationTab = ({ layer, selectedSize, onAnimationChange }: Animati
               {/* Animation Header */}
               <div
                 className="flex items-center h-9 px-2 bg-gray-50 border-b border-gray-200 cursor-move"
-                draggable={!layer.locked && !isEditingName}
+                draggable={!layer.locked && !isEditingName ? true : false}
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragEnd={handleDragEnd}
               >
-              <button
-                onClick={() => toggleExpanded(animation.id)}
-                className="p-0 mr-1.5 cursor-pointer"
-                disabled={layer.locked}
-              >
-                <ChevronDownIcon
-                  className={`w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`}
-                />
-              </button>
-              {isEditingName ? (
-                <input
-                  type="text"
-                  value={animation.name}
-                  onChange={(e) => handleUpdateAnimation(animation.id, { name: e.target.value })}
-                  onBlur={() => setEditingNameId(null)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      setEditingNameId(null);
-                    }
-                  }}
-                  autoFocus
-                  className="flex-1 px-1 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
-                />
-              ) : (
-                <span
-                  className="flex-1 text-sm font-medium cursor-pointer block overflow-hidden whitespace-nowrap"
+                <button
                   onClick={() => toggleExpanded(animation.id)}
-                  style={{
-                    maskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
-                  }}
+                  className="p-0 mr-1.5 cursor-pointer"
+                  disabled={layer.locked}
                 >
-                  {animation.name}
-                </span>
-              )}
-              <button
-                onClick={() => !layer.locked && setEditingNameId(animation.id)}
-                disabled={layer.locked}
-                className={`p-1 ml-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors ${
-                  layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
-                title="Edit name"
-              >
-                <EditIcon className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => handleDeleteAnimation(animation.id)}
-                disabled={layer.locked}
-                className={`p-1 ml-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors ${
-                  layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
-                title="Delete animation"
-              >
-                <TrashIcon className="w-3.5 h-3.5" />
-              </button>
+                  <ChevronDownIcon
+                    className={`w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`}
+                  />
+                </button>
+                {isEditingName ? (
+                  <input
+                    type="text"
+                    value={animation.name}
+                    onChange={(e) => handleUpdateAnimation(animation.id, { name: e.target.value })}
+                    onBlur={() => setEditingNameId(null)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setEditingNameId(null);
+                      }
+                    }}
+                    autoFocus
+                    className="flex-1 px-1 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 rounded"
+                  />
+                ) : (
+                  <span
+                    className="flex-1 text-sm font-medium cursor-pointer block overflow-hidden whitespace-nowrap"
+                    onClick={() => toggleExpanded(animation.id)}
+                    style={{
+                      maskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
+                      WebkitMaskImage: 'linear-gradient(to right, black 85%, transparent 100%)',
+                    }}
+                  >
+                    {animation.name}
+                  </span>
+                )}
+                <button
+                  onClick={() => !layer.locked && setEditingNameId(animation.id)}
+                  disabled={layer.locked}
+                  className={`p-1 ml-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors ${
+                    layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                  title="Edit name"
+                >
+                  <EditIcon className="w-3.5 h-3.5" />
+                </button>
+                {!layer.locked ? (
+                  <CopySizePopover
+                    allowedSizes={Object.keys(layer.sizeConfig) as AdSize[]}
+                    currentSize={selectedSize}
+                    onCopy={(targetSizes) => handleCopyToSizes(animation.id, targetSizes)}
+                    buttonClassName="p-1 ml-0.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                  />
+                ) : null}
+                <button
+                  onClick={() => handleDeleteAnimation(animation.id)}
+                  disabled={layer.locked}
+                  className={`p-1 ml-0.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors ${
+                    layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                  title="Delete animation"
+                >
+                  <TrashIcon className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Animation Content */}
+              {isExpanded ? (
+                <div className="p-3 space-y-3">{renderAnimationFields(animation)}</div>
+              ) : null}
             </div>
 
-            {/* Animation Content */}
-            {isExpanded ? (
-              <div className="p-3 space-y-3">{renderAnimationFields(animation)}</div>
+            {/* Drop indicator line below */}
+            {showDropLineBelow ? (
+              <div className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-blue-500 z-10" />
             ) : null}
           </div>
-          
-          {/* Drop indicator line below */}
-          {showDropLineBelow && (
-            <div className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-blue-500 z-10" />
-          )}
-        </div>
         );
       })}
 

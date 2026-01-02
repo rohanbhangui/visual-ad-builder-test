@@ -100,7 +100,9 @@ interface PropertyTabProps {
   ) => void;
   onBorderRadiusChange: (
     layerId: string,
-    borderRadius: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
+    borderRadius:
+      | number
+      | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
   ) => void;
   onCopyPositionSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
@@ -232,39 +234,39 @@ export const PropertyTab = ({
       {/* Width and Height */}
       <div className="relative">
         <div className="grid grid-cols-2 gap-2">
-            <PositionSizeInput
-              label="Width"
-              value={width.value}
-              unit={width.unit || 'px'}
-              onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
-              disabled={layer.locked}
-              isSizeSpecific={true}
-              selectedSize={selectedSize}
-              onCopyToSize={
-                onCopyPositionSize
-                  ? (targetSizes) => onCopyPositionSize(layer.id, selectedSize, targetSizes)
-                  : undefined
-              }
-              allowedSizes={allowedSizes}
-              currentSize={selectedSize}
-            />
-            <PositionSizeInput
-              label="Height"
-              value={height.value}
-              unit={height.unit || 'px'}
-              onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
-              disabled={layer.locked}
-              isSizeSpecific={true}
-              selectedSize={selectedSize}
-              onCopyToSize={
-                onCopyPositionSize
-                  ? (targetSizes) => onCopyPositionSize(layer.id, selectedSize, targetSizes)
-                  : undefined
-              }
-              allowedSizes={allowedSizes}
-              currentSize={selectedSize}
-            />
-          </div>
+          <PositionSizeInput
+            label="Width"
+            value={width.value}
+            unit={width.unit || 'px'}
+            onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
+            disabled={layer.locked}
+            isSizeSpecific={true}
+            selectedSize={selectedSize}
+            onCopyToSize={
+              onCopyPositionSize
+                ? (targetSizes) => onCopyPositionSize(layer.id, selectedSize, targetSizes)
+                : undefined
+            }
+            allowedSizes={allowedSizes}
+            currentSize={selectedSize}
+          />
+          <PositionSizeInput
+            label="Height"
+            value={height.value}
+            unit={height.unit || 'px'}
+            onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
+            disabled={layer.locked}
+            isSizeSpecific={true}
+            selectedSize={selectedSize}
+            onCopyToSize={
+              onCopyPositionSize
+                ? (targetSizes) => onCopyPositionSize(layer.id, selectedSize, targetSizes)
+                : undefined
+            }
+            allowedSizes={allowedSizes}
+            currentSize={selectedSize}
+          />
+        </div>
         <button
           onClick={() => onAspectRatioLockToggle(layer.id)}
           disabled={layer.locked}

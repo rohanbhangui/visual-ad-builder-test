@@ -9,13 +9,7 @@ interface UrlInputProps {
   disabled?: boolean;
 }
 
-export const UrlInput = ({
-  label,
-  value,
-  onChange,
-  placeholder,
-  disabled,
-}: UrlInputProps) => {
+export const UrlInput = ({ label, value, onChange, placeholder, disabled }: UrlInputProps) => {
   const [inputValue, setInputValue] = useState(value);
   const [error, setError] = useState(false);
   const onChangeRef = useRef(onChange);

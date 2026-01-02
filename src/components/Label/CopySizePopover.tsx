@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import type { AdSize } from '../../data';
-import MoreHorizontalIcon from '../../assets/icons/more-horizontal.svg?react';
+import CopyIcon from '../../assets/icons/copy.svg?react';
 
 // Ad size common names
 const AD_SIZE_NAMES: Record<AdSize, string> = {
@@ -19,12 +19,16 @@ interface CopySizePopoverProps {
   allowedSizes: AdSize[];
   currentSize: AdSize;
   onCopy: (targetSizes: AdSize[]) => void;
+  buttonClassName?: string;
+  iconClassName?: string;
 }
 
 export const CopySizePopover = ({
   allowedSizes,
   currentSize,
   onCopy,
+  buttonClassName,
+  iconClassName = 'w-3.5 h-3.5',
 }: CopySizePopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTargets, setSelectedTargets] = useState<AdSize[]>([]);
@@ -38,7 +42,8 @@ export const CopySizePopover = ({
   // Set indeterminate state on "All sizes" checkbox
   useEffect(() => {
     if (allCheckboxRef.current) {
-      const someSelected = selectedTargets.length > 0 && selectedTargets.length < availableTargets.length;
+      const someSelected =
+        selectedTargets.length > 0 && selectedTargets.length < availableTargets.length;
       allCheckboxRef.current.indeterminate = someSelected;
     }
   }, [selectedTargets, availableTargets.length]);
@@ -51,32 +56,35 @@ export const CopySizePopover = ({
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - buttonRect.bottom;
       const spaceAbove = buttonRect.top;
-      
+
       // Open upward if not enough space below but enough space above
       const openUpward = spaceBelow < popoverHeight + 8 && spaceAbove > popoverHeight + 8;
-      
+
       if (openUpward) {
         // Position above the button
-        popoverRef.current.style.setProperty('--popover-top', `${buttonRect.top - popoverHeight - 4}px`);
+        popoverRef.current.style.setProperty(
+          '--popover-top',
+          `${buttonRect.top - popoverHeight - 4}px`
+        );
       } else {
         // Position below the button (default)
         popoverRef.current.style.setProperty('--popover-top', `${buttonRect.bottom + 4}px`);
       }
-      
+
       // Horizontal positioning (align to right of button)
       const popoverWidth = 224; // w-56 = 14rem = 224px
       let leftPos = buttonRect.right - popoverWidth;
-      
+
       // Ensure popover doesn't go off left edge
       if (leftPos < 8) {
         leftPos = 8;
       }
-      
+
       // Ensure popover doesn't go off right edge
       if (leftPos + popoverWidth > window.innerWidth - 8) {
         leftPos = window.innerWidth - popoverWidth - 8;
       }
-      
+
       popoverRef.current.style.setProperty('--popover-left', `${leftPos}px`);
     }
   }, [isOpen]);
@@ -128,14 +136,17 @@ export const CopySizePopover = ({
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`cursor-pointer p-0.5 rounded transition-colors ${
-          isOpen
-            ? 'bg-blue-100 text-blue-600'
-            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-        }`}
+        className={
+          buttonClassName ||
+          `cursor-pointer p-0.5 rounded transition-colors ${
+            isOpen
+              ? 'bg-blue-100 text-blue-600'
+              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+          }`
+        }
         title="Copy to other sizes"
       >
-        <MoreHorizontalIcon className="w-3 h-3" />
+        <CopyIcon className={iconClassName} />
       </button>
 
       {isOpen ? (

@@ -33,8 +33,10 @@ interface PropertySidebarProps {
   canvasBackgroundColor?: string;
   animationLoop?: number;
   isClippingEnabled?: boolean;
-  onClippingEnabledChange?: (enabled: boolean) => void;  activeTab?: 'properties' | 'animations';
-  onActiveTabChange?: (tab: 'properties' | 'animations') => void;  onPropertyChange: (
+  onClippingEnabledChange?: (enabled: boolean) => void;
+  activeTab?: 'properties' | 'animations';
+  onActiveTabChange?: (tab: 'properties' | 'animations') => void;
+  onPropertyChange: (
     layerId: string,
     property: 'positionX' | 'positionY' | 'width' | 'height',
     value: number,
@@ -111,7 +113,9 @@ interface PropertySidebarProps {
   ) => void;
   onBorderRadiusChange: (
     layerId: string,
-    borderRadius: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
+    borderRadius:
+      | number
+      | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
   ) => void;
   onCopyPositionSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
@@ -187,8 +191,10 @@ const PropertySidebarComponent = ({
     value: 5,
     unit: 's' as const,
   };
-  const animationResetDuration = firstLayer?.sizeConfig[selectedSize]
-    ?.animationResetDuration || { value: 1, unit: 's' as const };
+  const animationResetDuration = firstLayer?.sizeConfig[selectedSize]?.animationResetDuration || {
+    value: 1,
+    unit: 's' as const,
+  };
 
   // Update local input values when layer or size changes
   useEffect(() => {
@@ -443,7 +449,10 @@ const PropertySidebarComponent = ({
                           setLoopDelayInputValue(val);
                           const numVal = parseFloat(val);
                           if (!isNaN(numVal)) {
-                            handleAnimationLoopDelayChange({ ...animationLoopDelay, value: numVal });
+                            handleAnimationLoopDelayChange({
+                              ...animationLoopDelay,
+                              value: numVal,
+                            });
                           } else if (val === '') {
                             handleAnimationLoopDelayChange({ ...animationLoopDelay, value: 0 });
                           }
@@ -496,7 +505,10 @@ const PropertySidebarComponent = ({
                             value: numVal,
                           });
                         } else if (val === '') {
-                          handleAnimationResetDurationChange({ ...animationResetDuration, value: 0 });
+                          handleAnimationResetDurationChange({
+                            ...animationResetDuration,
+                            value: 0,
+                          });
                         }
                       }}
                       placeholder="1"

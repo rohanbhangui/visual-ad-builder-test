@@ -6,7 +6,9 @@ import cornersIcon from '../assets/icons/corners.svg';
 interface CornersInputProps {
   label?: string;
   value: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number };
-  onChange: (value: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }) => void;
+  onChange: (
+    value: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
+  ) => void;
   disabled?: boolean;
   isSizeSpecific?: boolean;
   selectedSize?: AdSize;
@@ -34,12 +36,17 @@ export const CornersInput = ({
     : { topLeft: value, topRight: value, bottomRight: value, bottomLeft: value };
 
   // Check if all corners have the same value
-  const allCornersSame = 
+  const allCornersSame =
     individualValues.topLeft === individualValues.topRight &&
     individualValues.topLeft === individualValues.bottomRight &&
     individualValues.topLeft === individualValues.bottomLeft;
 
-  const mainInputValue = allCornersSame && individualValues.topLeft !== 0 ? individualValues.topLeft.toString() : allCornersSame && individualValues.topLeft === 0 ? '' : '';
+  const mainInputValue =
+    allCornersSame && individualValues.topLeft !== 0
+      ? individualValues.topLeft.toString()
+      : allCornersSame && individualValues.topLeft === 0
+        ? ''
+        : '';
   const mainInputPlaceholder = allCornersSame ? '' : 'Mixed';
 
   const handleMainInputChange = (value: string) => {
@@ -52,12 +59,13 @@ export const CornersInput = ({
     inputValue: string
   ) => {
     const numValue = inputValue === '' ? 0 : Math.max(0, parseInt(inputValue) || 0);
-    
+
     // Get current values
-    const currentValues = typeof value === 'number'
-      ? { topLeft: value, topRight: value, bottomRight: value, bottomLeft: value }
-      : value;
-    
+    const currentValues =
+      typeof value === 'number'
+        ? { topLeft: value, topRight: value, bottomRight: value, bottomLeft: value }
+        : value;
+
     // Update the specific corner
     onChange({
       ...currentValues,
@@ -84,9 +92,9 @@ export const CornersInput = ({
       {/* Main input - always visible */}
       <div className="flex gap-1 mb-1">
         <div className="relative flex-1">
-          <img 
-            src={cornersIcon} 
-            alt="Corners" 
+          <img
+            src={cornersIcon}
+            alt="Corners"
             className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-400"
           />
           <input
@@ -107,19 +115,11 @@ export const CornersInput = ({
           onClick={handleToggleExpanded}
           disabled={disabled}
           className={`w-8 h-8 flex items-center justify-center rounded transition-colors ${
-            isExpanded 
-              ? 'bg-blue-100 text-blue-600' 
-              : 'hover:bg-gray-100 text-gray-600'
-          } ${
-            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-          }`}
-          title={isExpanded ? "Hide individual corners" : "Set individual corners"}
+            isExpanded ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-600'
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          title={isExpanded ? 'Hide individual corners' : 'Set individual corners'}
         >
-          <img 
-            src={cornersIcon} 
-            alt="Corners" 
-            className="w-4 h-4"
-          />
+          <img src={cornersIcon} alt="Corners" className="w-4 h-4" />
         </button>
       </div>
 
@@ -136,9 +136,7 @@ export const CornersInput = ({
                 min="0"
                 step="1"
                 value={individualValues.topLeft}
-                onChange={(e) =>
-                  handleIndividualChange('topLeft', e.target.value)
-                }
+                onChange={(e) => handleIndividualChange('topLeft', e.target.value)}
                 disabled={disabled}
                 className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : ''
@@ -154,9 +152,7 @@ export const CornersInput = ({
                 min="0"
                 step="1"
                 value={individualValues.topRight}
-                onChange={(e) =>
-                  handleIndividualChange('topRight', e.target.value)
-                }
+                onChange={(e) => handleIndividualChange('topRight', e.target.value)}
                 disabled={disabled}
                 className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : ''
@@ -175,9 +171,7 @@ export const CornersInput = ({
                 min="0"
                 step="1"
                 value={individualValues.bottomLeft}
-                onChange={(e) =>
-                  handleIndividualChange('bottomLeft', e.target.value)
-                }
+                onChange={(e) => handleIndividualChange('bottomLeft', e.target.value)}
                 disabled={disabled}
                 className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : ''
@@ -193,12 +187,7 @@ export const CornersInput = ({
                 min="0"
                 step="1"
                 value={individualValues.bottomRight}
-                onChange={(e) =>
-                  handleIndividualChange(
-                    'bottomRight',
-                    e.target.value
-                  )
-                }
+                onChange={(e) => handleIndividualChange('bottomRight', e.target.value)}
                 disabled={disabled}
                 className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : ''
