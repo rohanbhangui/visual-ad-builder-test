@@ -57,6 +57,14 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Animation Loop Duration will hint what is the minimum animation length required to fulfill all animations
 
 
+## Future Development ideas
+
+- Exit animations
+- Carousel support (+ button support)
+- More sizes (+ being able to manually add in preset sizes)
+- "Copy to" ad specific style to other ad sizes
+
+
 ## Screenshots
 
 <img width="1747" height="1177" alt="image" src="https://github.com/user-attachments/assets/680955cc-91d6-4923-a022-478e84d4229c" />
