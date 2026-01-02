@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Label } from './Label';
+import { Label } from './Label/Label';
 import { type AdSize } from '../data';
 import cornersIcon from '../assets/icons/corners.svg';
 
@@ -10,6 +10,9 @@ interface CornersInputProps {
   disabled?: boolean;
   isSizeSpecific?: boolean;
   selectedSize?: AdSize;
+  onCopyToSize?: (targetSizes: AdSize[]) => void;
+  allowedSizes?: AdSize[];
+  currentSize?: AdSize;
 }
 
 export const CornersInput = ({
@@ -19,6 +22,9 @@ export const CornersInput = ({
   disabled = false,
   isSizeSpecific = true,
   selectedSize,
+  onCopyToSize,
+  allowedSizes,
+  currentSize,
 }: CornersInputProps) => {
   const isUniform = typeof value === 'number';
   const [isExpanded, setIsExpanded] = useState(!isUniform);
@@ -65,7 +71,14 @@ export const CornersInput = ({
 
   return (
     <div>
-      <Label isSizeSpecific={isSizeSpecific} selectedSize={selectedSize}>
+      <Label
+        isSizeSpecific={isSizeSpecific}
+        selectedSize={selectedSize}
+        onCopyToSize={onCopyToSize}
+        allowedSizes={allowedSizes}
+        currentSize={currentSize}
+        className="w-[250px]"
+      >
         {label}
       </Label>
       {/* Main input - always visible */}

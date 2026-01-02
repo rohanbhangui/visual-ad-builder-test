@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Label } from './Label';
+import { Label } from './Label/Label';
 import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
 
 interface ColorInputProps {
@@ -7,7 +7,6 @@ interface ColorInputProps {
   value: string;
   onChange: (color: string) => void;
   disabled?: boolean;
-  isGlobal?: boolean;
   showNoneOption?: boolean;
 }
 
@@ -16,7 +15,6 @@ export const ColorInput = ({
   value,
   onChange,
   disabled,
-  isGlobal = false,
   showNoneOption = false,
 }: ColorInputProps) => {
   const [error, setError] = useState<string>('');
@@ -58,7 +56,7 @@ export const ColorInput = ({
 
   return (
     <div>
-      <Label isGlobal={isGlobal}>{label}</Label>
+      <Label>{label}</Label>
       <div
         className={`flex items-stretch border rounded overflow-hidden ${
           error ? 'border-red-500' : 'border-gray-300'

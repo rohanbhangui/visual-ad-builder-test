@@ -1,6 +1,6 @@
 import { type RichtextLayer, type AdSize } from '../../../data';
 import { ColorInput } from '../../ColorInput';
-import { Label } from '../../Label';
+import { Label } from '../../Label/Label';
 import { FONT_SIZE_OPTIONS, GOOGLE_FONTS, UI_COLORS } from '../../../consts';
 import TextAlignLeftIcon from '../../../assets/icons/text-align-left.svg?react';
 import TextAlignCenterIcon from '../../../assets/icons/text-align-center.svg?react';
@@ -15,6 +15,8 @@ interface RichtextLayerFieldsProps {
   onFontSizeChange: (layerId: string, fontSize: string) => void;
   onTextAlignChange: (layerId: string, textAlign: 'left' | 'center' | 'right') => void;
   contentEditableRef?: React.RefObject<HTMLDivElement | null>;
+  onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  allowedSizes?: AdSize[];
 }
 
 export const RichtextLayerFields = ({
@@ -26,6 +28,8 @@ export const RichtextLayerFields = ({
   onFontSizeChange,
   onTextAlignChange,
   contentEditableRef,
+  onCopyFontSize,
+  allowedSizes,
 }: RichtextLayerFieldsProps) => {
   const config = layer.sizeConfig[selectedSize];
   if (!config) return null;
@@ -53,14 +57,24 @@ export const RichtextLayerFields = ({
             </select>
           </div>
           <div>
-            <Label isSizeSpecific={true} selectedSize={selectedSize}>
+            <Label
+              isSizeSpecific={true}
+              selectedSize={selectedSize}
+              onCopyToSize={
+                onCopyFontSize && config.fontSize
+                  ? (targetSizes) => onCopyFontSize(layer.id, selectedSize, targetSizes)
+                  : undefined
+              }
+              allowedSizes={allowedSizes}
+              currentSize={selectedSize}
+            >
               Font Size
             </Label>
             <select
               value={config.fontSize || '14px'}
               onChange={(e) => onFontSizeChange(layer.id, e.target.value)}
               disabled={layer.locked}
-              className={`h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`h-8 w-20 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
               }`}
             >

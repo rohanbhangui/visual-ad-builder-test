@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Label } from './Label';
+import { Label } from './Label/Label';
 
 interface UrlInputProps {
   label: string;
@@ -7,7 +7,6 @@ interface UrlInputProps {
   onChange: (url: string) => void;
   placeholder?: string;
   disabled?: boolean;
-  isGlobal?: boolean;
 }
 
 export const UrlInput = ({
@@ -16,7 +15,6 @@ export const UrlInput = ({
   onChange,
   placeholder,
   disabled,
-  isGlobal = false,
 }: UrlInputProps) => {
   const [inputValue, setInputValue] = useState(value);
   const [error, setError] = useState(false);
@@ -56,7 +54,7 @@ export const UrlInput = ({
 
   return (
     <div>
-      {label !== '' ? <Label isGlobal={isGlobal}>{label}</Label> : null}
+      {label !== '' ? <Label>{label}</Label> : null}
       <input
         type="text"
         value={inputValue}

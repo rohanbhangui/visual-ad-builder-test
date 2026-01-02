@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, memo } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../data';
 import { ColorInput } from '../ColorInput';
 import { PositionSizeInput } from '../PositionSizeInput';
-import { Label } from '../Label';
+import { Label } from '../Label/Label';
 import EditIcon from '../../assets/icons/edit.svg?react';
 import XIcon from '../../assets/icons/x.svg?react';
 import AlignLeftIcon from '../../assets/icons/align-left.svg?react';
@@ -113,6 +113,11 @@ interface PropertySidebarProps {
     layerId: string,
     borderRadius: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
   ) => void;
+  onCopyPositionSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyIconSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyBorderRadius?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  allowedSizes?: AdSize[];
 }
 
 const PropertySidebarComponent = ({
@@ -154,6 +159,11 @@ const PropertySidebarComponent = ({
   onButtonIconChange,
   onVideoControlChange,
   onBorderRadiusChange,
+  onCopyPositionSize,
+  onCopyFontSize,
+  onCopyIconSize,
+  onCopyBorderRadius,
+  allowedSizes,
   activeTab: activeTabProp = 'properties',
   onActiveTabChange,
 }: PropertySidebarProps) => {
@@ -600,7 +610,7 @@ const PropertySidebarComponent = ({
       </div>
 
       {/* Tab Content */}
-      <div className="px-4 pb-4 flex-1 overflow-y-auto">
+      <div className="px-4 pb-4 flex-1 overflow-y-auto overflow-x-visible">
         <div className="mt-4">
           {activeTab === 'properties' ? (
             <PropertyTab
@@ -629,6 +639,11 @@ const PropertySidebarComponent = ({
               onButtonIconChange={onButtonIconChange}
               onVideoControlChange={onVideoControlChange}
               onBorderRadiusChange={onBorderRadiusChange}
+              onCopyPositionSize={onCopyPositionSize}
+              onCopyFontSize={onCopyFontSize}
+              onCopyIconSize={onCopyIconSize}
+              onCopyBorderRadius={onCopyBorderRadius}
+              allowedSizes={allowedSizes}
             />
           ) : (
             <AnimationTab

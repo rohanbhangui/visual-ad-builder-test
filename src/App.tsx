@@ -885,6 +885,137 @@ const App = () => {
     );
   }, [selectedSize]);
 
+  const handleCopyPositionSize = useCallback(
+    (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+      setLayers((prev) =>
+        prev.map((layer) => {
+          if (layer.id !== layerId) return layer;
+
+          const sourceConfig = layer.sizeConfig[sourceSize];
+          if (!sourceConfig) return layer;
+
+          const updatedSizeConfig = { ...layer.sizeConfig };
+
+          targetSizes.forEach((targetSize) => {
+            const existingConfig = updatedSizeConfig[targetSize] || {
+              positionX: { value: 0, unit: 'px' as const },
+              positionY: { value: 0, unit: 'px' as const },
+              width: { value: 100, unit: 'px' as const },
+              height: { value: 100, unit: 'px' as const },
+            };
+
+            updatedSizeConfig[targetSize] = {
+              ...existingConfig,
+              positionX: sourceConfig.positionX,
+              positionY: sourceConfig.positionY,
+              width: sourceConfig.width,
+              height: sourceConfig.height,
+            };
+          });
+
+          return {
+            ...layer,
+            sizeConfig: updatedSizeConfig,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const handleCopyFontSize = useCallback(
+    (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+      setLayers((prev) =>
+        prev.map((layer) => {
+          if (layer.id !== layerId) return layer;
+
+          const sourceConfig = layer.sizeConfig[sourceSize];
+          if (!sourceConfig?.fontSize) return layer;
+
+          const updatedSizeConfig = { ...layer.sizeConfig };
+
+          targetSizes.forEach((targetSize) => {
+            const existingConfig = updatedSizeConfig[targetSize];
+            if (!existingConfig) return;
+
+            updatedSizeConfig[targetSize] = {
+              ...existingConfig,
+              fontSize: sourceConfig.fontSize,
+            };
+          });
+
+          return {
+            ...layer,
+            sizeConfig: updatedSizeConfig,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const handleCopyIconSize = useCallback(
+    (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+      setLayers((prev) =>
+        prev.map((layer) => {
+          if (layer.id !== layerId) return layer;
+
+          const sourceConfig = layer.sizeConfig[sourceSize];
+          if (sourceConfig?.iconSize === undefined) return layer;
+
+          const updatedSizeConfig = { ...layer.sizeConfig };
+
+          targetSizes.forEach((targetSize) => {
+            const existingConfig = updatedSizeConfig[targetSize];
+            if (!existingConfig) return;
+
+            updatedSizeConfig[targetSize] = {
+              ...existingConfig,
+              iconSize: sourceConfig.iconSize,
+            };
+          });
+
+          return {
+            ...layer,
+            sizeConfig: updatedSizeConfig,
+          };
+        })
+      );
+    },
+    []
+  );
+
+  const handleCopyBorderRadius = useCallback(
+    (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+      setLayers((prev) =>
+        prev.map((layer) => {
+          if (layer.id !== layerId) return layer;
+
+          const sourceConfig = layer.sizeConfig[sourceSize];
+          if (sourceConfig?.borderRadius === undefined) return layer;
+
+          const updatedSizeConfig = { ...layer.sizeConfig };
+
+          targetSizes.forEach((targetSize) => {
+            const existingConfig = updatedSizeConfig[targetSize];
+            if (!existingConfig) return;
+
+            updatedSizeConfig[targetSize] = {
+              ...existingConfig,
+              borderRadius: sourceConfig.borderRadius,
+            };
+          });
+
+          return {
+            ...layer,
+            sizeConfig: updatedSizeConfig,
+          };
+        })
+      );
+    },
+    []
+  );
+
   const handleReplayAnimations = () => {
     setAnimationKey((prev) => prev + 1);
   };
@@ -1426,6 +1557,11 @@ const App = () => {
             onButtonIconChange={handleButtonIconChange}
             onVideoControlChange={handleVideoControlChange}
             onBorderRadiusChange={handleBorderRadiusChange}
+            onCopyPositionSize={handleCopyPositionSize}
+            onCopyFontSize={handleCopyFontSize}
+            onCopyIconSize={handleCopyIconSize}
+            onCopyBorderRadius={handleCopyBorderRadius}
+            allowedSizes={sampleCanvas.allowedSizes}
           />
         ) : null}
       </div>

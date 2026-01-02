@@ -1,7 +1,7 @@
 import { type ButtonLayer, type AdSize, type LayerContent } from '../../../data';
 import { ColorInput } from '../../ColorInput';
 import { UrlInput } from '../../UrlInput';
-import { Label } from '../../Label';
+import { Label } from '../../Label/Label';
 import { FONT_SIZE_OPTIONS, MAX_BUTTON_TEXT_LENGTH, GOOGLE_FONTS } from '../../../consts';
 
 interface ButtonLayerFieldsProps {
@@ -43,6 +43,9 @@ interface ButtonLayerFieldsProps {
       action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
     }
   ) => void;
+  onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyIconSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  allowedSizes?: AdSize[];
 }
 
 export const ButtonLayerFields = ({
@@ -58,6 +61,9 @@ export const ButtonLayerFields = ({
   onButtonActionTypeChange,
   onButtonIconChange,
   onVideoControlChange,
+  onCopyFontSize,
+  onCopyIconSize,
+  allowedSizes,
 }: ButtonLayerFieldsProps) => {
   const config = layer.sizeConfig[selectedSize];
   if (!config) return null;
@@ -252,7 +258,17 @@ export const ButtonLayerFields = ({
           {/* Icon Size, Position & Color */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label isSizeSpecific={true} selectedSize={selectedSize}>
+              <Label
+                isSizeSpecific={true}
+                selectedSize={selectedSize}
+                onCopyToSize={
+                  onCopyIconSize && config.iconSize !== undefined
+                    ? (targetSizes) => onCopyIconSize(layer.id, selectedSize, targetSizes)
+                    : undefined
+                }
+                allowedSizes={allowedSizes}
+                currentSize={selectedSize}
+              >
                 Size
               </Label>
               <select
@@ -347,7 +363,17 @@ export const ButtonLayerFields = ({
               </select>
             </div>
             <div>
-              <Label isSizeSpecific={true} selectedSize={selectedSize}>
+              <Label
+                isSizeSpecific={true}
+                selectedSize={selectedSize}
+                onCopyToSize={
+                  onCopyFontSize && config.fontSize
+                    ? (targetSizes) => onCopyFontSize(layer.id, selectedSize, targetSizes)
+                    : undefined
+                }
+                allowedSizes={allowedSizes}
+                currentSize={selectedSize}
+              >
                 Font Size
               </Label>
               <select

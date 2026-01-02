@@ -9,7 +9,7 @@ import {
   type RichtextLayer,
 } from '../../../data';
 import { PositionSizeInput } from '../../PositionSizeInput';
-import { Label } from '../../Label';
+import { Label } from '../../Label/Label';
 import { ColorInput } from '../../ColorInput';
 import { CornersInput } from '../../CornersInput';
 import LockIcon from '../../../assets/icons/lock.svg?react';
@@ -102,6 +102,11 @@ interface PropertyTabProps {
     layerId: string,
     borderRadius: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
   ) => void;
+  onCopyPositionSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyIconSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyBorderRadius?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  allowedSizes?: AdSize[];
 }
 
 export const PropertyTab = ({
@@ -130,6 +135,11 @@ export const PropertyTab = ({
   onButtonIconChange,
   onVideoControlChange,
   onBorderRadiusChange,
+  onCopyPositionSize,
+  onCopyFontSize,
+  onCopyIconSize,
+  onCopyBorderRadius,
+  allowedSizes,
 }: PropertyTabProps) => {
   const config = layer.sizeConfig[selectedSize];
   if (!config) return null;
@@ -193,6 +203,13 @@ export const PropertyTab = ({
           disabled={layer.locked}
           isSizeSpecific={true}
           selectedSize={selectedSize}
+          onCopyToSize={
+            onCopyPositionSize
+              ? (targetSizes) => onCopyPositionSize(layer.id, selectedSize, targetSizes)
+              : undefined
+          }
+          allowedSizes={allowedSizes}
+          currentSize={selectedSize}
         />
         <PositionSizeInput
           label="Y"
@@ -202,31 +219,52 @@ export const PropertyTab = ({
           disabled={layer.locked}
           isSizeSpecific={true}
           selectedSize={selectedSize}
+          onCopyToSize={
+            onCopyPositionSize
+              ? (targetSizes) => onCopyPositionSize(layer.id, selectedSize, targetSizes)
+              : undefined
+          }
+          allowedSizes={allowedSizes}
+          currentSize={selectedSize}
         />
       </div>
 
       {/* Width and Height */}
       <div className="relative">
         <div className="grid grid-cols-2 gap-2">
-          <PositionSizeInput
-            label="Width"
-            value={width.value}
-            unit={width.unit || 'px'}
-            onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
-            disabled={layer.locked}
-            isSizeSpecific={true}
-            selectedSize={selectedSize}
-          />
-          <PositionSizeInput
-            label="Height"
-            value={height.value}
-            unit={height.unit || 'px'}
-            onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
-            disabled={layer.locked}
-            isSizeSpecific={true}
-            selectedSize={selectedSize}
-          />
-        </div>
+            <PositionSizeInput
+              label="Width"
+              value={width.value}
+              unit={width.unit || 'px'}
+              onChange={(value, unit) => onPropertyChange(layer.id, 'width', value, unit)}
+              disabled={layer.locked}
+              isSizeSpecific={true}
+              selectedSize={selectedSize}
+              onCopyToSize={
+                onCopyPositionSize
+                  ? (targetSizes) => onCopyPositionSize(layer.id, selectedSize, targetSizes)
+                  : undefined
+              }
+              allowedSizes={allowedSizes}
+              currentSize={selectedSize}
+            />
+            <PositionSizeInput
+              label="Height"
+              value={height.value}
+              unit={height.unit || 'px'}
+              onChange={(value, unit) => onPropertyChange(layer.id, 'height', value, unit)}
+              disabled={layer.locked}
+              isSizeSpecific={true}
+              selectedSize={selectedSize}
+              onCopyToSize={
+                onCopyPositionSize
+                  ? (targetSizes) => onCopyPositionSize(layer.id, selectedSize, targetSizes)
+                  : undefined
+              }
+              allowedSizes={allowedSizes}
+              currentSize={selectedSize}
+            />
+          </div>
         <button
           onClick={() => onAspectRatioLockToggle(layer.id)}
           disabled={layer.locked}
@@ -242,15 +280,6 @@ export const PropertyTab = ({
           )}
         </button>
       </div>
-
-      {/* Corners */}
-      <CornersInput
-        value={config.borderRadius || 0}
-        onChange={(value) => onBorderRadiusChange(layer.id, value)}
-        disabled={layer.locked}
-        isSizeSpecific={true}
-        selectedSize={selectedSize}
-      />
 
       {/* Image Controls */}
       {layer.type === 'image' ? (
@@ -285,6 +314,9 @@ export const PropertyTab = ({
           onButtonActionTypeChange={onButtonActionTypeChange}
           onButtonIconChange={onButtonIconChange}
           onVideoControlChange={onVideoControlChange}
+          onCopyFontSize={onCopyFontSize}
+          onCopyIconSize={onCopyIconSize}
+          allowedSizes={allowedSizes}
         />
       ) : null}
 
@@ -298,6 +330,8 @@ export const PropertyTab = ({
           onFontFamilyChange={onFontFamilyChange}
           onFontSizeChange={onFontSizeChange}
           onTextAlignChange={onTextAlignChange}
+          onCopyFontSize={onCopyFontSize}
+          allowedSizes={allowedSizes}
         />
       ) : null}
 
@@ -311,6 +345,8 @@ export const PropertyTab = ({
           onFontSizeChange={onFontSizeChange}
           onTextAlignChange={onTextAlignChange}
           contentEditableRef={contentEditableRef}
+          onCopyFontSize={onCopyFontSize}
+          allowedSizes={allowedSizes}
         />
       ) : null}
 
@@ -334,6 +370,13 @@ export const PropertyTab = ({
           disabled={layer.locked}
           isSizeSpecific={true}
           selectedSize={selectedSize}
+          onCopyToSize={
+            onCopyBorderRadius
+              ? (targetSizes) => onCopyBorderRadius(layer.id, selectedSize, targetSizes)
+              : undefined
+          }
+          allowedSizes={allowedSizes}
+          currentSize={selectedSize}
         />
       </div>
 

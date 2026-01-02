@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { type ImageLayer } from '../../../data';
 import { UrlInput } from '../../UrlInput';
-import { Label } from '../../Label';
+import { Label } from '../../Label/Label';
 
 interface ImageLayerFieldsProps {
   layer: ImageLayer;

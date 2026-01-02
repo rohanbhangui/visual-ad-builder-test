@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Label } from './Label';
+import { Label } from './Label/Label';
 import type { AdSize } from '../data';
 
 interface PositionSizeInputProps {
@@ -11,6 +11,9 @@ interface PositionSizeInputProps {
   placeholder?: string;
   isSizeSpecific?: boolean;
   selectedSize?: AdSize;
+  onCopyToSize?: (targetSizes: AdSize[]) => void;
+  allowedSizes?: AdSize[];
+  currentSize?: AdSize;
 }
 
 export const PositionSizeInput = ({
@@ -22,6 +25,9 @@ export const PositionSizeInput = ({
   placeholder,
   isSizeSpecific = false,
   selectedSize,
+  onCopyToSize,
+  allowedSizes,
+  currentSize,
 }: PositionSizeInputProps) => {
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState<string>(placeholder || value.toString());
@@ -114,7 +120,14 @@ export const PositionSizeInput = ({
 
   return (
     <div>
-      <Label isSizeSpecific={isSizeSpecific} selectedSize={selectedSize}>
+      <Label
+        isSizeSpecific={isSizeSpecific}
+        selectedSize={selectedSize}
+        onCopyToSize={onCopyToSize}
+        allowedSizes={allowedSizes}
+        currentSize={currentSize}
+        className={`w-[112px]`}
+      >
         {label}
       </Label>
       <div className="flex gap-1">

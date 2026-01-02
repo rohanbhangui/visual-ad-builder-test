@@ -1,6 +1,6 @@
 import { type TextLayer, type AdSize } from '../../../data';
 import { ColorInput } from '../../ColorInput';
-import { Label } from '../../Label';
+import { Label } from '../../Label/Label';
 import {
   FONT_SIZE_OPTIONS,
   MAX_TEXT_CONTENT_LENGTH,
@@ -19,6 +19,8 @@ interface TextLayerFieldsProps {
   onFontFamilyChange: (layerId: string, fontFamily: string) => void;
   onFontSizeChange: (layerId: string, fontSize: string) => void;
   onTextAlignChange: (layerId: string, textAlign: 'left' | 'center' | 'right') => void;
+  onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  allowedSizes?: AdSize[];
 }
 
 export const TextLayerFields = ({
@@ -29,6 +31,8 @@ export const TextLayerFields = ({
   onFontFamilyChange,
   onFontSizeChange,
   onTextAlignChange,
+  onCopyFontSize,
+  allowedSizes,
 }: TextLayerFieldsProps) => {
   const config = layer.sizeConfig[selectedSize];
   if (!config) return null;
@@ -130,7 +134,17 @@ export const TextLayerFields = ({
         </div>
 
         <div>
-          <Label isSizeSpecific={true} selectedSize={selectedSize}>
+          <Label
+            isSizeSpecific={true}
+            selectedSize={selectedSize}
+            onCopyToSize={
+              onCopyFontSize && config.fontSize
+                ? (targetSizes) => onCopyFontSize(layer.id, selectedSize, targetSizes)
+                : undefined
+            }
+            allowedSizes={allowedSizes}
+            currentSize={selectedSize}
+          >
             Font Size
           </Label>
           <select

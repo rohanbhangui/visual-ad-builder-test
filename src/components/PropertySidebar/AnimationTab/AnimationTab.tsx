@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../../data';
-import { Label } from '../../Label';
+import { Label } from '../../Label/Label';
 import { ColorInput } from '../../ColorInput';
 import TrashIcon from '../../../assets/icons/trash.svg?react';
 import EditIcon from '../../../assets/icons/edit.svg?react';

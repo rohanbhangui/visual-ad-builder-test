@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { type VideoLayer } from '../../../data';
 import { UrlInput } from '../../UrlInput';
-import { Label } from '../../Label';
+import { Label } from '../../Label/Label';
 
 interface VideoLayerFieldsProps {
   layer: VideoLayer;
