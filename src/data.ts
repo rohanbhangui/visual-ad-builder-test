@@ -272,7 +272,7 @@ export const sampleCanvas: Canvas = {
             },
           ],
           animationLoopDelay: { value: 5, unit: 's' },
-          animationResetDuration: { value: 1, unit: 's' },
+          animationResetDuration: { value: 0.1, unit: 's' },
         },
         '336x280': {
           positionX: { value: 21, unit: 'px' },
@@ -293,7 +293,7 @@ export const sampleCanvas: Canvas = {
             },
           ],
           animationLoopDelay: { value: 5, unit: 's' },
-          animationResetDuration: { value: 1, unit: 's' },
+          animationResetDuration: { value: 0.1, unit: 's' },
         },
         '728x90': {
           positionX: { value: 98, unit: 'px' },
@@ -364,7 +364,7 @@ export const sampleCanvas: Canvas = {
             },
           ],
           animationLoopDelay: { value: 5, unit: 's' },
-          animationResetDuration: { value: 1, unit: 's' },
+          animationResetDuration: { value: 0.1, unit: 's' },
         },
         '728x90': {
           positionX: { value: 573, unit: 'px' },
@@ -425,7 +425,7 @@ export const sampleCanvas: Canvas = {
             },
           ],
           animationLoopDelay: { value: 5, unit: 's' },
-          animationResetDuration: { value: 1, unit: 's' },
+          animationResetDuration: { value: 0.1, unit: 's' },
         },
         '336x280': {
           positionX: { value: 69, unit: 'px' },
@@ -445,7 +445,7 @@ export const sampleCanvas: Canvas = {
             },
           ],
           animationLoopDelay: { value: 5, unit: 's' },
-          animationResetDuration: { value: 1, unit: 's' },
+          animationResetDuration: { value: 0.1, unit: 's' },
         },
         '728x90': {
           positionX: { value: 568, unit: 'px' },
@@ -506,7 +506,7 @@ export const sampleCanvas: Canvas = {
             },
           ],
           animationLoopDelay: { value: 5, unit: 's' },
-          animationResetDuration: { value: 1, unit: 's' },
+          animationResetDuration: { value: 0.1, unit: 's' },
         },
         '336x280': {
           positionX: { value: 118, unit: 'px' },
@@ -537,7 +537,7 @@ export const sampleCanvas: Canvas = {
             },
           ],
           animationLoopDelay: { value: 5, unit: 's' },
-          animationResetDuration: { value: 1, unit: 's' },
+          animationResetDuration: { value: 0.1, unit: 's' },
         },
         '728x90': {
           positionX: { value: 421, unit: 'px' },

@@ -624,6 +624,22 @@ ${generateLayerElements()}
             el.style.animation = animationValue;
           }
         });
+
+        // Handle video reset on animation iteration
+        const videos = document.querySelectorAll('video');
+        if (videos.length > 0 && elementsWithAnimation.length > 0) {
+          // Listen to the first animated element's iteration event
+          const firstAnimatedEl = elementsWithAnimation[0];
+          firstAnimatedEl.addEventListener('animationiteration', function() {
+            videos.forEach(function(video) {
+              video.pause();
+              video.currentTime = 0;
+              if (video.hasAttribute('autoplay')) {
+                video.play();
+              }
+            });
+          });
+        }
       });
 
       // Auto-play videos on load
