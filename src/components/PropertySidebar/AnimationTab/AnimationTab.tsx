@@ -5,7 +5,6 @@ import { CopySizePopover } from '../../Label/CopySizePopover';
 import { ColorInput } from '../../ColorInput';
 import TrashIcon from '../../../assets/icons/trash.svg?react';
 import EditIcon from '../../../assets/icons/edit.svg?react';
-import CopyIcon from '../../../assets/icons/copy.svg?react';
 import ChevronDownIcon from '../../../assets/icons/chevron-down.svg?react';
 
 interface AnimationTabProps {

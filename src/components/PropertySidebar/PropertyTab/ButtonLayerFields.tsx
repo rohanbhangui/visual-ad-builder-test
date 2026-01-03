@@ -122,8 +122,8 @@ export const ButtonLayerFields = ({
                 onVideoControlChange(layer.id, {
                   ...layer.videoControl,
                   targetElementId: e.target.value,
-                  action: layer.videoControl?.action || 'play',
-                } as any)
+                  action: (layer.videoControl?.action || 'play') as 'play' | 'pause',
+                })
               }
               disabled={layer.locked}
               className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -153,7 +153,7 @@ export const ButtonLayerFields = ({
                   ...layer.videoControl,
                   targetElementId: layer.videoControl?.targetElementId || '',
                   action: e.target.value as 'play' | 'pause' | 'restart' | 'togglePlayPause',
-                } as any)
+                })
               }
               disabled={layer.locked}
               className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -205,7 +205,22 @@ export const ButtonLayerFields = ({
         <Label>Icon</Label>
         <select
           value={icon.type}
-          onChange={(e) => onButtonIconChange(layer.id, { ...icon, type: e.target.value as any })}
+          onChange={(e) =>
+            onButtonIconChange(layer.id, {
+              ...icon,
+              type: e.target.value as
+                | 'none'
+                | 'play'
+                | 'pause'
+                | 'replay'
+                | 'play-fill'
+                | 'pause-fill'
+                | 'custom'
+                | 'toggle-filled'
+                | 'toggle-outline'
+                | 'toggle-custom',
+            })
+          }
           disabled={layer.locked}
           className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
             layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'

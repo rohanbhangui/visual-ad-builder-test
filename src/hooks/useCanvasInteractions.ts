@@ -865,6 +865,7 @@ export const useCanvasInteractions = ({
       isAltPressed,
       dimensions,
       setLayers,
+      SNAP_THRESHOLD,
     ]
   );
 

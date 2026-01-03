@@ -34,8 +34,10 @@ export const PositionSizeInput = ({
 
   useEffect(() => {
     if (placeholder) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInputValue(placeholder);
     } else {
+       
       setInputValue(value.toString());
     }
   }, [value, placeholder]);

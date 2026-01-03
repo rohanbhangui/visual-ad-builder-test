@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useRef } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../data';
 import { ColorInput } from '../ColorInput';
 import { PositionSizeInput } from '../PositionSizeInput';
@@ -198,7 +198,9 @@ const PropertySidebarComponent = ({
 
   // Update local input values when layer or size changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoopDelayInputValue(animationLoopDelay.value.toString());
+     
     setResetDurationInputValue(animationResetDuration.value.toString());
   }, [selectedSize, animationLoopDelay.value, animationResetDuration.value]);
 

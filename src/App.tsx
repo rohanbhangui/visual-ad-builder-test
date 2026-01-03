@@ -62,7 +62,9 @@ const App = () => {
 
   // Reset zoom and pan when ad size changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setZoom(1);
+     
     setPan({ x: 0, y: 0 });
   }, [selectedSize]);
 
@@ -1169,6 +1171,87 @@ const App = () => {
     []
   );
 
+  const handleAlignMultipleLayers = useCallback(
+    (alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v') => {
+      // Calculate selection bounds
+      const selectedLayers = layers.filter((l) => selectedLayerIds.includes(l.id));
+      if (selectedLayers.length === 0) return;
+
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+
+      selectedLayers.forEach((layer) => {
+        const config = layer.sizeConfig[selectedSize];
+        if (!config) return;
+
+        const posX = config.positionX.value;
+        const posY = config.positionY.value;
+        const width = config.width.value;
+        const height = config.height.value;
+
+        minX = Math.min(minX, posX);
+        minY = Math.min(minY, posY);
+        maxX = Math.max(maxX, posX + width);
+        maxY = Math.max(maxY, posY + height);
+      });
+
+      const selectionWidth = maxX - minX;
+      const selectionHeight = maxY - minY;
+      const selectionCenterX = minX + selectionWidth / 2;
+      const selectionCenterY = minY + selectionHeight / 2;
+
+      setLayers((prev) =>
+        prev.map((layer) => {
+          if (!selectedLayerIds.includes(layer.id)) return layer;
+
+          const config = layer.sizeConfig[selectedSize];
+          if (!config) return layer;
+
+          const width = config.width.value;
+          const height = config.height.value;
+          let newPosX = config.positionX.value;
+          let newPosY = config.positionY.value;
+
+          switch (alignment) {
+            case 'left':
+              newPosX = minX;
+              break;
+            case 'right':
+              newPosX = maxX - width;
+              break;
+            case 'center-h':
+              newPosX = selectionCenterX - width / 2;
+              break;
+            case 'top':
+              newPosY = minY;
+              break;
+            case 'bottom':
+              newPosY = maxY - height;
+              break;
+            case 'center-v':
+              newPosY = selectionCenterY - height / 2;
+              break;
+          }
+
+          return {
+            ...layer,
+            sizeConfig: {
+              ...layer.sizeConfig,
+              [selectedSize]: {
+                ...config,
+                positionX: { value: Math.round(newPosX), unit: 'px' },
+                positionY: { value: Math.round(newPosY), unit: 'px' },
+              },
+            },
+          };
+        })
+      );
+    },
+    [layers, selectedLayerIds, selectedSize]
+  );
+
   const handleAlignLayer = useCallback(
     (layerId: string, alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v') => {
       // If multiple layers are selected, align relative to selection bounds
@@ -1234,88 +1317,8 @@ const App = () => {
         })
       );
     },
-    [selectedLayerIds, selectedSize, dimensions.width, dimensions.height]
+    [selectedLayerIds, selectedSize, dimensions.width, dimensions.height, handleAlignMultipleLayers]
   );
-
-  const handleAlignMultipleLayers = (
-    alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v'
-  ) => {
-    // Calculate selection bounds
-    const selectedLayers = layers.filter((l) => selectedLayerIds.includes(l.id));
-    if (selectedLayers.length === 0) return;
-
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-
-    selectedLayers.forEach((layer) => {
-      const config = layer.sizeConfig[selectedSize];
-      if (!config) return;
-
-      const posX = config.positionX.value;
-      const posY = config.positionY.value;
-      const width = config.width.value;
-      const height = config.height.value;
-
-      minX = Math.min(minX, posX);
-      minY = Math.min(minY, posY);
-      maxX = Math.max(maxX, posX + width);
-      maxY = Math.max(maxY, posY + height);
-    });
-
-    const selectionWidth = maxX - minX;
-    const selectionHeight = maxY - minY;
-    const selectionCenterX = minX + selectionWidth / 2;
-    const selectionCenterY = minY + selectionHeight / 2;
-
-    setLayers((prev) =>
-      prev.map((layer) => {
-        if (!selectedLayerIds.includes(layer.id)) return layer;
-
-        const config = layer.sizeConfig[selectedSize];
-        if (!config) return layer;
-
-        const width = config.width.value;
-        const height = config.height.value;
-        let newPosX = config.positionX.value;
-        let newPosY = config.positionY.value;
-
-        switch (alignment) {
-          case 'left':
-            newPosX = minX;
-            break;
-          case 'right':
-            newPosX = maxX - width;
-            break;
-          case 'center-h':
-            newPosX = selectionCenterX - width / 2;
-            break;
-          case 'top':
-            newPosY = minY;
-            break;
-          case 'bottom':
-            newPosY = maxY - height;
-            break;
-          case 'center-v':
-            newPosY = selectionCenterY - height / 2;
-            break;
-        }
-
-        return {
-          ...layer,
-          sizeConfig: {
-            ...layer.sizeConfig,
-            [selectedSize]: {
-              ...config,
-              positionX: { value: Math.round(newPosX), unit: 'px' },
-              positionY: { value: Math.round(newPosY), unit: 'px' },
-            },
-          },
-        };
-      })
-    );
-  };
 
   const handleExportHTML = () => {
     setSelectedLayerIds([]);
