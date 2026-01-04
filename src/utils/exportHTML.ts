@@ -67,48 +67,31 @@ export const generateResponsiveHTML = (
   // Generate single set of layer elements
   const generateLayerElements = (): string => {
     return layers
-      .map((layer, index) => {
-        const zIndex = layers.length - index;
-        const opacity = layer.styles.opacity;
-
+      .map((layer) => {
         // Use attributes.id if set, otherwise fall back to UUID
         const layerId = layer.attributes.id || layer.id;
-
-        // Check if opacity is animated in any size config
-        const hasOpacityAnimation = Object.values(layer.sizeConfig).some((config) =>
-          config?.animations?.some((a) => a.type === 'fadeIn')
-        );
-
-        // Base styles that don't change - exclude opacity if it's animated
-        const opacityStyle = !hasOpacityAnimation ? ` opacity: ${opacity};` : '';
-        const baseStyle = `position: absolute; z-index: ${zIndex};${opacityStyle}`;
 
         // Get animation data for this layer
         const animationData = animationDataMap.get(layerId);
         const animationAttr = animationData ? ` data-animation="${animationData}"` : '';
 
         let content = '';
-        let additionalStyles = '';
 
         switch (layer.type) {
           case 'image': {
-            // Width/height will be set via CSS for each size
-            additionalStyles = `object-fit: ${layer.styles.objectFit || 'cover'};`;
-            content = `<img id="${layerId}" src="${layer.url}" style="${baseStyle} ${additionalStyles}"${animationAttr} alt="${layer.label}">`;
+            content = `<img id="${layerId}" src="${layer.url}"${animationAttr} alt="${layer.label}">`;
             break;
           }
           case 'text':
-            additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'}; white-space: pre-wrap;`;
-            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}"${animationAttr}>${layer.content}</div>`;
+            content = `<div id="${layerId}"${animationAttr}>${layer.content}</div>`;
             break;
           case 'richtext':
-            additionalStyles = `color: ${layer.styles?.color || '#000000'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};`;
-            content = `<div id="${layerId}" style="${baseStyle} ${additionalStyles}"${animationAttr}>${layer.content}</div>`;
+            content = `<div id="${layerId}"${animationAttr}>${layer.content}</div>`;
             break;
           case 'video': {
             const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
             const controls = layer.properties?.controls !== false ? ' controls' : '';
-            content = `<video id="${layerId}" src="${layer.url}" style="${baseStyle}"${autoplay}${controls}${animationAttr}></video>`;
+            content = `<video id="${layerId}" src="${layer.url}"${autoplay}${controls}${animationAttr}></video>`;
             break;
           }
           case 'button': {
@@ -178,40 +161,37 @@ export const generateResponsiveHTML = (
 
               // Set initial icon based on autoplay (pause if autoplay, play if not)
               iconHtml = hasAutoplay
-                ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
-                : `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+                ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`
+                : `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`;
               isToggleIcon = true;
-              toggleIconData = ` data-play-icon="<img src='${icon.customPlayImage}' width='${iconSize}' height='${iconSize}' style='object-fit: contain;' />" data-pause-icon="<img src='${icon.customPauseImage}' width='${iconSize}' height='${iconSize}' style='object-fit: contain;' />"`;
+              toggleIconData = ` data-play-icon="<img src='${icon.customPlayImage}' width='${iconSize}' height='${iconSize}' class='btn-icon-img' />" data-pause-icon="<img src='${icon.customPauseImage}' width='${iconSize}' height='${iconSize}' class='btn-icon-img' />"`;
             } else if (icon.type === 'custom' && icon.customImage) {
-              iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+              iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`;
             }
 
             const hasText = layer.text && layer.text.trim().length > 0;
             const hasIcon = icon.type !== 'none' && iconHtml;
-            const gap = hasText && hasIcon ? '6px' : '0';
 
             let contentHtml = '';
             if (hasIcon && hasText) {
               if (isToggleIcon) {
                 contentHtml =
                   icon.position === 'before'
-                    ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span><span style="margin-left: ${gap};">${layer.text}</span>`
-                    : `<span style="margin-right: ${gap};">${layer.text}</span><span class="btn-icon"${toggleIconData}>${iconHtml}</span>`;
+                    ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span><span class="btn-text">${layer.text}</span>`
+                    : `<span class="btn-text">${layer.text}</span><span class="btn-icon"${toggleIconData}>${iconHtml}</span>`;
               } else {
                 contentHtml =
                   icon.position === 'before'
-                    ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
-                    : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
+                    ? `<span class="btn-icon-static">${iconHtml}</span><span class="btn-text">${layer.text}</span>`
+                    : `<span class="btn-text">${layer.text}</span><span class="btn-icon-static">${iconHtml}</span>`;
               }
             } else if (hasIcon) {
               contentHtml = isToggleIcon
                 ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span>`
-                : iconHtml;
+                : `<span class="btn-icon-static">${iconHtml}</span>`;
             } else {
               contentHtml = layer.text;
             }
-
-            const baseButtonStyle = `${baseStyle} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
 
             // Use button for video controls, anchor for links
             if (layer.actionType === 'videoControl' && layer.videoControl) {
@@ -230,11 +210,11 @@ export const generateResponsiveHTML = (
 
               const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${videoAction} ${iconToggleLogic} }`;
 
-              content = `<button id="${layerId}" onclick="${onclickHandler}" style="${baseButtonStyle}"${animationAttr}>${contentHtml}</button>`;
+              content = `<button id="${layerId}" onclick="${onclickHandler}"${animationAttr}>${contentHtml}</button>`;
             } else {
               const href = layer.actionType === 'link' ? layer.url : '#';
               const target = layer.actionType === 'link' ? ' target="_blank"' : '';
-              content = `<a id="${layerId}" href="${href}"${target} style="${baseButtonStyle} text-decoration: none;"${animationAttr}>${contentHtml}</a>`;
+              content = `<a id="${layerId}" href="${href}"${target}${animationAttr}>${contentHtml}</a>`;
             }
             break;
           }
@@ -355,7 +335,7 @@ export const generateResponsiveHTML = (
 
     // Generate base styles for first size
     const baseStyles = layers
-      .map((layer) => {
+      .map((layer, index) => {
         // Use attributes.id if set, otherwise fall back to UUID
         const layerId = layer.attributes.id || layer.id;
         const config = layer.sizeConfig[firstSize];
@@ -368,6 +348,7 @@ export const generateResponsiveHTML = (
         const posY = config.positionY;
         const width = config.width;
         const height = config.height;
+        const zIndex = layers.length - index; // Stack layers in reverse order
 
         // Add fontSize for text, richtext, and button layers
         let fontSizeRule = '';
@@ -442,10 +423,51 @@ export const generateResponsiveHTML = (
           }
         }
 
+        // Base rules that apply to all layer types
+        const baseRules = `
+        position: absolute;
+        z-index: ${zIndex};
+        opacity: ${layer.styles.opacity ?? 1};`;
+
+        // Type-specific rules
+        let typeSpecificRules = '';
+        
+        if (layer.type === 'image') {
+          typeSpecificRules = `
+        object-fit: cover;`;
+        } else if (layer.type === 'text') {
+          typeSpecificRules = `
+        color: ${layer.styles?.color || '#000000'};
+        font-family: ${layer.styles?.fontFamily || 'Arial'};
+        text-align: ${layer.styles?.textAlign || 'left'};`;
+        } else if (layer.type === 'richtext') {
+          typeSpecificRules = `
+        color: ${layer.styles?.color || '#000000'};
+        font-family: ${layer.styles?.fontFamily || 'Arial'};
+        text-align: ${layer.styles?.textAlign || 'left'};`;
+        } else if (layer.type === 'button') {
+          const bgColor = layer.styles?.backgroundColor || '#007bff';
+          const textColor = layer.styles?.color || '#ffffff';
+          
+          typeSpecificRules = `
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: ${bgColor};
+        color: ${textColor};
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        font-family: ${layer.styles?.fontFamily || 'Arial'};
+        text-align: center;`;
+        } else if (layer.type === 'video') {
+          typeSpecificRules = `
+        object-fit: cover;`;
+        }
+
         // Animation styles are applied via data-animation attribute set earlier
 
-        return `      #${layerId} {
-        display: block;
+        return `      #${layerId} {${baseRules}${typeSpecificRules}
         left: ${posX.value}${posX.unit || 'px'};
         top: ${posY.value}${posY.unit || 'px'};
         width: ${width.value}${width.unit};
@@ -543,7 +565,6 @@ export const generateResponsiveHTML = (
             // Animation styles removed - will be applied via script on DOMContentLoaded
 
             return `        #${layerId} {
-          display: block;
           left: ${posX.value}${posX.unit || 'px'};
           top: ${posY.value}${posY.unit || 'px'};
           width: ${width.value}${width.unit};
@@ -583,6 +604,21 @@ ${layerStyles}
         position: relative;
         overflow: hidden;
         margin: 0 auto;
+      }
+
+      /* Button icon spacing */
+      .btn-icon + .btn-text,
+      .btn-icon-static + .btn-text {
+        margin-left: 6px;
+      }
+      
+      .btn-text + .btn-icon,
+      .btn-text + .btn-icon-static {
+        margin-left: 6px;
+      }
+      
+      .btn-icon-img {
+        object-fit: contain;
       }
 
       /* Animation keyframes for ${firstSize} */

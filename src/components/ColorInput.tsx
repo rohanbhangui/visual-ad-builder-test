@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Label } from './Label/Label';
 import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
 
@@ -20,14 +20,16 @@ export const ColorInput = ({
   const [error, setError] = useState<string>('');
   const [inputValue, setInputValue] = useState(value || '');
 
+  // Sync input value when prop value changes from outside
+  useEffect(() => {
+    if (value !== undefined) {
+      setInputValue(value || '');
+    }
+  }, [value]);
+
   // Derive dropdown value from current value prop
   const dropdownValue: 'transparent' | 'custom' =
     value === 'transparent' || value === 'rgba(0,0,0,0)' ? 'transparent' : 'custom';
-
-  // Sync input value when prop value changes from outside
-  if (inputValue !== value && value !== undefined) {
-    setInputValue(value || '');
-  }
 
   const validateColor = (color: string): boolean => {
     // Allow transparent values
