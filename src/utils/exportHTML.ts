@@ -1,5 +1,5 @@
 import { type LayerContent, type AdSize } from '../data';
-import { HTML5_AD_SIZES } from '../consts';
+import { HTML5_AD_SIZES, DEFAULT_CSS_VALUES } from '../consts';
 import { getGoogleFontsLink } from './googleFonts';
 
 // Helper function to convert animation value to CSS string
@@ -352,30 +352,26 @@ export const generateResponsiveHTML = (
 
         // Add fontSize for text, richtext, and button layers
         let fontSizeRule = '';
-        if (
-          (layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') &&
-          config.fontSize
-        ) {
-          fontSizeRule = `\n        font-size: ${config.fontSize};`;
+        if (layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') {
+          fontSizeRule = `\n        font-size: ${config.fontSize || DEFAULT_CSS_VALUES.FONT_SIZE};`;
         }
 
         // Add icon size for button layers (applied to SVG children)
         let iconSizeRule = '';
-        if (layer.type === 'button' && config.iconSize) {
-          iconSizeRule = `\n      #${layerId} svg { width: ${config.iconSize}px; height: ${config.iconSize}px; }`;
+        if (layer.type === 'button') {
+          const iconSize = config.iconSize || DEFAULT_CSS_VALUES.ICON_SIZE;
+          iconSizeRule = `\n      #${layerId} svg { width: ${iconSize}px; height: ${iconSize}px; }`;
         }
 
         // Add border-radius for layers
-        let borderRadiusRule = '';
-        if (config.borderRadius) {
-          const borderRadius =
-            typeof config.borderRadius === 'number'
-              ? `${config.borderRadius}px`
-              : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`;
-          borderRadiusRule = `\n        border-radius: ${borderRadius};`;
-          if (layer.type === 'image' || layer.type === 'video') {
-            borderRadiusRule += '\n        overflow: hidden;';
-          }
+        const borderRadius = config.borderRadius
+          ? typeof config.borderRadius === 'number'
+            ? `${config.borderRadius}px`
+            : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`
+          : DEFAULT_CSS_VALUES.BORDER_RADIUS;
+        let borderRadiusRule = `\n        border-radius: ${borderRadius};`;
+        if ((layer.type === 'image' || layer.type === 'video') && config.borderRadius) {
+          borderRadiusRule += '\n        overflow: hidden;';
         }
 
         // Add initial state CSS based on animation "from" values
@@ -427,27 +423,27 @@ export const generateResponsiveHTML = (
         const baseRules = `
         position: absolute;
         z-index: ${zIndex};
-        opacity: ${layer.styles.opacity ?? 1};`;
+        opacity: ${layer.styles.opacity ?? DEFAULT_CSS_VALUES.OPACITY};`;
 
         // Type-specific rules
         let typeSpecificRules = '';
         
         if (layer.type === 'image') {
           typeSpecificRules = `
-        object-fit: cover;`;
+        object-fit: ${DEFAULT_CSS_VALUES.OBJECT_FIT};`;
         } else if (layer.type === 'text') {
           typeSpecificRules = `
-        color: ${layer.styles?.color || '#000000'};
-        font-family: ${layer.styles?.fontFamily || 'Arial'};
-        text-align: ${layer.styles?.textAlign || 'left'};`;
+        color: ${layer.styles?.color || DEFAULT_CSS_VALUES.TEXT_COLOR};
+        font-family: ${layer.styles?.fontFamily || DEFAULT_CSS_VALUES.FONT_FAMILY};
+        text-align: ${layer.styles?.textAlign || DEFAULT_CSS_VALUES.TEXT_ALIGN};`;
         } else if (layer.type === 'richtext') {
           typeSpecificRules = `
-        color: ${layer.styles?.color || '#000000'};
-        font-family: ${layer.styles?.fontFamily || 'Arial'};
-        text-align: ${layer.styles?.textAlign || 'left'};`;
+        color: ${layer.styles?.color || DEFAULT_CSS_VALUES.TEXT_COLOR};
+        font-family: ${layer.styles?.fontFamily || DEFAULT_CSS_VALUES.FONT_FAMILY};
+        text-align: ${layer.styles?.textAlign || DEFAULT_CSS_VALUES.TEXT_ALIGN};`;
         } else if (layer.type === 'button') {
-          const bgColor = layer.styles?.backgroundColor || '#007bff';
-          const textColor = layer.styles?.color || '#ffffff';
+          const bgColor = layer.styles?.backgroundColor || DEFAULT_CSS_VALUES.BUTTON_BG_COLOR;
+          const textColor = layer.styles?.color || DEFAULT_CSS_VALUES.BUTTON_TEXT_COLOR;
           
           typeSpecificRules = `
         display: flex;
@@ -458,11 +454,11 @@ export const generateResponsiveHTML = (
         text-decoration: none;
         border: none;
         cursor: pointer;
-        font-family: ${layer.styles?.fontFamily || 'Arial'};
+        font-family: ${layer.styles?.fontFamily || DEFAULT_CSS_VALUES.FONT_FAMILY};
         text-align: center;`;
         } else if (layer.type === 'video') {
           typeSpecificRules = `
-        object-fit: cover;`;
+        object-fit: ${DEFAULT_CSS_VALUES.OBJECT_FIT};`;
         }
 
         // Animation styles are applied via data-animation attribute set earlier
@@ -499,30 +495,26 @@ export const generateResponsiveHTML = (
 
             // Add fontSize for text, richtext, and button layers
             let fontSizeRule = '';
-            if (
-              (layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') &&
-              config.fontSize
-            ) {
-              fontSizeRule = `\n          font-size: ${config.fontSize};`;
+            if (layer.type === 'text' || layer.type === 'richtext' || layer.type === 'button') {
+              fontSizeRule = `\n          font-size: ${config.fontSize || DEFAULT_CSS_VALUES.FONT_SIZE};`;
             }
 
             // Add icon size for button layers (applied to SVG children)
             let iconSizeRule = '';
-            if (layer.type === 'button' && config.iconSize) {
-              iconSizeRule = `\n        #${layerId} svg { width: ${config.iconSize}px; height: ${config.iconSize}px; }`;
+            if (layer.type === 'button') {
+              const iconSize = config.iconSize || DEFAULT_CSS_VALUES.ICON_SIZE;
+              iconSizeRule = `\n        #${layerId} svg { width: ${iconSize}px; height: ${iconSize}px; }`;
             }
 
             // Add border-radius for layers
-            let borderRadiusRule = '';
-            if (config.borderRadius) {
-              const borderRadius =
-                typeof config.borderRadius === 'number'
-                  ? `${config.borderRadius}px`
-                  : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`;
-              borderRadiusRule = `\n          border-radius: ${borderRadius};`;
-              if (layer.type === 'image' || layer.type === 'video') {
-                borderRadiusRule += '\n          overflow: hidden;';
-              }
+            const borderRadius = config.borderRadius
+              ? typeof config.borderRadius === 'number'
+                ? `${config.borderRadius}px`
+                : `${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px`
+              : DEFAULT_CSS_VALUES.BORDER_RADIUS;
+            let borderRadiusRule = `\n          border-radius: ${borderRadius};`;
+            if ((layer.type === 'image' || layer.type === 'video') && config.borderRadius) {
+              borderRadiusRule += '\n          overflow: hidden;';
             }
 
             // Add initial state CSS based on animation "from" values
@@ -603,7 +595,6 @@ ${layerStyles}
         height: ${firstDimensions.height}px;
         position: relative;
         overflow: hidden;
-        margin: 0 auto;
       }
 
       /* Button icon spacing */

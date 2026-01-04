@@ -765,13 +765,29 @@ export const Canvas: React.FC<CanvasProps> = ({
               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
               userSelect: 'none',
               WebkitUserSelect: 'none',
-              overflow: isClippingEnabled ? 'hidden' : 'visible',
             }}
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
             onMouseLeave={onMouseLeave}
             onClick={onCanvasClick}
           >
+            {/* Inner clipping container for layer content */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                overflow: isClippingEnabled ? 'hidden' : 'visible',
+                pointerEvents: 'none',
+              }}
+            >
+              <div style={{ pointerEvents: 'auto' }}>
+                {layers.map((layer, index) => renderLayer(layer, index))}
+              </div>
+            </div>
+            {/* Snap lines - outside clipping container */}
             {snapLines.map((line, idx) => (
               <div
                 key={idx}
@@ -789,7 +805,6 @@ export const Canvas: React.FC<CanvasProps> = ({
                 }}
               />
             ))}
-            {layers.map((layer, index) => renderLayer(layer, index))}
             {/* Selection outline overlay - rendered on top of all layers */}
             {selectedLayerIds.length > 0
               ? (() => {

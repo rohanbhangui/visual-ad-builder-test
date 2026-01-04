@@ -63,6 +63,20 @@ export const UI_LAYOUT = {
   LAYERS_PANEL_COLLAPSED_HEIGHT: 48, // Height of the layers panel when collapsed in pixels
 } as const;
 
+// Default CSS values for HTML export
+export const DEFAULT_CSS_VALUES = {
+  FONT_SIZE: '14px',
+  ICON_SIZE: 24,
+  BORDER_RADIUS: '0',
+  OPACITY: 1,
+  TEXT_COLOR: '#000000',
+  BUTTON_BG_COLOR: '#333333',
+  BUTTON_TEXT_COLOR: '#ffffff',
+  FONT_FAMILY: 'Arial',
+  TEXT_ALIGN: 'left',
+  OBJECT_FIT: 'cover',
+} as const;
+
 // Common HTML5 ad sizes
 export const HTML5_AD_SIZES = {
   '728x90': { width: 728, height: 90 },
