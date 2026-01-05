@@ -136,7 +136,7 @@ export const TopBar = ({
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="cursor-pointer p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Undo (⌥Z)"
           >
             <UndoIcon className="w-4 h-4 text-gray-700" />
@@ -144,7 +144,7 @@ export const TopBar = ({
           <button
             onClick={onRedo}
             disabled={!canRedo}
-            className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="cursor-pointer p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Redo (⌥⇧Z)"
           >
             <RedoIcon className="w-4 h-4 text-gray-700" />
