@@ -4,6 +4,12 @@ Quick test to build a visual ad builder app for multiple sizes
 
 Demo: https://visual-ad-builder-test.vercel.app/
 
+## Screenshots
+
+<img width="1747" height="1177" alt="image" src="https://github.com/user-attachments/assets/680955cc-91d6-4923-a022-478e84d4229c" />
+
+<img width="1747" height="1174" alt="image" src="https://github.com/user-attachments/assets/4440b611-2050-4a1e-9bd0-95dd6d96ca2d" />
+
 ## Key Features
 
 ### Visual Editor
@@ -62,9 +68,3 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Exit animations
 - Carousel support (+ button support)
 - More sizes (+ being able to manually add in preset sizes)
-
-## Screenshots
-
-<img width="1747" height="1177" alt="image" src="https://github.com/user-attachments/assets/680955cc-91d6-4923-a022-478e84d4229c" />
-
-<img width="1747" height="1174" alt="image" src="https://github.com/user-attachments/assets/4440b611-2050-4a1e-9bd0-95dd6d96ca2d" />
