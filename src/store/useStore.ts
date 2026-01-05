@@ -15,9 +15,6 @@ interface HistoricalState {
   selectedSize: AdSize;
   selectedLayerIds: string[];
   activePropertyTab: 'properties' | 'animations';
-  isLayersPanelCollapsed: boolean;
-  layersPanelPos: { x: number; y: number };
-  layersPanelSide: 'left' | 'right';
 }
 
 // Ephemeral UI state that doesn't get tracked
@@ -34,6 +31,9 @@ interface EphemeralState {
   draggedLayerIndex: number | null;
   dragOverLayerIndex: number | null;
   isLayersPanelDragging: boolean;
+  isLayersPanelCollapsed: boolean;
+  layersPanelPos: { x: number; y: number };
+  layersPanelSide: 'left' | 'right';
 }
 
 // Combined store type
@@ -186,9 +186,6 @@ export const useStore = create<AppStore>()(
         selectedSize: state.selectedSize,
         selectedLayerIds: state.selectedLayerIds,
         activePropertyTab: state.activePropertyTab,
-        isLayersPanelCollapsed: state.isLayersPanelCollapsed,
-        layersPanelPos: state.layersPanelPos,
-        layersPanelSide: state.layersPanelSide,
       }),
     }
   )
