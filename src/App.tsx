@@ -10,6 +10,7 @@ import { ZoomControls } from './components/ZoomControls';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
+import { useStore, useCanUndo, useCanRedo } from './store/useStore';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 
@@ -17,48 +18,71 @@ import freeMoveIcon from './assets/icons/free-move.svg';
 const App = () => {
   const LAYERS_PANEL_BOTTOM_GAP = 75;
 
-  const [mode, setMode] = useState<'edit' | 'preview'>('edit');
-  const [layers, setLayers] = useState<LayerContent[]>(sampleCanvas.layers);
-  const [canvasName, setCanvasName] = useState<string>(sampleCanvas.name);
-  const [canvasBackgroundColor, setCanvasBackgroundColor] = useState<string>(
-    sampleCanvas.styles?.backgroundColor || '#ffffff'
-  );
-  const [animationLoop, setAnimationLoop] = useState<number>(sampleCanvas.animationLoop ?? -1);
+  // Zustand store - tracked state (undo/redo)
+  const layers = useStore((state) => state.layers);
+  const canvasName = useStore((state) => state.canvasName);
+  const canvasBackgroundColor = useStore((state) => state.canvasBackgroundColor);
+  const animationLoop = useStore((state) => state.animationLoop);
+  const selectedLayerIds = useStore((state) => state.selectedLayerIds);
+  const selectedSize = useStore((state) => state.selectedSize);
+  const activePropertyTab = useStore((state) => state.activePropertyTab);
+  const layersPanelSide = useStore((state) => state.layersPanelSide);
+  const layersPanelPos = useStore((state) => state.layersPanelPos);
+  const isLayersPanelCollapsed = useStore((state) => state.isLayersPanelCollapsed);
+  
+  // Zustand store - ephemeral state (not tracked)
+  const mode = useStore((state) => state.mode);
+  const zoom = useStore((state) => state.zoom);
+  const pan = useStore((state) => state.pan);
+  const isPanning = useStore((state) => state.isPanning);
+  const isSnappingEnabled = useStore((state) => state.isSnappingEnabled);
+  const isClippingEnabled = useStore((state) => state.isClippingEnabled);
+  const isExportModalOpen = useStore((state) => state.isExportModalOpen);
+  const exportedHTML = useStore((state) => state.exportedHTML);
+  const animationKey = useStore((state) => state.animationKey);
+  const draggedLayerIndex = useStore((state) => state.draggedLayerIndex);
+  const dragOverLayerIndex = useStore((state) => state.dragOverLayerIndex);
+  const isLayersPanelDragging = useStore((state) => state.isLayersPanelDragging);
+  
+  // Zustand actions
+  const setLayers = useStore((state) => state.setLayers);
+  const setCanvasName = useStore((state) => state.setCanvasName);
+  const setCanvasBackgroundColor = useStore((state) => state.setCanvasBackgroundColor);
+  const setAnimationLoop = useStore((state) => state.setAnimationLoop);
+  const setSelectedLayerIds = useStore((state) => state.setSelectedLayerIds);
+  const setSelectedSize = useStore((state) => state.setSelectedSize);
+  const setActivePropertyTab = useStore((state) => state.setActivePropertyTab);
+  const setLayersPanelSide = useStore((state) => state.setLayersPanelSide);
+  const setLayersPanelPos = useStore((state) => state.setLayersPanelPos);
+  const setIsLayersPanelCollapsed = useStore((state) => state.setIsLayersPanelCollapsed);
+  const setMode = useStore((state) => state.setMode);
+  const setZoom = useStore((state) => state.setZoom);
+  const setPan = useStore((state) => state.setPan);
+  const setIsPanning = useStore((state) => state.setIsPanning);
+  const setIsSnappingEnabled = useStore((state) => state.setIsSnappingEnabled);
+  const setIsClippingEnabled = useStore((state) => state.setIsClippingEnabled);
+  const setIsExportModalOpen = useStore((state) => state.setIsExportModalOpen);
+  const setExportedHTML = useStore((state) => state.setExportedHTML);
+  const setAnimationKey = useStore((state) => state.setAnimationKey);
+  const setDraggedLayerIndex = useStore((state) => state.setDraggedLayerIndex);
+  const setDragOverLayerIndex = useStore((state) => state.setDragOverLayerIndex);
+  const setIsLayersPanelDragging = useStore((state) => state.setIsLayersPanelDragging);
+  
+  // Undo/redo
+  const canUndo = useCanUndo();
+  const canRedo = useCanRedo();
+  const handleUndo = () => (useStore as any).temporal.getState().undo();
+  const handleRedo = () => (useStore as any).temporal.getState().redo();
 
-  const [selectedLayerIds, setSelectedLayerIds] = useState<string[]>([]);
-  const [selectedSize, setSelectedSize] = useState<AdSize>('336x280');
-
+  // Local UI state (keyboard, mouse)
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isAltPressed, setIsAltPressed] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
 
-  const [isSnappingEnabled, setIsSnappingEnabled] = useState(true);
-  const [isClippingEnabled, setIsClippingEnabled] = useState(false);
-  const [activePropertyTab, setActivePropertyTab] = useState<'properties' | 'animations'>(
-    'properties'
-  );
-
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-
-  const [layersPanelSide, setLayersPanelSide] = useState<'left' | 'right'>('right');
-  const [isLayersPanelDragging, setIsLayersPanelDragging] = useState(false);
-  const [layersPanelPos, setLayersPanelPos] = useState({ x: -1, y: 10 });
-  const [isLayersPanelCollapsed, setIsLayersPanelCollapsed] = useState(false);
-
-  const [draggedLayerIndex, setDraggedLayerIndex] = useState<number | null>(null);
-  const [dragOverLayerIndex, setDragOverLayerIndex] = useState<number | null>(null);
-
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [exportedHTML, setExportedHTML] = useState('');
-
-  const [animationKey, setAnimationKey] = useState(0);
-
   const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
   const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
-  const dimensions = HTML5_AD_SIZES[selectedSize];
+  const dimensions = HTML5_AD_SIZES[selectedSize] || HTML5_AD_SIZES['336x280'];
 
   // Reset zoom and pan when ad size changes
   useEffect(() => {
@@ -129,6 +153,9 @@ const App = () => {
     handleMouseMove,
     handleMouseUp,
     handleMouseLeave,
+    tempLayerUpdates,
+    isDragging,
+    isResizing,
   } = useCanvasInteractions({
     mode,
     layers,
@@ -142,6 +169,9 @@ const App = () => {
     setLayers,
     setSelectedLayerIds,
   });
+
+  // Use tempLayerUpdates when dragging/resizing, otherwise use the actual layers from store
+  const displayLayers = isDragging || isResizing ? tempLayerUpdates : layers;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -159,6 +189,21 @@ const App = () => {
         (activeElement.tagName === 'INPUT' ||
           activeElement.tagName === 'TEXTAREA' ||
           (activeElement as HTMLElement).isContentEditable);
+
+      // Undo/Redo shortcuts (Option+Z / Option+Shift+Z on macOS, Alt+Z / Alt+Shift+Z on Windows)
+      // Use e.code instead of e.key because Option+Z produces special characters on macOS
+      if (e.altKey && e.code === 'KeyZ' && !e.shiftKey && !isTyping) {
+        console.log('Undo triggered');
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+      if (e.altKey && e.code === 'KeyZ' && e.shiftKey && !isTyping) {
+        console.log('Redo triggered');
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
 
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedLayerIds.length > 0) {
         if (isTyping) {
@@ -1279,27 +1324,28 @@ const App = () => {
               ? config.height.value
               : (canvasHeight * config.height.value) / 100;
 
-          let newPosX = config.positionX.value;
-          let newPosY = config.positionY.value;
+          // Determine which axis this alignment affects
+          let updatedPosX = config.positionX;
+          let updatedPosY = config.positionY;
 
           switch (alignment) {
             case 'left':
-              newPosX = 0;
+              updatedPosX = { value: 0, unit: 'px' };
               break;
             case 'right':
-              newPosX = canvasWidth - layerWidth;
+              updatedPosX = { value: Math.round(canvasWidth - layerWidth), unit: 'px' };
               break;
             case 'center-h':
-              newPosX = (canvasWidth - layerWidth) / 2;
+              updatedPosX = { value: Math.round((canvasWidth - layerWidth) / 2), unit: 'px' };
               break;
             case 'top':
-              newPosY = 0;
+              updatedPosY = { value: 0, unit: 'px' };
               break;
             case 'bottom':
-              newPosY = canvasHeight - layerHeight;
+              updatedPosY = { value: Math.round(canvasHeight - layerHeight), unit: 'px' };
               break;
             case 'center-v':
-              newPosY = (canvasHeight - layerHeight) / 2;
+              updatedPosY = { value: Math.round((canvasHeight - layerHeight) / 2), unit: 'px' };
               break;
           }
 
@@ -1309,8 +1355,8 @@ const App = () => {
               ...layer.sizeConfig,
               [selectedSize]: {
                 ...config,
-                positionX: { value: Math.round(newPosX), unit: 'px' },
-                positionY: { value: Math.round(newPosY), unit: 'px' },
+                positionX: updatedPosX,
+                positionY: updatedPosY,
               },
             },
           };
@@ -1408,9 +1454,13 @@ const App = () => {
         mode={mode}
         selectedSize={selectedSize}
         allowedSizes={sampleCanvas.allowedSizes}
+        canUndo={canUndo}
+        canRedo={canRedo}
         onModeChange={setMode}
         onSizeChange={setSelectedSize}
         onExportHTML={handleExportHTML}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
       />
       <ExportHTMLModal
         isOpen={isExportModalOpen}
@@ -1456,7 +1506,7 @@ const App = () => {
 
           <Canvas
             mode={mode}
-            layers={layers}
+            layers={displayLayers}
             selectedLayerIds={selectedLayerIds}
             selectedSize={selectedSize}
             dimensions={dimensions}

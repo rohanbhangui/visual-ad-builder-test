@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Label } from './Label/Label';
+import { DebouncedInput } from './DebouncedInput';
 import { type AdSize } from '../data';
 import cornersIcon from '../assets/icons/corners.svg';
 
@@ -97,14 +98,15 @@ export const CornersInput = ({
             alt="Corners"
             className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none text-gray-400"
           />
-          <input
+          <DebouncedInput
             type="number"
             min="0"
             step="1"
             value={mainInputValue}
             placeholder={mainInputPlaceholder}
-            onChange={(e) => handleMainInputChange(e.target.value)}
+            onChange={handleMainInputChange}
             disabled={disabled}
+            debounceMs={300}
             className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               disabled ? 'bg-gray-100 cursor-not-allowed' : ''
             }`}
@@ -131,13 +133,14 @@ export const CornersInput = ({
             {/* Top-left */}
             <div className="flex-1 relative">
               <div className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 border-l-2 border-t-2 border-gray-400 rounded-tl-sm pointer-events-none" />
-              <input
+              <DebouncedInput
                 type="number"
                 min="0"
                 step="1"
-                value={individualValues.topLeft}
-                onChange={(e) => handleIndividualChange('topLeft', e.target.value)}
+                value={String(individualValues.topLeft)}
+                onChange={(val) => handleIndividualChange('topLeft', val)}
                 disabled={disabled}
+                debounceMs={300}
                 className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : ''
                 }`}
@@ -147,13 +150,14 @@ export const CornersInput = ({
             {/* Top-right */}
             <div className="flex-1 relative">
               <div className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 border-r-2 border-t-2 border-gray-400 rounded-tr-sm pointer-events-none" />
-              <input
+              <DebouncedInput
                 type="number"
                 min="0"
                 step="1"
-                value={individualValues.topRight}
-                onChange={(e) => handleIndividualChange('topRight', e.target.value)}
+                value={String(individualValues.topRight)}
+                onChange={(val) => handleIndividualChange('topRight', val)}
                 disabled={disabled}
+                debounceMs={300}
                 className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : ''
                 }`}
@@ -166,13 +170,14 @@ export const CornersInput = ({
             {/* Bottom-left */}
             <div className="flex-1 relative">
               <div className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 border-l-2 border-b-2 border-gray-400 rounded-bl-sm pointer-events-none" />
-              <input
+              <DebouncedInput
                 type="number"
                 min="0"
                 step="1"
-                value={individualValues.bottomLeft}
-                onChange={(e) => handleIndividualChange('bottomLeft', e.target.value)}
+                value={String(individualValues.bottomLeft)}
+                onChange={(val) => handleIndividualChange('bottomLeft', val)}
                 disabled={disabled}
+                debounceMs={300}
                 className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : ''
                 }`}
@@ -182,13 +187,14 @@ export const CornersInput = ({
             {/* Bottom-right */}
             <div className="flex-1 relative">
               <div className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 border-r-2 border-b-2 border-gray-400 rounded-br-sm pointer-events-none" />
-              <input
+              <DebouncedInput
                 type="number"
                 min="0"
                 step="1"
-                value={individualValues.bottomRight}
-                onChange={(e) => handleIndividualChange('bottomRight', e.target.value)}
+                value={String(individualValues.bottomRight)}
+                onChange={(val) => handleIndividualChange('bottomRight', val)}
                 disabled={disabled}
+                debounceMs={300}
                 className={`w-full h-8 pl-7 pr-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   disabled ? 'bg-gray-100 cursor-not-allowed' : ''
                 }`}

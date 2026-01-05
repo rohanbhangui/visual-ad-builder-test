@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Label } from './Label/Label';
 import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { DebouncedInput } from './DebouncedInput';
 
 interface ColorInputProps {
   label: string;
@@ -18,14 +20,24 @@ export const ColorInput = ({
   showNoneOption = false,
 }: ColorInputProps) => {
   const [error, setError] = useState<string>('');
-  const [inputValue, setInputValue] = useState(value || '');
+  
+  // For color picker input, use local state + debounced value
+  const [colorPickerValue, setColorPickerValue] = useState(value || '');
+  const debouncedColorPickerValue = useDebouncedValue(colorPickerValue, 150);
 
-  // Sync input value when prop value changes from outside
+  // Sync when prop value changes from outside
   useEffect(() => {
     if (value !== undefined) {
-      setInputValue(value || '');
+      setColorPickerValue(value || '');
     }
   }, [value]);
+
+  // Call onChange when debounced color picker value changes
+  useEffect(() => {
+    if (debouncedColorPickerValue && debouncedColorPickerValue !== value) {
+      onChange(debouncedColorPickerValue);
+    }
+  }, [debouncedColorPickerValue]);
 
   // Derive dropdown value from current value prop
   const dropdownValue: 'transparent' | 'custom' =
@@ -41,10 +53,7 @@ export const ColorInput = ({
     return hexRegex.test(color);
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newColor = e.target.value;
-    setInputValue(newColor);
-
+  const handleTextChange = (newColor: string) => {
     if (newColor === '') {
       setError('');
       onChange('');
@@ -71,17 +80,23 @@ export const ColorInput = ({
           }
           onChange={(e) => {
             setError('');
-            setInputValue(e.target.value);
-            onChange(e.target.value);
+            setColorPickerValue(e.target.value);
+          }}
+          onBlur={() => {
+            // Immediately commit on blur (hybrid approach)
+            if (colorPickerValue && colorPickerValue !== value) {
+              onChange(colorPickerValue);
+            }
           }}
           disabled={disabled}
           className={`w-8 h-8 border-none flex-shrink-0 ml-0.5 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
         />
-        <input
+        <DebouncedInput
           type="text"
-          value={inputValue}
+          value={value || ''}
           onChange={handleTextChange}
           disabled={disabled}
+          debounceMs={300}
           className={`flex-1 h-8 px-2 py-1 text-sm border-none border-l border-gray-300 focus:outline-none ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
           placeholder="rgba(0,0,0,0) or #000000"
         />
@@ -94,12 +109,10 @@ export const ColorInput = ({
                 onChange={(e) => {
                   const newValue = e.target.value as 'transparent' | 'custom';
                   if (newValue === 'transparent') {
-                    setInputValue('rgba(0,0,0,0)');
                     onChange('rgba(0,0,0,0)');
                     setError('');
                   } else {
                     // Switching to custom - use black as default
-                    setInputValue('#000000');
                     onChange('#000000');
                     setError('');
                   }
