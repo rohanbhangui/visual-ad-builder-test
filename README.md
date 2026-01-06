@@ -70,6 +70,8 @@ The app exposes a `window.vb` object in the browser console for debugging and de
 
 ### Available Functions
 
+- **`window.vb.clearHistory()`** - Manually clears the entire undo/redo history
+
 - **`window.vb.history()`** - Returns the complete undo/redo history state
   - `past`: Array of previous states
   - `present`: Current state
@@ -79,7 +81,6 @@ The app exposes a `window.vb` object in the browser console for debugging and de
 
 - **`window.vb.store()`** - Returns the current Zustand store state with all layers, canvas properties, and UI state
 
-- **`window.vb.clearHistory()`** - Manually clears the entire undo/redo history
 
 ## Future Development ideas
 
