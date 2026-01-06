@@ -11,7 +11,7 @@ import { ZoomControls } from './components/ZoomControls';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
-import { useStore, useCanUndo, useCanRedo } from './store/useStore';
+import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory } from './store/useStore';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 import ReplayIcon from './assets/icons/reset-view-ccw.svg?react';
@@ -97,6 +97,22 @@ const App = () => {
   const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
   const dimensions = HTML5_AD_SIZES[selectedSize] || HTML5_AD_SIZES['336x280'];
+
+  // Clear initial history and expose debug API to window
+  useEffect(() => {
+    // Clear history after a short delay to ensure all initialization is complete
+    const timer = setTimeout(() => {
+      clearInitialHistory();
+    }, 100);
+    
+    (window as any).vb = {
+      history: getHistory,
+      store: useStore.getState,
+      clearHistory: clearInitialHistory,
+    };
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Reset zoom and pan when ad size changes
   useEffect(() => {

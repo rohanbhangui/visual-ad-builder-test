@@ -223,3 +223,20 @@ export const pauseHistory = () => {
 export const resumeHistory = () => {
   (useStore.temporal as any).getState().resume();
 };
+
+// Debug helper to access history (accessible via window.vb.history())
+export const getHistory = () => {
+  const temporal = (useStore.temporal as any).getState();
+  return {
+    past: temporal.pastStates || [],
+    present: useStore.getState(),
+    future: temporal.futureStates || [],
+    canUndo: temporal.pastStates?.length > 0,
+    canRedo: temporal.futureStates?.length > 0,
+  };
+};
+
+// Clear initial history - call this on app mount
+export const clearInitialHistory = () => {
+  (useStore.temporal as any).getState().clear();
+};
