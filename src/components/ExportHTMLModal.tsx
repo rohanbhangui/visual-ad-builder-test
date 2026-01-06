@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import XIcon from '../assets/icons/x.svg?react';
 
 interface ExportHTMLModalProps {
@@ -26,10 +27,10 @@ export const ExportHTMLModal: React.FC<ExportHTMLModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      {/* Semi-transparent black backdrop */}
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(0, 0, 0, 0.66)' }} onClick={onClose} />
 
       {/* Modal */}
       <div className="relative bg-white rounded-lg shadow-xl w-[90vw] h-[90vh] flex flex-col">
@@ -70,4 +71,6 @@ export const ExportHTMLModal: React.FC<ExportHTMLModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };

@@ -61,6 +61,7 @@ export const UI_LAYOUT = {
   TOP_BAR_HEIGHT: 56, // Height of the top navigation bar in pixels
   LAYERS_PANEL_EXPANDED_HEIGHT: 322, // Height of the layers panel when expanded in pixels
   LAYERS_PANEL_COLLAPSED_HEIGHT: 48, // Height of the layers panel when collapsed in pixels
+  AD_SELECTOR_SCALE: 0.06, // Scale factor for ad size previews in bottom selector
 } as const;
 
 // Default CSS values for HTML export

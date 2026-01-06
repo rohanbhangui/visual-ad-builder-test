@@ -27,6 +27,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Multiple layer select (click layers with `shift`)
 - Zoom and pan support (`Ctrl/Cmd + scroll` to zoom scroll / `spacebar + mouse drag` is pan)
 - Trackpad support for pan and pinch to zoom in/out
+- Undo/Redo Buttons (with shortcuts: `alt/option + z` for Undo or `alt/option + shift + z` for Redo)
 
 ### Layers Panel
 

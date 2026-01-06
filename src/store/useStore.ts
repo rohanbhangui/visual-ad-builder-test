@@ -26,6 +26,8 @@ interface EphemeralState {
   isSnappingEnabled: boolean;
   isClippingEnabled: boolean;
   isExportModalOpen: boolean;
+  isSettingsModalOpen: boolean;
+  adSelectorPosition: 'top' | 'bottom';
   exportedHTML: string;
   animationKey: number;
   draggedLayerIndex: number | null;
@@ -66,6 +68,8 @@ interface AppStore extends HistoricalState, EphemeralState {
   setIsSnappingEnabled: (enabled: boolean) => void;
   setIsClippingEnabled: (enabled: boolean) => void;
   setIsExportModalOpen: (open: boolean) => void;
+  setIsSettingsModalOpen: (open: boolean) => void;
+  setAdSelectorPosition: (position: 'top' | 'bottom') => void;
   setExportedHTML: (html: string) => void;
   setAnimationKey: (key: number | ((prev: number) => number)) => void;
   setDraggedLayerIndex: (index: number | null) => void;
@@ -96,6 +100,8 @@ export const useStore = create<AppStore>()(
       isSnappingEnabled: true,
       isClippingEnabled: false,
       isExportModalOpen: false,
+      isSettingsModalOpen: false,
+      adSelectorPosition: 'bottom',
       exportedHTML: '',
       animationKey: 0,
       draggedLayerIndex: null,
@@ -164,6 +170,8 @@ export const useStore = create<AppStore>()(
         })),
       setIsPanning: (isPanning: boolean) => set({ isPanning }),
       setIsSnappingEnabled: (isSnappingEnabled: boolean) => set({ isSnappingEnabled }),
+      setIsSettingsModalOpen: (isSettingsModalOpen: boolean) => set({ isSettingsModalOpen }),
+      setAdSelectorPosition: (adSelectorPosition: 'top' | 'bottom') => set({ adSelectorPosition }),
       setIsClippingEnabled: (isClippingEnabled: boolean) => set({ isClippingEnabled }),
       setIsExportModalOpen: (isExportModalOpen: boolean) => set({ isExportModalOpen }),
       setExportedHTML: (exportedHTML: string) => set({ exportedHTML }),

@@ -6,6 +6,7 @@ import { LayersPanel } from './components/LayersPanel';
 import { PropertySidebar } from './components/PropertySidebar';
 import { Canvas } from './components/Canvas';
 import { ExportHTMLModal } from './components/ExportHTMLModal';
+import { SettingsModal } from './components/SettingsModal';
 import { ZoomControls } from './components/ZoomControls';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
@@ -13,6 +14,7 @@ import { generateResponsiveHTML } from './utils/exportHTML';
 import { useStore, useCanUndo, useCanRedo } from './store/useStore';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
+import ReplayIcon from './assets/icons/reset-view-ccw.svg?react';
 
 // UI Layout Constant (moved inside component)
 const App = () => {
@@ -38,6 +40,8 @@ const App = () => {
   const isSnappingEnabled = useStore((state) => state.isSnappingEnabled);
   const isClippingEnabled = useStore((state) => state.isClippingEnabled);
   const isExportModalOpen = useStore((state) => state.isExportModalOpen);
+  const isSettingsModalOpen = useStore((state) => state.isSettingsModalOpen);
+  const adSelectorPosition = useStore((state) => state.adSelectorPosition);
   const exportedHTML = useStore((state) => state.exportedHTML);
   const animationKey = useStore((state) => state.animationKey);
   const draggedLayerIndex = useStore((state) => state.draggedLayerIndex);
@@ -67,6 +71,8 @@ const App = () => {
   const setAnimationKey = useStore((state) => state.setAnimationKey);
   const setExportedHTML = useStore((state) => state.setExportedHTML);
   const setIsExportModalOpen = useStore((state) => state.setIsExportModalOpen);
+  const setIsSettingsModalOpen = useStore((state) => state.setIsSettingsModalOpen);
+  const setAdSelectorPosition = useStore((state) => state.setAdSelectorPosition);
   
   // Undo/redo
   const canUndo = useCanUndo();
@@ -1400,16 +1406,24 @@ const App = () => {
         allowedSizes={sampleCanvas.allowedSizes}
         canUndo={canUndo}
         canRedo={canRedo}
+        showAdSelector={adSelectorPosition === 'top'}
         onModeChange={setMode}
         onSizeChange={setSelectedSize}
         onExportHTML={handleExportHTML}
         onUndo={handleUndo}
         onRedo={handleRedo}
+        onSettingsClick={() => setIsSettingsModalOpen(true)}
       />
       <ExportHTMLModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         htmlContent={exportedHTML}
+      />
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        adSelectorPosition={adSelectorPosition}
+        onAdSelectorPositionChange={setAdSelectorPosition}
       />
 
       <div
@@ -1483,63 +1497,82 @@ const App = () => {
             onCanvasSettingsClick={() => setSelectedLayerIds([])}
           />
 
-          {/* Replay Button in Preview Mode */}
-          {mode === 'preview' ? (
-            <button
-              onClick={handleReplayAnimations}
-              className="absolute bottom-4 left-4 flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer"
-              title="Replay Animations"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M14 8C14 11.3137 11.3137 14 8 14C4.68629 14 2 11.3137 2 8C2 4.68629 4.68629 2 8 2C10.3995 2 12.5 3.31 13.5 5.25M13.5 2V5.25H10.25"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Replay
-            </button>
-          ) : null}
+          {/* Bottom Controls Bar - Always visible */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 flex items-center px-4 gap-4">
+            {/* Left side controls */}
+            <div className="flex items-center gap-4">
+              {/* Replay Button in Preview Mode OR Snapping Toggle in Edit Mode */}
+              {mode === 'preview' ? (
+                <button
+                  onClick={handleReplayAnimations}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all cursor-pointer"
+                  title="Replay Animations"
+                >
+                  <ReplayIcon className="w-5 h-5" />
+                  Replay
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsSnappingEnabled(!isSnappingEnabled)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all border w-24 cursor-pointer ${
+                    isSnappingEnabled
+                      ? 'bg-blue-600 border-blue-700 text-white'
+                      : 'bg-white border-gray-200 text-gray-700'
+                  }`}
+                  title={isSnappingEnabled ? 'Snapping enabled' : 'Snapping disabled'}
+                >
+                  <img
+                    src={isSnappingEnabled ? magnetOutlineIcon : freeMoveIcon}
+                    alt={isSnappingEnabled ? 'magnet' : 'free move'}
+                    className={`w-5 h-5 ${isSnappingEnabled ? 'brightness-0 invert' : 'text-gray-700'}`}
+                  />
+                  <span className="text-sm font-medium">{isSnappingEnabled ? 'Snap' : 'Free'}</span>
+                </button>
+              )}
+            </div>
 
-          {/* Snapping Toggle - Only in Edit Mode */}
-          {mode === 'edit' ? (
-            <button
-              onClick={() => setIsSnappingEnabled(!isSnappingEnabled)}
-              className={`absolute bottom-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all border w-24 cursor-pointer ${
-                isSnappingEnabled
-                  ? 'bg-blue-600 border-blue-700 text-white'
-                  : 'bg-white border-gray-200 text-gray-700'
-              }`}
-              title={isSnappingEnabled ? 'Snapping enabled' : 'Snapping disabled'}
-            >
-              <img
-                src={isSnappingEnabled ? magnetOutlineIcon : freeMoveIcon}
-                alt={isSnappingEnabled ? 'magnet' : 'free move'}
-                className={`w-5 h-5 ${isSnappingEnabled ? 'brightness-0 invert' : 'text-gray-700'}`}
+            {/* Ad Selector - Center (when position is 'bottom' and in edit mode) */}
+            {mode === 'edit' && adSelectorPosition === 'bottom' ? (
+              <div className="flex-1 flex items-center justify-center gap-4">
+                {sampleCanvas.allowedSizes.map((size) => {
+                  const { width, height } = HTML5_AD_SIZES[size];
+                  const isSelected = selectedSize === size;
+                  const scale = UI_LAYOUT.AD_SELECTOR_SCALE;
+
+                  return (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className="flex flex-col items-center gap-1 p-1 transition-opacity hover:opacity-80 cursor-pointer"
+                    >
+                      <div
+                        className={`bg-white shadow transition-colors duration-200 border-2 ${
+                          isSelected ? 'border-blue-600' : 'border-transparent'
+                        }`}
+                        style={{
+                          width: `${width * scale}px`,
+                          height: `${height * scale}px`,
+                        }}
+                      />
+                      <span className="text-[10px] font-medium text-gray-900">{size}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {/* Zoom Controls - Right side */}
+            <div className="ml-auto">
+              <ZoomControls
+                zoom={zoom}
+                onZoomChange={handleZoomChange}
+                onResetPan={() => {
+                  setPan({ x: 0, y: 0 });
+                  setZoom(1);
+                }}
               />
-              <span className="text-sm font-medium">{isSnappingEnabled ? 'Snap' : 'Free'}</span>
-            </button>
-          ) : null}
-
-          {/* Zoom Controls */}
-          {mode === 'edit' ? (
-            <ZoomControls
-              zoom={zoom}
-              onZoomChange={handleZoomChange}
-              onResetPan={() => {
-                setPan({ x: 0, y: 0 });
-                setZoom(1);
-              }}
-            />
-          ) : null}
+            </div>
+          </div>
         </div>
 
         {mode === 'edit' ? (

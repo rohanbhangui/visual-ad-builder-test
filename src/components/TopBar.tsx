@@ -5,6 +5,7 @@ import CheckIcon from '../assets/icons/check.svg?react';
 import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
 import UndoIcon from '../assets/icons/undo.svg?react';
 import RedoIcon from '../assets/icons/redo.svg?react';
+import SettingsIcon from '../assets/icons/settings.svg?react';
 
 interface TopBarProps {
   mode: 'edit' | 'preview';
@@ -12,11 +13,13 @@ interface TopBarProps {
   allowedSizes: AdSize[];
   canUndo: boolean;
   canRedo: boolean;
+  showAdSelector?: boolean;
   onModeChange: (mode: 'edit' | 'preview') => void;
   onSizeChange: (size: AdSize) => void;
   onExportHTML: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  onSettingsClick: () => void;
 }
 
 // Ad size common names
@@ -38,11 +41,13 @@ export const TopBar = ({
   allowedSizes,
   canUndo,
   canRedo,
+  showAdSelector = true,
   onModeChange,
   onSizeChange,
   onExportHTML,
   onUndo,
   onRedo,
+  onSettingsClick,
 }: TopBarProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -89,15 +94,16 @@ export const TopBar = ({
       <div className="flex items-center gap-4">
         <h1 className="text-lg font-semibold text-gray-900">Visual Builder</h1>
 
-        {/* Size Selector Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            {getAspectRatioBox(selectedSize)}
-            <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[selectedSize]}</span>
-            <ChevronDownIcon
+        {/* Size Selector Dropdown - Conditionally rendered */}
+        {showAdSelector && (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              {getAspectRatioBox(selectedSize)}
+              <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[selectedSize]}</span>
+              <ChevronDownIcon
               className={`w-4 h-4 text-gray-500 transition-transform ml-1 ${isDropdownOpen ? 'rotate-180' : ''}`}
             />
           </button>
@@ -129,7 +135,8 @@ export const TopBar = ({
               ))}
             </div>
           ) : null}
-        </div>
+          </div>
+        )}
 
         {/* Undo/Redo Buttons */}
         <div className="flex gap-1 border-l border-gray-300 pl-4">
@@ -153,6 +160,15 @@ export const TopBar = ({
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Settings Button */}
+        <button
+          onClick={onSettingsClick}
+          className="cursor-pointer p-2 rounded hover:bg-gray-100 transition-colors"
+          title="Settings"
+        >
+          <SettingsIcon className="w-5 h-5 text-gray-700" />
+        </button>
+
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-700">Edit</span>
           <label className="relative inline-flex items-center cursor-pointer">
