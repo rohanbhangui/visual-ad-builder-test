@@ -64,6 +64,23 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Animation Loop Duration will hint what is the minimum animation length required to fulfill all animations
 - "Copy to" for certain properties so that other sizes can be updated
 
+## Developer Menu
+
+The app exposes a `window.vb` object in the browser console for debugging and development purposes.
+
+### Available Functions
+
+- **`window.vb.history()`** - Returns the complete undo/redo history state
+  - `past`: Array of previous states
+  - `present`: Current state
+  - `future`: Array of future states (for redo)
+  - `canUndo`: Boolean indicating if undo is available
+  - `canRedo`: Boolean indicating if redo is available
+
+- **`window.vb.store()`** - Returns the current Zustand store state with all layers, canvas properties, and UI state
+
+- **`window.vb.clearHistory()`** - Manually clears the entire undo/redo history
+
 ## Future Development ideas
 
 - Exit animations
