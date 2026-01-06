@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Label } from './Label/Label';
+import { DebouncedInput } from './DebouncedInput';
 import type { AdSize } from '../data';
 
 interface PositionSizeInputProps {
@@ -52,9 +53,7 @@ export const PositionSizeInput = ({
     return true;
   };
 
-  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputVal = e.target.value;
-
+  const handleValueChange = (inputVal: string) => {
     // Allow only numbers, minus sign, and decimal point
     if (inputVal !== '' && inputVal !== '-' && !/^-?\d*\.?\d*$/.test(inputVal)) {
       return;
@@ -133,7 +132,7 @@ export const PositionSizeInput = ({
         {label}
       </Label>
       <div className="flex gap-1">
-        <input
+        <DebouncedInput
           type="text"
           value={inputValue}
           onChange={handleValueChange}

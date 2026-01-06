@@ -3,14 +3,20 @@ import { HTML5_AD_SIZES, UI_LAYOUT } from '../consts';
 import { type AdSize } from '../data';
 import CheckIcon from '../assets/icons/check.svg?react';
 import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
+import UndoIcon from '../assets/icons/undo.svg?react';
+import RedoIcon from '../assets/icons/redo.svg?react';
 
 interface TopBarProps {
   mode: 'edit' | 'preview';
   selectedSize: AdSize;
   allowedSizes: AdSize[];
+  canUndo: boolean;
+  canRedo: boolean;
   onModeChange: (mode: 'edit' | 'preview') => void;
   onSizeChange: (size: AdSize) => void;
   onExportHTML: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 // Ad size common names
@@ -30,9 +36,13 @@ export const TopBar = ({
   mode,
   selectedSize,
   allowedSizes,
+  canUndo,
+  canRedo,
   onModeChange,
   onSizeChange,
   onExportHTML,
+  onUndo,
+  onRedo,
 }: TopBarProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,6 +60,8 @@ export const TopBar = ({
 
   const getAspectRatioBox = (size: AdSize) => {
     const dimensions = HTML5_AD_SIZES[size];
+    if (!dimensions) return null;
+    
     const maxWidth = 24;
     const maxHeight = 16;
 
@@ -117,6 +129,26 @@ export const TopBar = ({
               ))}
             </div>
           ) : null}
+        </div>
+
+        {/* Undo/Redo Buttons */}
+        <div className="flex gap-1 border-l border-gray-300 pl-4">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className="cursor-pointer p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Undo (⌥Z)"
+          >
+            <UndoIcon className="w-4 h-4 text-gray-700" />
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className="cursor-pointer p-1.5 rounded hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title="Redo (⌥⇧Z)"
+          >
+            <RedoIcon className="w-4 h-4 text-gray-700" />
+          </button>
         </div>
       </div>
 

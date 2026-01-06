@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Label } from './Label/Label';
+import { DebouncedInput } from './DebouncedInput';
 
 interface UrlInputProps {
   label: string;
@@ -49,11 +50,12 @@ export const UrlInput = ({ label, value, onChange, placeholder, disabled }: UrlI
   return (
     <div>
       {label !== '' ? <Label>{label}</Label> : null}
-      <input
+      <DebouncedInput
         type="text"
         value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
+        onChange={(val) => setInputValue(val)}
         disabled={disabled}
+        debounceMs={500}
         className={`w-full h-8 px-2 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
           error ? 'border-red-500' : 'border-gray-300'
         } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''} ${label === '' ? 'mt-1' : ''}`}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Label } from './Label/Label';
 import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 interface ColorInputProps {
   label: string;
@@ -18,18 +19,29 @@ export const ColorInput = ({
   showNoneOption = false,
 }: ColorInputProps) => {
   const [error, setError] = useState<string>('');
-  const [inputValue, setInputValue] = useState(value || '');
+  
+  // 1. Zustand value comes in as prop → local state
+  const [localValue, setLocalValue] = useState(value);
+  
+  // 2. Debounce the local value
+  const debouncedValue = useDebouncedValue(localValue, 300);
 
-  // Sync input value when prop value changes from outside
+  // 3. Sync local state when Zustand value changes (e.g., undo/redo, external updates)
   useEffect(() => {
-    if (value !== undefined) {
-      setInputValue(value || '');
-    }
+    setLocalValue(value);
   }, [value]);
 
-  // Derive dropdown value from current value prop
+  // 4. When debounced value changes, update Zustand store
+  useEffect(() => {
+    if (debouncedValue !== value) {
+      onChange(debouncedValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedValue, value]);
+
+  // Derive dropdown value from local value
   const dropdownValue: 'transparent' | 'custom' =
-    value === 'transparent' || value === 'rgba(0,0,0,0)' ? 'transparent' : 'custom';
+    localValue === 'transparent' || localValue === 'rgba(0,0,0,0)' ? 'transparent' : 'custom';
 
   const validateColor = (color: string): boolean => {
     // Allow transparent values
@@ -41,18 +53,17 @@ export const ColorInput = ({
     return hexRegex.test(color);
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newColor = e.target.value;
-    setInputValue(newColor);
-
+  const handleTextChange = (newColor: string) => {
+    // All input changes update local state immediately
     if (newColor === '') {
       setError('');
-      onChange('');
+      setLocalValue('');
     } else if (validateColor(newColor)) {
       setError('');
-      onChange(newColor);
+      setLocalValue(newColor);
     } else {
       setError('Invalid hex color (e.g., #000000)');
+      setLocalValue(newColor); // Still update local to show what user typed
     }
   };
 
@@ -67,20 +78,21 @@ export const ColorInput = ({
         <input
           type="color"
           value={
-            value === 'transparent' || value === 'rgba(0,0,0,0)' ? '#000000' : value || '#000000'
+            localValue === 'transparent' || localValue === 'rgba(0,0,0,0)' 
+              ? '#000000' 
+              : localValue || '#000000'
           }
           onChange={(e) => {
             setError('');
-            setInputValue(e.target.value);
-            onChange(e.target.value);
+            setLocalValue(e.target.value); // Update local state immediately
           }}
           disabled={disabled}
           className={`w-8 h-8 border-none flex-shrink-0 ml-0.5 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
         />
         <input
           type="text"
-          value={inputValue}
-          onChange={handleTextChange}
+          value={localValue || ''}
+          onChange={(e) => handleTextChange(e.target.value)} // Update local state immediately
           disabled={disabled}
           className={`flex-1 h-8 px-2 py-1 text-sm border-none border-l border-gray-300 focus:outline-none ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
           placeholder="rgba(0,0,0,0) or #000000"
@@ -93,15 +105,12 @@ export const ColorInput = ({
                 value={dropdownValue}
                 onChange={(e) => {
                   const newValue = e.target.value as 'transparent' | 'custom';
+                  setError('');
+                  // Update local state immediately
                   if (newValue === 'transparent') {
-                    setInputValue('rgba(0,0,0,0)');
-                    onChange('rgba(0,0,0,0)');
-                    setError('');
+                    setLocalValue('rgba(0,0,0,0)');
                   } else {
-                    // Switching to custom - use black as default
-                    setInputValue('#000000');
-                    onChange('#000000');
-                    setError('');
+                    setLocalValue('#000000');
                   }
                 }}
                 disabled={disabled}
@@ -117,6 +126,7 @@ export const ColorInput = ({
           </>
         ) : null}
       </div>
+      {error ? <div className="text-red-500 text-xs mt-1">{error}</div> : null}
     </div>
   );
 };

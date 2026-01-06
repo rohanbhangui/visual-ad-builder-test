@@ -41,6 +41,12 @@ export const useCanvasInteractions = ({
   const [snapLines, setSnapLines] = useState<
     Array<{ type: 'vertical' | 'horizontal'; position: number }>
   >([]);
+  
+  // Store layer updates during drag/resize without committing to store
+  const [tempLayerUpdates, setTempLayerUpdates] = useState<LayerContent[]>([]);
+  const isDraggingRef = useRef(false);
+  const isResizingRef = useRef(false);
+  
   const dragStartRef = useRef<{
     x: number;
     y: number;
@@ -123,6 +129,8 @@ export const useCanvasInteractions = ({
     });
 
     setIsDragging(true);
+    isDraggingRef.current = true;
+    setTempLayerUpdates(layers); // Store initial state
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
@@ -153,6 +161,8 @@ export const useCanvasInteractions = ({
     const height = config.height;
 
     setIsResizing(true);
+    isResizingRef.current = true;
+    setTempLayerUpdates(layers); // Store initial state
     resizeStartRef.current = {
       x: e.clientX,
       y: e.clientY,
@@ -325,8 +335,8 @@ export const useCanvasInteractions = ({
 
         setSnapLines(guides);
 
-        // Apply movement with snapping
-        setLayers((prev) =>
+        // Apply movement with snapping to temp state (not store)
+        setTempLayerUpdates((prev) =>
           prev.map((layer) => {
             const initialPos = dragStartRef.current.layerPositions[layer.id];
             if (!initialPos) return layer;
@@ -826,7 +836,7 @@ export const useCanvasInteractions = ({
 
         setSnapLines(guides);
 
-        setLayers((prev) =>
+        setTempLayerUpdates((prev) =>
           prev.map((layer) => {
             if (layer.id === selectedLayerIds[0]) {
               const config = layer.sizeConfig[selectedSize];
@@ -875,10 +885,18 @@ export const useCanvasInteractions = ({
 
   /** Handler for ending drag or resize operations */
   const handleMouseUp = useCallback(() => {
+    // Commit temp layer updates to the store when drag/resize ends
+    if ((isDraggingRef.current || isResizingRef.current) && tempLayerUpdates.length > 0) {
+      setLayers(tempLayerUpdates);
+    }
+    
+    isDraggingRef.current = false;
+    isResizingRef.current = false;
     setIsDragging(false);
     setIsResizing(false);
     setSnapLines([]);
-  }, []);
+    setTempLayerUpdates([]);
+  }, [tempLayerUpdates, setLayers]);
 
   /** Handler for mouse leaving the canvas area */
   const handleMouseLeave = useCallback(() => {
@@ -935,5 +953,6 @@ export const useCanvasInteractions = ({
     handleMouseUp,
     handleMouseLeave,
     setSnapLines,
+    tempLayerUpdates,
   };
 };
