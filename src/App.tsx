@@ -44,7 +44,7 @@ const App = () => {
   const dragOverLayerIndex = useStore((state) => state.dragOverLayerIndex);
   const isLayersPanelDragging = useStore((state) => state.isLayersPanelDragging);
   
-  // Zustand actions
+  // Zustand actions - only ones actually used in App.tsx
   const setLayers = useStore((state) => state.setLayers);
   const setCanvasName = useStore((state) => state.setCanvasName);
   const setCanvasBackgroundColor = useStore((state) => state.setCanvasBackgroundColor);
@@ -52,27 +52,35 @@ const App = () => {
   const setSelectedLayerIds = useStore((state) => state.setSelectedLayerIds);
   const setSelectedSize = useStore((state) => state.setSelectedSize);
   const setActivePropertyTab = useStore((state) => state.setActivePropertyTab);
-  const setLayersPanelSide = useStore((state) => state.setLayersPanelSide);
-  const setLayersPanelPos = useStore((state) => state.setLayersPanelPos);
-  const setIsLayersPanelCollapsed = useStore((state) => state.setIsLayersPanelCollapsed);
   const setMode = useStore((state) => state.setMode);
   const setZoom = useStore((state) => state.setZoom);
   const setPan = useStore((state) => state.setPan);
   const setIsPanning = useStore((state) => state.setIsPanning);
   const setIsSnappingEnabled = useStore((state) => state.setIsSnappingEnabled);
   const setIsClippingEnabled = useStore((state) => state.setIsClippingEnabled);
-  const setIsExportModalOpen = useStore((state) => state.setIsExportModalOpen);
-  const setExportedHTML = useStore((state) => state.setExportedHTML);
-  const setAnimationKey = useStore((state) => state.setAnimationKey);
+  const setLayersPanelSide = useStore((state) => state.setLayersPanelSide);
+  const setLayersPanelPos = useStore((state) => state.setLayersPanelPos);
+  const setIsLayersPanelCollapsed = useStore((state) => state.setIsLayersPanelCollapsed);
+  const setIsLayersPanelDragging = useStore((state) => state.setIsLayersPanelDragging);
   const setDraggedLayerIndex = useStore((state) => state.setDraggedLayerIndex);
   const setDragOverLayerIndex = useStore((state) => state.setDragOverLayerIndex);
-  const setIsLayersPanelDragging = useStore((state) => state.setIsLayersPanelDragging);
+  const setAnimationKey = useStore((state) => state.setAnimationKey);
+  const setExportedHTML = useStore((state) => state.setExportedHTML);
+  const setIsExportModalOpen = useStore((state) => state.setIsExportModalOpen);
   
   // Undo/redo
   const canUndo = useCanUndo();
   const canRedo = useCanRedo();
-  const handleUndo = () => (useStore as any).temporal.getState().undo();
-  const handleRedo = () => (useStore as any).temporal.getState().redo();
+  const handleUndo = () => {
+    if (canUndo) {
+      (useStore as any).temporal.getState().undo();
+    }
+  };
+  const handleRedo = () => {
+    if (canRedo) {
+      (useStore as any).temporal.getState().redo();
+    }
+  };
 
   // Local UI state (keyboard, mouse)
   const [isShiftPressed, setIsShiftPressed] = useState(false);
@@ -86,11 +94,9 @@ const App = () => {
 
   // Reset zoom and pan when ad size changes
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setZoom(1);
-     
     setPan({ x: 0, y: 0 });
-  }, [selectedSize]);
+  }, [selectedSize, setZoom, setPan]);
 
   // Load Google Fonts when layers change
   useEffect(() => {
@@ -106,25 +112,10 @@ const App = () => {
     }
   }, [layers]);
 
-  const handleDeleteLayer = useCallback(
-    (layerId: string) => {
-      const layer = layers.find((l) => l.id === layerId);
-      if (layer && window.confirm(`Are you sure you want to delete "${layer.label}"?`)) {
-        setLayers((prev) => prev.filter((l) => l.id !== layerId));
-        setSelectedLayerIds([]);
-      }
-    },
-    [layers]
-  );
-
-  const handleDeleteSelectedLayers = () => {
-    if (selectedLayerIds.length === 0) return;
-    const message =
-      selectedLayerIds.length === 1
-        ? `Are you sure you want to delete "${layers.find((l) => l.id === selectedLayerIds[0])?.label}"?`
-        : `Are you sure you want to delete ${selectedLayerIds.length} layers?`;
-    if (window.confirm(message)) {
-      setLayers((prev) => prev.filter((l) => !selectedLayerIds.includes(l.id)));
+  const handleDeleteLayer = (layerId: string) => {
+    const layer = layers.find((l) => l.id === layerId);
+    if (layer && window.confirm(`Are you sure you want to delete "${layer.label}"?`)) {
+      setLayers((prev) => prev.filter((l) => l.id !== layerId));
       setSelectedLayerIds([]);
     }
   };
@@ -174,6 +165,18 @@ const App = () => {
   const displayLayers = isDragging || isResizing ? tempLayerUpdates : layers;
 
   useEffect(() => {
+    const handleDeleteSelectedLayers = () => {
+      if (selectedLayerIds.length === 0) return;
+      const message =
+        selectedLayerIds.length === 1
+          ? `Are you sure you want to delete "${layers.find((l) => l.id === selectedLayerIds[0])?.label}"?`
+          : `Are you sure you want to delete ${selectedLayerIds.length} layers?`;
+      if (window.confirm(message)) {
+        setLayers((prev) => prev.filter((l) => !selectedLayerIds.includes(l.id)));
+        setSelectedLayerIds([]);
+      }
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Shift') {
         setIsShiftPressed(true);
@@ -193,13 +196,11 @@ const App = () => {
       // Undo/Redo shortcuts (Option+Z / Option+Shift+Z on macOS, Alt+Z / Alt+Shift+Z on Windows)
       // Use e.code instead of e.key because Option+Z produces special characters on macOS
       if (e.altKey && e.code === 'KeyZ' && !e.shiftKey && !isTyping) {
-        console.log('Undo triggered');
         e.preventDefault();
         handleUndo();
         return;
       }
       if (e.altKey && e.code === 'KeyZ' && e.shiftKey && !isTyping) {
-        console.log('Redo triggered');
         e.preventDefault();
         handleRedo();
         return;
@@ -283,10 +284,10 @@ const App = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedLayerIds, layers, selectedSize]);
+  }, [selectedLayerIds, layers, selectedSize, dimensions.width, dimensions.height, setLayers, setSelectedLayerIds]);
 
   // Zoom and Pan handlers
-  const handleZoomChange = (newZoom: number, cursorX?: number, cursorY?: number) => {
+  const handleZoomChange = useCallback((newZoom: number, cursorX?: number, cursorY?: number) => {
     if (cursorX !== undefined && cursorY !== undefined) {
       // Zoom toward cursor position
       const canvasRect = document.querySelector('[data-canvas-container]')?.getBoundingClientRect();
@@ -306,7 +307,7 @@ const App = () => {
       }
     }
     setZoom(newZoom);
-  };
+  }, [zoom, setPan, setZoom]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -404,7 +405,7 @@ const App = () => {
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [isSpacePressed, zoom, pan]);
+  }, [isSpacePressed, zoom, pan, handleZoomChange, setIsPanning, setPan]);
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     if (isSpacePressed) {
@@ -453,7 +454,7 @@ const App = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [layersPanelSide]);
+  }, [layersPanelSide, setLayersPanelPos]);
 
   // Extended handleMouseUp for layers panel dragging
   const handleExtendedMouseUp = () => {
@@ -589,21 +590,20 @@ const App = () => {
     setDragOverLayerIndex(null);
   };
 
-  const handlePropertyChange = useCallback(
-    (
-      layerId: string,
-      property: 'positionX' | 'positionY' | 'width' | 'height',
-      value: number,
-      unit?: 'px' | '%'
-    ) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId) {
-            const config = l.sizeConfig[selectedSize];
-            if (!config) return l;
+  const handlePropertyChange = (
+    layerId: string,
+    property: 'positionX' | 'positionY' | 'width' | 'height',
+    value: number,
+    unit?: 'px' | '%'
+  ) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId) {
+          const config = l.sizeConfig[selectedSize];
+          if (!config) return l;
 
-            const updated = {
-              ...l,
+          const updated = {
+            ...l,
               sizeConfig: {
                 ...l.sizeConfig,
                 [selectedSize]: {
@@ -658,16 +658,13 @@ const App = () => {
           return l;
         })
       );
-    },
-    [selectedSize]
-  );
+  };
 
-  const handleLabelChange = useCallback((layerId: string, newLabel: string) => {
+  const handleLabelChange = (layerId: string, newLabel: string) => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, label: newLabel } : l)));
-  }, []);
+  };
 
-  const handleHtmlIdChange = useCallback(
-    (layerId: string, htmlId: string) => {
+  const handleHtmlIdChange = (layerId: string, htmlId: string) => {
       // Validate: no spaces allowed
       if (/\s/.test(htmlId)) {
         return;
@@ -690,78 +687,67 @@ const App = () => {
           l.id === layerId ? { ...l, attributes: { ...l.attributes, id: htmlId } } : l
         )
       );
-    },
-    [layers]
-  );
+  };
 
-  const handleAnimationChange = useCallback(
-    (layerId: string, size: AdSize, animations: import('./data').Animation[]) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id !== layerId) return l;
+  const handleAnimationChange = (layerId: string, size: AdSize, animations: import('./data').Animation[]) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id !== layerId) return l;
 
-          const updatedSizeConfig = { ...l.sizeConfig };
-          if (updatedSizeConfig[size]) {
-            updatedSizeConfig[size] = {
-              ...updatedSizeConfig[size],
-              animations: animations.length > 0 ? animations : undefined,
-            };
-          }
+        const updatedSizeConfig = { ...l.sizeConfig };
+        if (updatedSizeConfig[size]) {
+          updatedSizeConfig[size] = {
+            ...updatedSizeConfig[size],
+            animations: animations.length > 0 ? animations : undefined,
+          };
+        }
 
-          return { ...l, sizeConfig: updatedSizeConfig };
-        })
-      );
-    },
-    []
-  );
+        return { ...l, sizeConfig: updatedSizeConfig };
+      })
+    );
+  };
 
-  const handleAnimationLoopDelayChange = useCallback(
-    (layerId: string, size: AdSize, delay: { value: number; unit: 'ms' | 's' }) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id !== layerId) return l;
+  const handleAnimationLoopDelayChange = (layerId: string, size: AdSize, delay: { value: number; unit: 'ms' | 's' }) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id !== layerId) return l;
 
-          const updatedSizeConfig = { ...l.sizeConfig };
-          if (updatedSizeConfig[size]) {
-            updatedSizeConfig[size] = {
-              ...updatedSizeConfig[size],
-              animationLoopDelay: delay,
-            };
-          }
+        const updatedSizeConfig = { ...l.sizeConfig };
+        if (updatedSizeConfig[size]) {
+          updatedSizeConfig[size] = {
+            ...updatedSizeConfig[size],
+            animationLoopDelay: delay,
+          };
+        }
 
-          return { ...l, sizeConfig: updatedSizeConfig };
-        })
-      );
-    },
-    []
-  );
+        return { ...l, sizeConfig: updatedSizeConfig };
+      })
+    );
+  };
 
-  const handleAnimationResetDurationChange = useCallback(
-    (layerId: string, size: AdSize, duration: { value: number; unit: 'ms' | 's' }) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id !== layerId) return l;
+  const handleAnimationResetDurationChange = (layerId: string, size: AdSize, duration: { value: number; unit: 'ms' | 's' }) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id !== layerId) return l;
 
-          const updatedSizeConfig = { ...l.sizeConfig };
-          if (updatedSizeConfig[size]) {
-            updatedSizeConfig[size] = {
-              ...updatedSizeConfig[size],
-              animationResetDuration: duration,
-            };
-          }
+        const updatedSizeConfig = { ...l.sizeConfig };
+        if (updatedSizeConfig[size]) {
+          updatedSizeConfig[size] = {
+            ...updatedSizeConfig[size],
+            animationResetDuration: duration,
+          };
+        }
 
-          return { ...l, sizeConfig: updatedSizeConfig };
-        })
-      );
-    },
-    []
-  );
+        return { ...l, sizeConfig: updatedSizeConfig };
+      })
+    );
+  };
 
-  const handleContentChange = useCallback((layerId: string, content: string) => {
+  const handleContentChange = (layerId: string, content: string) => {
     setLayers((prev) => prev.map((l) => (l.id === layerId ? { ...l, content } : l)));
-  }, []);
+  };
 
-  const handleColorChange = useCallback((layerId: string, color: string) => {
+  const handleColorChange = (layerId: string, color: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
@@ -776,64 +762,58 @@ const App = () => {
         return l;
       })
     );
-  }, []);
+  };
 
-  const handleFontSizeChange = useCallback(
-    (layerId: string, fontSize: string) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId) {
-            const currentConfig = l.sizeConfig[selectedSize];
-            if (!currentConfig) return l;
+  const handleFontSizeChange = (layerId: string, fontSize: string) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId) {
+          const currentConfig = l.sizeConfig[selectedSize];
+          if (!currentConfig) return l;
 
-            return {
-              ...l,
-              sizeConfig: {
-                ...l.sizeConfig,
-                [selectedSize]: {
-                  ...currentConfig,
-                  fontSize: fontSize,
-                },
+          return {
+            ...l,
+            sizeConfig: {
+              ...l.sizeConfig,
+              [selectedSize]: {
+                ...currentConfig,
+                fontSize: fontSize,
               },
-              styles: {
-                ...l.styles,
+            },
+            styles: {
+              ...l.styles,
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
+
+  const handleIconSizeChange = (layerId: string, iconSize: number) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId) {
+          const currentConfig = l.sizeConfig[selectedSize];
+          if (!currentConfig) return l;
+
+          return {
+            ...l,
+            sizeConfig: {
+              ...l.sizeConfig,
+              [selectedSize]: {
+                ...currentConfig,
+                iconSize: iconSize,
               },
-            };
-          }
-          return l;
-        })
-      );
-    },
-    [selectedSize]
-  );
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
 
-  const handleIconSizeChange = useCallback(
-    (layerId: string, iconSize: number) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId) {
-            const currentConfig = l.sizeConfig[selectedSize];
-            if (!currentConfig) return l;
-
-            return {
-              ...l,
-              sizeConfig: {
-                ...l.sizeConfig,
-                [selectedSize]: {
-                  ...currentConfig,
-                  iconSize: iconSize,
-                },
-              },
-            };
-          }
-          return l;
-        })
-      );
-    },
-    [selectedSize]
-  );
-
-  const handleFontFamilyChange = useCallback((layerId: string, fontFamily: string) => {
+  const handleFontFamilyChange = (layerId: string, fontFamily: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && (l.type === 'richtext' || l.type === 'button')) {
@@ -848,27 +828,24 @@ const App = () => {
         return l;
       })
     );
-  }, []);
-  const handleTextAlignChange = useCallback(
-    (layerId: string, textAlign: 'left' | 'center' | 'right') => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId && (l.type === 'text' || l.type === 'richtext')) {
-            return {
-              ...l,
-              styles: {
-                ...l.styles,
-                textAlign,
-              },
-            };
-          }
-          return l;
-        })
-      );
-    },
-    []
-  );
-  const handleTextChange = useCallback((layerId: string, text: string) => {
+  };
+  const handleTextAlignChange = (layerId: string, textAlign: 'left' | 'center' | 'right') => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && (l.type === 'text' || l.type === 'richtext')) {
+          return {
+            ...l,
+            styles: {
+              ...l.styles,
+              textAlign,
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
+  const handleTextChange = (layerId: string, text: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'button') {
@@ -877,12 +854,12 @@ const App = () => {
         return l;
       })
     );
-  }, []);
+  };
 
-  const handleBackgroundColorChange = useCallback((layerId: string, color: string) => {
+  const handleBackgroundColorChange = (layerId: string, color: string) => {
     setLayers((prev) =>
       prev.map((l) => {
-        if (l.id === layerId && l.type === 'button') {
+        if (l.id === layerId) {
           return {
             ...l,
             styles: {
@@ -894,15 +871,15 @@ const App = () => {
         return l;
       })
     );
-  }, []);
+  };
 
-  const handleAspectRatioLockToggle = useCallback((layerId: string) => {
+  const handleAspectRatioLockToggle = (layerId: string) => {
     setLayers((prev) =>
       prev.map((l) => (l.id === layerId ? { ...l, aspectRatioLocked: !l.aspectRatioLocked } : l))
     );
-  }, []);
+  };
 
-  const handleOpacityChange = useCallback((layerId: string, opacity: number) => {
+  const handleOpacityChange = (layerId: string, opacity: number) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
@@ -917,247 +894,223 @@ const App = () => {
         return l;
       })
     );
-  }, []);
+  };
 
-  const handleCanvasBackgroundColorChange = useCallback((color: string) => {
+  const handleCanvasBackgroundColorChange = (color: string) => {
     setCanvasBackgroundColor(color);
-  }, []);
+  };
 
-  const handleBorderRadiusChange = useCallback(
-    (
-      layerId: string,
-      borderRadius:
-        | number
-        | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
-    ) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId) {
-            const currentConfig = l.sizeConfig[selectedSize];
-            if (!currentConfig) return l;
+  const handleBorderRadiusChange = (
+    layerId: string,
+    borderRadius:
+      | number
+      | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }
+  ) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId) {
+          const currentConfig = l.sizeConfig[selectedSize];
+          if (!currentConfig) return l;
 
-            return {
-              ...l,
-              sizeConfig: {
-                ...l.sizeConfig,
-                [selectedSize]: {
-                  ...currentConfig,
-                  borderRadius,
-                },
+          return {
+            ...l,
+            sizeConfig: {
+              ...l.sizeConfig,
+              [selectedSize]: {
+                ...currentConfig,
+                borderRadius,
               },
-            };
-          }
-          return l;
-        })
-      );
-    },
-    [selectedSize]
-  );
-
-  const handleCopyPositionSize = useCallback(
-    (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
-      setLayers((prev) =>
-        prev.map((layer) => {
-          if (layer.id !== layerId) return layer;
-
-          const sourceConfig = layer.sizeConfig[sourceSize];
-          if (!sourceConfig) return layer;
-
-          const updatedSizeConfig = { ...layer.sizeConfig };
-
-          targetSizes.forEach((targetSize) => {
-            const existingConfig = updatedSizeConfig[targetSize] || {
-              positionX: { value: 0, unit: 'px' as const },
-              positionY: { value: 0, unit: 'px' as const },
-              width: { value: 100, unit: 'px' as const },
-              height: { value: 100, unit: 'px' as const },
-            };
-
-            updatedSizeConfig[targetSize] = {
-              ...existingConfig,
-              positionX: sourceConfig.positionX,
-              positionY: sourceConfig.positionY,
-              width: sourceConfig.width,
-              height: sourceConfig.height,
-            };
-          });
-
-          return {
-            ...layer,
-            sizeConfig: updatedSizeConfig,
+            },
           };
-        })
-      );
-    },
-    []
-  );
+        }
+        return l;
+      })
+    );
+  };
 
-  const handleCopyFontSize = useCallback(
-    (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
-      setLayers((prev) =>
-        prev.map((layer) => {
-          if (layer.id !== layerId) return layer;
+  const handleCopyPositionSize = (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
 
-          const sourceConfig = layer.sizeConfig[sourceSize];
-          if (!sourceConfig?.fontSize) return layer;
+        const sourceConfig = layer.sizeConfig[sourceSize];
+        if (!sourceConfig) return layer;
 
-          const updatedSizeConfig = { ...layer.sizeConfig };
+        const updatedSizeConfig = { ...layer.sizeConfig };
 
-          targetSizes.forEach((targetSize) => {
-            const existingConfig = updatedSizeConfig[targetSize];
-            if (!existingConfig) return;
-
-            updatedSizeConfig[targetSize] = {
-              ...existingConfig,
-              fontSize: sourceConfig.fontSize,
-            };
-          });
-
-          return {
-            ...layer,
-            sizeConfig: updatedSizeConfig,
+        targetSizes.forEach((targetSize) => {
+          const existingConfig = updatedSizeConfig[targetSize] || {
+            positionX: { value: 0, unit: 'px' as const },
+            positionY: { value: 0, unit: 'px' as const },
+            width: { value: 100, unit: 'px' as const },
+            height: { value: 100, unit: 'px' as const },
           };
-        })
-      );
-    },
-    []
-  );
 
-  const handleCopyIconSize = useCallback(
-    (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
-      setLayers((prev) =>
-        prev.map((layer) => {
-          if (layer.id !== layerId) return layer;
-
-          const sourceConfig = layer.sizeConfig[sourceSize];
-          if (sourceConfig?.iconSize === undefined) return layer;
-
-          const updatedSizeConfig = { ...layer.sizeConfig };
-
-          targetSizes.forEach((targetSize) => {
-            const existingConfig = updatedSizeConfig[targetSize];
-            if (!existingConfig) return;
-
-            updatedSizeConfig[targetSize] = {
-              ...existingConfig,
-              iconSize: sourceConfig.iconSize,
-            };
-          });
-
-          return {
-            ...layer,
-            sizeConfig: updatedSizeConfig,
+          updatedSizeConfig[targetSize] = {
+            ...existingConfig,
+            positionX: sourceConfig.positionX,
+            positionY: sourceConfig.positionY,
+            width: sourceConfig.width,
+            height: sourceConfig.height,
           };
-        })
-      );
-    },
-    []
-  );
+        });
 
-  const handleCopyBorderRadius = useCallback(
-    (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
-      setLayers((prev) =>
-        prev.map((layer) => {
-          if (layer.id !== layerId) return layer;
+        return {
+          ...layer,
+          sizeConfig: updatedSizeConfig,
+        };
+      })
+    );
+  };
 
-          const sourceConfig = layer.sizeConfig[sourceSize];
-          if (sourceConfig?.borderRadius === undefined) return layer;
+  const handleCopyFontSize = (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
 
-          const updatedSizeConfig = { ...layer.sizeConfig };
+        const sourceConfig = layer.sizeConfig[sourceSize];
+        if (!sourceConfig?.fontSize) return layer;
 
-          targetSizes.forEach((targetSize) => {
-            const existingConfig = updatedSizeConfig[targetSize];
-            if (!existingConfig) return;
+        const updatedSizeConfig = { ...layer.sizeConfig };
 
-            updatedSizeConfig[targetSize] = {
-              ...existingConfig,
-              borderRadius: sourceConfig.borderRadius,
-            };
-          });
+        targetSizes.forEach((targetSize) => {
+          const existingConfig = updatedSizeConfig[targetSize];
+          if (!existingConfig) return;
 
-          return {
-            ...layer,
-            sizeConfig: updatedSizeConfig,
+          updatedSizeConfig[targetSize] = {
+            ...existingConfig,
+            fontSize: sourceConfig.fontSize,
           };
-        })
-      );
-    },
-    []
-  );
+        });
+
+        return {
+          ...layer,
+          sizeConfig: updatedSizeConfig,
+        };
+      })
+    );
+  };
+
+  const handleCopyIconSize = (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
+
+        const sourceConfig = layer.sizeConfig[sourceSize];
+        if (sourceConfig?.iconSize === undefined) return layer;
+
+        const updatedSizeConfig = { ...layer.sizeConfig };
+
+        targetSizes.forEach((targetSize) => {
+          const existingConfig = updatedSizeConfig[targetSize];
+          if (!existingConfig) return;
+
+          updatedSizeConfig[targetSize] = {
+            ...existingConfig,
+            iconSize: sourceConfig.iconSize,
+          };
+        });
+
+        return {
+          ...layer,
+          sizeConfig: updatedSizeConfig,
+        };
+      })
+    );
+  };
+
+  const handleCopyBorderRadius = (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
+
+        const sourceConfig = layer.sizeConfig[sourceSize];
+        if (sourceConfig?.borderRadius === undefined) return layer;
+
+        const updatedSizeConfig = { ...layer.sizeConfig };
+
+        targetSizes.forEach((targetSize) => {
+          const existingConfig = updatedSizeConfig[targetSize];
+          if (!existingConfig) return;
+
+          updatedSizeConfig[targetSize] = {
+            ...existingConfig,
+            borderRadius: sourceConfig.borderRadius,
+          };
+        });
+
+        return {
+          ...layer,
+          sizeConfig: updatedSizeConfig,
+        };
+      })
+    );
+  };
 
   const handleReplayAnimations = () => {
     setAnimationKey((prev) => prev + 1);
   };
 
-  const handleButtonActionTypeChange = useCallback(
-    (layerId: string, actionType: 'link' | 'videoControl') => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId && l.type === 'button') {
-            return { ...l, actionType };
-          }
-          return l;
-        })
-      );
-    },
-    []
-  );
+  const handleButtonActionTypeChange = (layerId: string, actionType: 'link' | 'videoControl') => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'button') {
+          return { ...l, actionType };
+        }
+        return l;
+      })
+    );
+  };
 
-  const handleButtonIconChange = useCallback(
-    (
-      layerId: string,
-      icon: {
-        type:
-          | 'none'
-          | 'play'
-          | 'pause'
-          | 'replay'
-          | 'play-fill'
-          | 'pause-fill'
-          | 'custom'
-          | 'toggle-filled'
-          | 'toggle-outline'
-          | 'toggle-custom';
-        customImage?: string;
-        customPlayImage?: string;
-        customPauseImage?: string;
-        color?: string;
-        position?: 'before' | 'after';
-      }
-    ) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId && l.type === 'button') {
-            return { ...l, icon };
-          }
-          return l;
-        })
-      );
-    },
-    []
-  );
+  const handleButtonIconChange = (
+    layerId: string,
+    icon: {
+      type:
+        | 'none'
+        | 'play'
+        | 'pause'
+        | 'replay'
+        | 'play-fill'
+        | 'pause-fill'
+        | 'custom'
+        | 'toggle-filled'
+        | 'toggle-outline'
+        | 'toggle-custom';
+      customImage?: string;
+      customPlayImage?: string;
+      customPauseImage?: string;
+      color?: string;
+      position?: 'before' | 'after';
+    }
+  ) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'button') {
+          return { ...l, icon };
+        }
+        return l;
+      })
+    );
+  };
 
-  const handleVideoControlChange = useCallback(
-    (
-      layerId: string,
-      videoControl: {
-        targetElementId: string;
-        action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
-      }
-    ) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId && l.type === 'button') {
-            return { ...l, videoControl };
-          }
-          return l;
-        })
-      );
-    },
-    []
-  );
+  const handleVideoControlChange = (
+    layerId: string,
+    videoControl: {
+      targetElementId: string;
+      action: 'play' | 'pause' | 'restart' | 'togglePlayPause';
+    }
+  ) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'button') {
+          return { ...l, videoControl };
+        }
+        return l;
+      })
+    );
+  };
 
-  const handleImageUrlChange = useCallback((layerId: string, url: string) => {
+  const handleImageUrlChange = (layerId: string, url: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'image') {
@@ -1166,9 +1119,9 @@ const App = () => {
         return l;
       })
     );
-  }, []);
+  };
 
-  const handleObjectFitChange = useCallback((layerId: string, objectFit: string) => {
+  const handleObjectFitChange = (layerId: string, objectFit: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'image') {
@@ -1183,9 +1136,9 @@ const App = () => {
         return l;
       })
     );
-  }, []);
+  };
 
-  const handleVideoUrlChange = useCallback((layerId: string, url: string) => {
+  const handleVideoUrlChange = (layerId: string, url: string) => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && l.type === 'video') {
@@ -1194,177 +1147,168 @@ const App = () => {
         return l;
       })
     );
-  }, []);
+  };
 
-  const handleVideoPropertyChange = useCallback(
-    (layerId: string, property: 'autoplay' | 'controls', value: boolean) => {
-      setLayers((prev) =>
-        prev.map((l) => {
-          if (l.id === layerId && l.type === 'video') {
-            return {
-              ...l,
-              properties: {
-                ...l.properties,
-                [property]: value,
-              },
-            };
-          }
-          return l;
-        })
-      );
-    },
-    []
-  );
+  const handleVideoPropertyChange = (layerId: string, property: 'autoplay' | 'controls', value: boolean) => {
+    setLayers((prev) =>
+      prev.map((l) => {
+        if (l.id === layerId && l.type === 'video') {
+          return {
+            ...l,
+            properties: {
+              ...l.properties,
+              [property]: value,
+            },
+          };
+        }
+        return l;
+      })
+    );
+  };
 
-  const handleAlignMultipleLayers = useCallback(
-    (alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v') => {
-      // Calculate selection bounds
-      const selectedLayers = layers.filter((l) => selectedLayerIds.includes(l.id));
-      if (selectedLayers.length === 0) return;
+  const handleAlignMultipleLayers = (alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v') => {
+    // Calculate selection bounds
+    const selectedLayers = layers.filter((l) => selectedLayerIds.includes(l.id));
+    if (selectedLayers.length === 0) return;
 
-      let minX = Infinity,
-        minY = Infinity,
-        maxX = -Infinity,
-        maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
 
-      selectedLayers.forEach((layer) => {
+    selectedLayers.forEach((layer) => {
+      const config = layer.sizeConfig[selectedSize];
+      if (!config) return;
+
+      const posX = config.positionX.value;
+      const posY = config.positionY.value;
+      const width = config.width.value;
+      const height = config.height.value;
+
+      minX = Math.min(minX, posX);
+      minY = Math.min(minY, posY);
+      maxX = Math.max(maxX, posX + width);
+      maxY = Math.max(maxY, posY + height);
+    });
+
+    const selectionWidth = maxX - minX;
+    const selectionHeight = maxY - minY;
+    const selectionCenterX = minX + selectionWidth / 2;
+    const selectionCenterY = minY + selectionHeight / 2;
+
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (!selectedLayerIds.includes(layer.id)) return layer;
+
         const config = layer.sizeConfig[selectedSize];
-        if (!config) return;
+        if (!config) return layer;
 
-        const posX = config.positionX.value;
-        const posY = config.positionY.value;
         const width = config.width.value;
         const height = config.height.value;
+        let newPosX = config.positionX.value;
+        let newPosY = config.positionY.value;
 
-        minX = Math.min(minX, posX);
-        minY = Math.min(minY, posY);
-        maxX = Math.max(maxX, posX + width);
-        maxY = Math.max(maxY, posY + height);
-      });
+        switch (alignment) {
+          case 'left':
+            newPosX = minX;
+            break;
+          case 'right':
+            newPosX = maxX - width;
+            break;
+          case 'center-h':
+            newPosX = selectionCenterX - width / 2;
+            break;
+          case 'top':
+            newPosY = minY;
+            break;
+          case 'bottom':
+            newPosY = maxY - height;
+            break;
+          case 'center-v':
+            newPosY = selectionCenterY - height / 2;
+            break;
+        }
 
-      const selectionWidth = maxX - minX;
-      const selectionHeight = maxY - minY;
-      const selectionCenterX = minX + selectionWidth / 2;
-      const selectionCenterY = minY + selectionHeight / 2;
-
-      setLayers((prev) =>
-        prev.map((layer) => {
-          if (!selectedLayerIds.includes(layer.id)) return layer;
-
-          const config = layer.sizeConfig[selectedSize];
-          if (!config) return layer;
-
-          const width = config.width.value;
-          const height = config.height.value;
-          let newPosX = config.positionX.value;
-          let newPosY = config.positionY.value;
-
-          switch (alignment) {
-            case 'left':
-              newPosX = minX;
-              break;
-            case 'right':
-              newPosX = maxX - width;
-              break;
-            case 'center-h':
-              newPosX = selectionCenterX - width / 2;
-              break;
-            case 'top':
-              newPosY = minY;
-              break;
-            case 'bottom':
-              newPosY = maxY - height;
-              break;
-            case 'center-v':
-              newPosY = selectionCenterY - height / 2;
-              break;
-          }
-
-          return {
-            ...layer,
-            sizeConfig: {
-              ...layer.sizeConfig,
-              [selectedSize]: {
-                ...config,
-                positionX: { value: Math.round(newPosX), unit: 'px' },
-                positionY: { value: Math.round(newPosY), unit: 'px' },
-              },
+        return {
+          ...layer,
+          sizeConfig: {
+            ...layer.sizeConfig,
+            [selectedSize]: {
+              ...config,
+              positionX: { value: Math.round(newPosX), unit: 'px' },
+              positionY: { value: Math.round(newPosY), unit: 'px' },
             },
-          };
-        })
-      );
-    },
-    [layers, selectedLayerIds, selectedSize]
-  );
+          },
+        };
+      })
+    );
+  };
 
-  const handleAlignLayer = useCallback(
-    (layerId: string, alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v') => {
-      // If multiple layers are selected, align relative to selection bounds
-      if (selectedLayerIds.length > 1) {
-        handleAlignMultipleLayers(alignment);
-        return;
-      }
+  const handleAlignLayer = (layerId: string, alignment: 'left' | 'right' | 'top' | 'bottom' | 'center-h' | 'center-v') => {
+    // If multiple layers are selected, align relative to selection bounds
+    if (selectedLayerIds.length > 1) {
+      handleAlignMultipleLayers(alignment);
+      return;
+    }
 
-      // Single layer alignment (relative to canvas)
-      setLayers((prev) =>
-        prev.map((layer) => {
-          if (layer.id !== layerId) return layer;
+    // Single layer alignment (relative to canvas)
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
 
-          const config = layer.sizeConfig[selectedSize];
-          if (!config) return layer;
+        const config = layer.sizeConfig[selectedSize];
+        if (!config) return layer;
 
-          const canvasWidth = dimensions.width;
-          const canvasHeight = dimensions.height;
-          const layerWidth =
-            config.width.unit === 'px'
-              ? config.width.value
-              : (canvasWidth * config.width.value) / 100;
-          const layerHeight =
-            config.height.unit === 'px'
-              ? config.height.value
-              : (canvasHeight * config.height.value) / 100;
+        const canvasWidth = dimensions.width;
+        const canvasHeight = dimensions.height;
+        const layerWidth =
+          config.width.unit === 'px'
+            ? config.width.value
+            : (canvasWidth * config.width.value) / 100;
+        const layerHeight =
+          config.height.unit === 'px'
+            ? config.height.value
+            : (canvasHeight * config.height.value) / 100;
 
-          // Determine which axis this alignment affects
-          let updatedPosX = config.positionX;
-          let updatedPosY = config.positionY;
+        // Determine which axis this alignment affects
+        let updatedPosX = config.positionX;
+        let updatedPosY = config.positionY;
 
-          switch (alignment) {
-            case 'left':
-              updatedPosX = { value: 0, unit: 'px' };
-              break;
-            case 'right':
-              updatedPosX = { value: Math.round(canvasWidth - layerWidth), unit: 'px' };
-              break;
-            case 'center-h':
-              updatedPosX = { value: Math.round((canvasWidth - layerWidth) / 2), unit: 'px' };
-              break;
-            case 'top':
-              updatedPosY = { value: 0, unit: 'px' };
-              break;
-            case 'bottom':
-              updatedPosY = { value: Math.round(canvasHeight - layerHeight), unit: 'px' };
-              break;
-            case 'center-v':
-              updatedPosY = { value: Math.round((canvasHeight - layerHeight) / 2), unit: 'px' };
-              break;
-          }
+        switch (alignment) {
+          case 'left':
+            updatedPosX = { value: 0, unit: 'px' };
+            break;
+          case 'right':
+            updatedPosX = { value: Math.round(canvasWidth - layerWidth), unit: 'px' };
+            break;
+          case 'center-h':
+            updatedPosX = { value: Math.round((canvasWidth - layerWidth) / 2), unit: 'px' };
+            break;
+          case 'top':
+            updatedPosY = { value: 0, unit: 'px' };
+            break;
+          case 'bottom':
+            updatedPosY = { value: Math.round(canvasHeight - layerHeight), unit: 'px' };
+            break;
+          case 'center-v':
+            updatedPosY = { value: Math.round((canvasHeight - layerHeight) / 2), unit: 'px' };
+            break;
+        }
 
-          return {
-            ...layer,
-            sizeConfig: {
-              ...layer.sizeConfig,
-              [selectedSize]: {
-                ...config,
-                positionX: updatedPosX,
-                positionY: updatedPosY,
-              },
+        return {
+          ...layer,
+          sizeConfig: {
+            ...layer.sizeConfig,
+            [selectedSize]: {
+              ...config,
+              positionX: updatedPosX,
+              positionY: updatedPosY,
             },
-          };
-        })
-      );
-    },
-    [selectedLayerIds, selectedSize, dimensions.width, dimensions.height, handleAlignMultipleLayers]
-  );
+          },
+        };
+      })
+    );
+  };
 
   const handleExportHTML = () => {
     setSelectedLayerIds([]);
@@ -1417,19 +1361,19 @@ const App = () => {
       ...(type === 'text' || type === 'richtext'
         ? {
             content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            styles: { color: '#000000', opacity: 1 },
+            styles: { backgroundColor: 'rgba(0,0,0,0)', color: '#000000', opacity: 1 },
           }
         : {}),
       ...(type === 'image'
         ? {
             url: 'https://images.pexels.com/photos/35025716/pexels-photo-35025716.jpeg',
-            styles: { opacity: 1 },
+            styles: { backgroundColor: 'rgba(0,0,0,0)', opacity: 1 },
           }
         : {}),
       ...(type === 'video'
         ? {
             url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4',
-            styles: { opacity: 1 },
+            styles: { backgroundColor: 'rgba(0,0,0,0)', opacity: 1 },
           }
         : {}),
       ...(type === 'button'
