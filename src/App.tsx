@@ -357,6 +357,9 @@ const App = () => {
     };
 
     const handleWheel = (e: WheelEvent) => {
+      // Disable zoom/pan in preview mode
+      if (mode === 'preview') return;
+
       // Check if we're over the canvas area
       const target = e.target as HTMLElement;
       const canvasContainer = document.querySelector('[data-canvas-container]');
@@ -427,9 +430,12 @@ const App = () => {
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [isSpacePressed, zoom, pan, handleZoomChange, setIsPanning, setPan]);
+  }, [isSpacePressed, zoom, pan, handleZoomChange, setIsPanning, setPan, mode]);
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    // Disable panning in preview mode
+    if (mode === 'preview') return;
+
     if (isSpacePressed) {
       e.preventDefault();
       setIsPanning(true);
@@ -443,6 +449,9 @@ const App = () => {
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    // Disable pan movement in preview mode
+    if (mode === 'preview') return;
+
     if (isPanning && isSpacePressed) {
       const dx = e.clientX - panStartRef.current.x;
       const dy = e.clientY - panStartRef.current.y;
@@ -454,6 +463,9 @@ const App = () => {
   };
 
   const handleCanvasMouseUp = () => {
+    // Disable pan end in preview mode
+    if (mode === 'preview') return;
+
     if (isPanning) {
       setIsPanning(false);
     }
@@ -1422,7 +1434,7 @@ const App = () => {
         allowedSizes={sampleCanvas.allowedSizes}
         canUndo={canUndo}
         canRedo={canRedo}
-        showAdSelector={adSelectorPosition === 'top'}
+        showAdSelector={mode === 'preview' || adSelectorPosition === 'top'}
         onModeChange={setMode}
         onSizeChange={setSelectedSize}
         onExportHTML={handleExportHTML}
@@ -1547,8 +1559,8 @@ const App = () => {
               )}
             </div>
 
-            {/* Ad Selector - Center (when position is 'bottom' and in edit mode) */}
-            {mode === 'edit' && adSelectorPosition === 'bottom' ? (
+            {/* Ad Selector - Center (when position is 'bottom' in edit mode, or always in preview mode) */}
+            {(mode === 'edit' && adSelectorPosition === 'bottom') || mode === 'preview' ? (
               <div className="flex-1 flex items-center justify-center gap-4">
                 {sampleCanvas.allowedSizes.map((size) => {
                   const { width, height } = HTML5_AD_SIZES[size];
@@ -1577,17 +1589,19 @@ const App = () => {
               </div>
             ) : null}
 
-            {/* Zoom Controls - Right side */}
-            <div className="ml-auto">
-              <ZoomControls
-                zoom={zoom}
-                onZoomChange={handleZoomChange}
-                onResetPan={() => {
-                  setPan({ x: 0, y: 0 });
-                  setZoom(1);
-                }}
-              />
-            </div>
+            {/* Zoom Controls - Right side (hidden in preview mode) */}
+            {mode === 'edit' ? (
+              <div className="ml-auto">
+                <ZoomControls
+                  zoom={zoom}
+                  onZoomChange={handleZoomChange}
+                  onResetPan={() => {
+                    setPan({ x: 0, y: 0 });
+                    setZoom(1);
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         </div>
 
