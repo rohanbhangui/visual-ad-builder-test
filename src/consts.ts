@@ -54,6 +54,11 @@ export const UI_COLORS = {
   SELECTED_INDICATOR: 'bg-blue-600', // Blue dot indicator for selected layer
   ACTIVE_BUTTON: 'bg-blue-100', // Light blue for active text alignment buttons
   ACTIVE_BUTTON_HOVER: 'hover:bg-blue-200', // Hover state for active buttons
+  // Size-specific indicator colors (peach/amber treatment)
+  SIZE_SPECIFIC_BG: 'bg-amber-100', // Light amber/peach background for size-specific labels
+  SIZE_SPECIFIC_TEXT: 'text-amber-900', // Dark amber/brown text for size-specific labels
+  SIZE_SPECIFIC_ACTIVE: 'bg-amber-200', // Amber highlight for active size-specific buttons
+  SIZE_SPECIFIC_ACTIVE_HOVER: 'hover:bg-amber-300', // Hover state for active size-specific buttons
 } as const;
 
 // UI Layout Constants

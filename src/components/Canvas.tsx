@@ -144,10 +144,10 @@ export const Canvas: React.FC<CanvasProps> = ({
             content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" ${animationValue ? `data-animation="${animationValue}"` : ''} alt="${layer.label}">`;
             break;
           case 'text':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${config.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
             break;
           case 'richtext':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${layer.styles?.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
+            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${config.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
             break;
           case 'video':
             if (width.value > 0 && height.value > 0) {
@@ -551,7 +551,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               color: layer.styles?.color || '#000000',
               fontSize: config.fontSize || '14px',
               fontFamily: layer.styles?.fontFamily || 'Arial',
-              textAlign: layer.styles?.textAlign || 'left',
+              textAlign: config.textAlign || 'left',
             }}
             dangerouslySetInnerHTML={{ __html: layer.content }}
           />

@@ -87,3 +87,4 @@ The app exposes a `window.vb` object in the browser console for debugging and de
 - Exit animations
 - Carousel support (+ button support)
 - More sizes (+ being able to manually add in preset sizes)
+- Preset components like canvas (eg. when a new button is added have a preset of buttons ready to go)

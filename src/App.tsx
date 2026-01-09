@@ -109,6 +109,24 @@ const App = () => {
       history: getHistory,
       store: useStore.getState,
       clearHistory: clearInitialHistory,
+      exportCanvas: () => {
+        const state = useStore.getState();
+        const canvas = {
+          id: `canvas-${crypto.randomUUID()}`,
+          name: state.canvasName,
+          allowedSizes: sampleCanvas.allowedSizes,
+          styles: {
+            backgroundColor: state.canvasBackgroundColor,
+          },
+          layers: state.layers,
+          animationLoop: state.animationLoop,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        console.log('Canvas Structure:');
+        console.log(JSON.stringify(canvas, null, 2));
+        return canvas;
+      },
     };
     
     return () => clearTimeout(timer);
@@ -867,11 +885,16 @@ const App = () => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId && (l.type === 'text' || l.type === 'richtext')) {
+          const config = l.sizeConfig[selectedSize];
+          if (!config) return l;
           return {
             ...l,
-            styles: {
-              ...l.styles,
-              textAlign,
+            sizeConfig: {
+              ...l.sizeConfig,
+              [selectedSize]: {
+                ...config,
+                textAlign,
+              },
             },
           };
         }
@@ -894,11 +917,16 @@ const App = () => {
     setLayers((prev) =>
       prev.map((l) => {
         if (l.id === layerId) {
+          // Normalize transparent values to undefined for consistency
+          const normalizedColor = 
+            !color || color === 'transparent' || color === 'rgba(0,0,0,0)' 
+              ? undefined 
+              : color;
           return {
             ...l,
             styles: {
               ...l.styles,
-              backgroundColor: color,
+              backgroundColor: normalizedColor,
             },
           };
         }
@@ -1014,6 +1042,34 @@ const App = () => {
           updatedSizeConfig[targetSize] = {
             ...existingConfig,
             fontSize: sourceConfig.fontSize,
+          };
+        });
+
+        return {
+          ...layer,
+          sizeConfig: updatedSizeConfig,
+        };
+      })
+    );
+  };
+
+  const handleCopyTextAlign = (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
+
+        const sourceConfig = layer.sizeConfig[sourceSize];
+        if (!sourceConfig?.textAlign) return layer;
+
+        const updatedSizeConfig = { ...layer.sizeConfig };
+
+        targetSizes.forEach((targetSize) => {
+          const existingConfig = updatedSizeConfig[targetSize];
+          if (!existingConfig) return;
+
+          updatedSizeConfig[targetSize] = {
+            ...existingConfig,
+            textAlign: sourceConfig.textAlign,
           };
         });
 
@@ -1649,6 +1705,7 @@ const App = () => {
             onBorderRadiusChange={handleBorderRadiusChange}
             onCopyPositionSize={handleCopyPositionSize}
             onCopyFontSize={handleCopyFontSize}
+            onCopyTextAlign={handleCopyTextAlign}
             onCopyIconSize={handleCopyIconSize}
             onCopyBorderRadius={handleCopyBorderRadius}
             allowedSizes={sampleCanvas.allowedSizes}

@@ -236,7 +236,7 @@ export const getHistory = () => {
   };
 };
 
-// Clear initial history - call this on app mount
+// Helper to clear initial history (after first render)
 export const clearInitialHistory = () => {
   (useStore.temporal as any).getState().clear();
 };

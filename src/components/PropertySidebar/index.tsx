@@ -119,6 +119,7 @@ interface PropertySidebarProps {
   ) => void;
   onCopyPositionSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyTextAlign?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyIconSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyBorderRadius?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   allowedSizes?: AdSize[];
@@ -165,6 +166,7 @@ const PropertySidebarComponent = ({
   onBorderRadiusChange,
   onCopyPositionSize,
   onCopyFontSize,
+  onCopyTextAlign,
   onCopyIconSize,
   onCopyBorderRadius,
   allowedSizes,
@@ -655,6 +657,7 @@ const PropertySidebarComponent = ({
               onBorderRadiusChange={onBorderRadiusChange}
               onCopyPositionSize={onCopyPositionSize}
               onCopyFontSize={onCopyFontSize}
+              onCopyTextAlign={onCopyTextAlign}
               onCopyIconSize={onCopyIconSize}
               onCopyBorderRadius={onCopyBorderRadius}
               allowedSizes={allowedSizes}

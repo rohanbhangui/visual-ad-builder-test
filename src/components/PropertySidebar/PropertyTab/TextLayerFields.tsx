@@ -20,6 +20,7 @@ interface TextLayerFieldsProps {
   onFontSizeChange: (layerId: string, fontSize: string) => void;
   onTextAlignChange: (layerId: string, textAlign: 'left' | 'center' | 'right') => void;
   onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyTextAlign?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   allowedSizes?: AdSize[];
 }
 
@@ -32,6 +33,7 @@ export const TextLayerFields = ({
   onFontSizeChange,
   onTextAlignChange,
   onCopyFontSize,
+  onCopyTextAlign,
   allowedSizes,
 }: TextLayerFieldsProps) => {
   const config = layer.sizeConfig[selectedSize];
@@ -71,14 +73,27 @@ export const TextLayerFields = ({
         />
 
         <div>
-          <Label>Text Align</Label>
+          <Label
+            isSizeSpecific={true}
+            selectedSize={selectedSize}
+            onCopyToSize={
+              onCopyTextAlign && config.textAlign
+                ? (targetSizes) => onCopyTextAlign(layer.id, selectedSize, targetSizes)
+                : undefined
+            }
+            allowedSizes={allowedSizes}
+            currentSize={selectedSize}
+            className="w-[118px]"
+          >
+            Text Align
+          </Label>
           <div className="inline-flex border border-gray-300 rounded overflow-hidden">
             <button
               onClick={() => onTextAlignChange(layer.id, 'left')}
               disabled={layer.locked}
               className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
-                (layer.styles?.textAlign || 'left') === 'left'
-                  ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+                (config.textAlign || 'left') === 'left'
+                  ? `${UI_COLORS.SIZE_SPECIFIC_ACTIVE} ${UI_COLORS.SIZE_SPECIFIC_ACTIVE_HOVER} ${UI_COLORS.SIZE_SPECIFIC_TEXT}`
                   : 'hover:bg-gray-50'
               } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               title="Align Left"
@@ -89,8 +104,8 @@ export const TextLayerFields = ({
               onClick={() => onTextAlignChange(layer.id, 'center')}
               disabled={layer.locked}
               className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
-                layer.styles?.textAlign === 'center'
-                  ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+                config.textAlign === 'center'
+                  ? `${UI_COLORS.SIZE_SPECIFIC_ACTIVE} ${UI_COLORS.SIZE_SPECIFIC_ACTIVE_HOVER} ${UI_COLORS.SIZE_SPECIFIC_TEXT}`
                   : 'hover:bg-gray-50'
               } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               title="Align Center"
@@ -100,9 +115,9 @@ export const TextLayerFields = ({
             <button
               onClick={() => onTextAlignChange(layer.id, 'right')}
               disabled={layer.locked}
-              className={`px-3 h-8 flex items-center text-sm ${
-                layer.styles?.textAlign === 'right'
-                  ? `${UI_COLORS.ACTIVE_BUTTON} ${UI_COLORS.ACTIVE_BUTTON_HOVER}`
+              className={`px-3 h-8 flex items-center text-sm border-r border-gray-300 last:border-r-0 ${
+                config.textAlign === 'right'
+                  ? `${UI_COLORS.SIZE_SPECIFIC_ACTIVE} ${UI_COLORS.SIZE_SPECIFIC_ACTIVE_HOVER} ${UI_COLORS.SIZE_SPECIFIC_TEXT}`
                   : 'hover:bg-gray-50'
               } ${layer.locked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               title="Align Right"

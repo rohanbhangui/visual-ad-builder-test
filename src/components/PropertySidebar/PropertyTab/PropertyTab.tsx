@@ -106,6 +106,7 @@ interface PropertyTabProps {
   ) => void;
   onCopyPositionSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyTextAlign?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyIconSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyBorderRadius?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   allowedSizes?: AdSize[];
@@ -139,6 +140,7 @@ export const PropertyTab = ({
   onBorderRadiusChange,
   onCopyPositionSize,
   onCopyFontSize,
+  onCopyTextAlign,
   onCopyIconSize,
   onCopyBorderRadius,
   allowedSizes,
@@ -333,6 +335,7 @@ export const PropertyTab = ({
           onFontSizeChange={onFontSizeChange}
           onTextAlignChange={onTextAlignChange}
           onCopyFontSize={onCopyFontSize}
+          onCopyTextAlign={onCopyTextAlign}
           allowedSizes={allowedSizes}
         />
       ) : null}
@@ -348,6 +351,7 @@ export const PropertyTab = ({
           onTextAlignChange={onTextAlignChange}
           contentEditableRef={contentEditableRef}
           onCopyFontSize={onCopyFontSize}
+          onCopyTextAlign={onCopyTextAlign}
           allowedSizes={allowedSizes}
         />
       ) : null}

@@ -43,6 +43,7 @@ export interface SizeConfig {
   width: Size;
   height: Size;
   fontSize?: string; // Font size specific to this ad size (e.g., '14px')
+  textAlign?: 'left' | 'center' | 'right'; // Text alignment specific to this ad size
   iconSize?: number; // Icon size in pixels (for button layers)
   borderRadius?:
     | number
@@ -74,7 +75,6 @@ export interface TextLayer extends BaseLayer {
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
-    textAlign?: 'left' | 'center' | 'right';
     opacity: number;
   };
 }
@@ -87,7 +87,6 @@ export interface RichtextLayer extends BaseLayer {
     color?: string;
     fontSize?: string;
     fontFamily?: FontFamily;
-    textAlign?: 'left' | 'center' | 'right';
     opacity: number;
   };
 }
@@ -192,6 +191,7 @@ export const sampleCanvas: Canvas = {
           width: { value: 280, unit: 'px' },
           height: { value: 35, unit: 'px' },
           fontSize: '20px',
+          textAlign: 'center',
           animations: [
             {
               id: `sa-${crypto.randomUUID()}`,
@@ -211,6 +211,7 @@ export const sampleCanvas: Canvas = {
           width: { value: 316, unit: 'px' },
           height: { value: 35, unit: 'px' },
           fontSize: '24px',
+          textAlign: 'center',
           animations: [
             {
               id: `sa-${crypto.randomUUID()}`,
@@ -230,6 +231,7 @@ export const sampleCanvas: Canvas = {
           width: { value: 234, unit: 'px' },
           height: { value: 30, unit: 'px' },
           fontSize: '20px',
+          textAlign: 'center',
         },
         '160x600': {
           positionX: { value: 10, unit: 'px' },
@@ -237,13 +239,13 @@ export const sampleCanvas: Canvas = {
           width: { value: 140, unit: 'px' },
           height: { value: 40, unit: 'px' },
           fontSize: '20px',
+          textAlign: 'center',
         },
       },
       content: '<strong>Holiday Sale!</strong>',
       styles: {
         color: '#ff0000',
         fontFamily: 'Playfair Display',
-        textAlign: 'center',
         opacity: 1,
       },
     },
@@ -261,6 +263,7 @@ export const sampleCanvas: Canvas = {
           width: { value: 280, unit: 'px' },
           height: { value: 39, unit: 'px' },
           fontSize: '14px',
+          textAlign: 'center',
           animations: [
             {
               id: `sa-${crypto.randomUUID()}`,
@@ -282,6 +285,7 @@ export const sampleCanvas: Canvas = {
           width: { value: 294, unit: 'px' },
           height: { value: 36, unit: 'px' },
           fontSize: '14px',
+          textAlign: 'center',
           animations: [
             {
               id: `sa-${crypto.randomUUID()}`,
@@ -303,6 +307,7 @@ export const sampleCanvas: Canvas = {
           width: { value: 284, unit: 'px' },
           height: { value: 36, unit: 'px' },
           fontSize: '14px',
+          textAlign: 'center',
         },
         '160x600': {
           positionX: { value: 10, unit: 'px' },
@@ -310,13 +315,13 @@ export const sampleCanvas: Canvas = {
           width: { value: 140, unit: 'px' },
           height: { value: 53, unit: 'px' },
           fontSize: '14px',
+          textAlign: 'center',
         },
       },
       content: 'Get 50% off on your first purchase.\nLimited time offer!',
       styles: {
         color: '#000000',
         fontFamily: 'Arial',
-        textAlign: 'center',
         opacity: 1,
       },
     },
@@ -608,6 +613,513 @@ export const sampleCanvas: Canvas = {
     },
   ],
   animationLoop: -1, // Infinite
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+// Tech Product Launch Ad Template
+export const sampleCanvas2: Canvas = {
+  id: `sa-${crypto.randomUUID()}`,
+  name: 'Tech Product Launch Ad',
+  allowedSizes: ['300x250', '336x280', '728x90', '160x600'],
+  styles: {
+    backgroundColor: '#0a0e27',
+  },
+  layers: [
+    {
+      id: `sa-${crypto.randomUUID()}`,
+      label: 'Brand Logo',
+      type: 'richtext',
+      locked: false,
+      aspectRatioLocked: false,
+      attributes: { id: 'brand-logo' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 15, unit: 'px' },
+          positionY: { value: 15, unit: 'px' },
+          width: { value: 120, unit: 'px' },
+          height: { value: 25, unit: 'px' },
+          fontSize: '16px',
+          textAlign: 'left',
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'slideDown',
+              from: { value: -20, unit: 'px' },
+              duration: { value: 0.6, unit: 's' },
+              delay: { value: 0, unit: 's' },
+              easing: 'ease-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 2',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.6, unit: 's' },
+              delay: { value: 0, unit: 's' },
+              easing: 'ease-in-out',
+            },
+          ],
+        },
+        '336x280': {
+          positionX: { value: 15, unit: 'px' },
+          positionY: { value: 15, unit: 'px' },
+          width: { value: 130, unit: 'px' },
+          height: { value: 28, unit: 'px' },
+          fontSize: '18px',
+          textAlign: 'left',
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'slideDown',
+              from: { value: -20, unit: 'px' },
+              duration: { value: 0.6, unit: 's' },
+              delay: { value: 0, unit: 's' },
+              easing: 'ease-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 2',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.6, unit: 's' },
+              delay: { value: 0, unit: 's' },
+              easing: 'ease-in-out',
+            },
+          ],
+        },
+        '728x90': {
+          positionX: { value: 15, unit: 'px' },
+          positionY: { value: 10, unit: 'px' },
+          width: { value: 110, unit: 'px' },
+          height: { value: 22, unit: 'px' },
+          fontSize: '14px',
+          textAlign: 'left',
+        },
+        '160x600': {
+          positionX: { value: 20, unit: 'px' },
+          positionY: { value: 20, unit: 'px' },
+          width: { value: 120, unit: 'px' },
+          height: { value: 25, unit: 'px' },
+          fontSize: '16px',
+          textAlign: 'left',
+        },
+      },
+      content: '<strong>TECH</strong>NOVA',
+      styles: {
+        color: '#00d4ff',
+        fontFamily: 'Montserrat',
+        opacity: 1,
+      },
+    },
+    {
+      id: `sa-${crypto.randomUUID()}`,
+      label: 'Product Image',
+      type: 'image',
+      locked: false,
+      aspectRatioLocked: true,
+      attributes: { id: 'product' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 90, unit: 'px' },
+          positionY: { value: 45, unit: 'px' },
+          width: { value: 120, unit: 'px' },
+          height: { value: 80, unit: 'px' },
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.8, unit: 's' },
+              delay: { value: 0.3, unit: 's' },
+              easing: 'ease-in-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 2',
+              type: 'scale',
+              from: { value: 0.8, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.8, unit: 's' },
+              delay: { value: 0.3, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
+        },
+        '336x280': {
+          positionX: { value: 108, unit: 'px' },
+          positionY: { value: 50, unit: 'px' },
+          width: { value: 120, unit: 'px' },
+          height: { value: 80, unit: 'px' },
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.8, unit: 's' },
+              delay: { value: 0.3, unit: 's' },
+              easing: 'ease-in-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 2',
+              type: 'scale',
+              from: { value: 0.8, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.8, unit: 's' },
+              delay: { value: 0.3, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
+        },
+        '728x90': {
+          positionX: { value: 530, unit: 'px' },
+          positionY: { value: 5, unit: 'px' },
+          width: { value: 75, unit: 'px' },
+          height: { value: 80, unit: 'px' },
+        },
+        '160x600': {
+          positionX: { value: 20, unit: 'px' },
+          positionY: { value: 60, unit: 'px' },
+          width: { value: 120, unit: 'px' },
+          height: { value: 80, unit: 'px' },
+        },
+      },
+      url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
+      styles: {
+        opacity: 1,
+        objectFit: 'contain',
+      },
+    },
+    {
+      id: `sa-${crypto.randomUUID()}`,
+      label: 'Headline',
+      type: 'richtext',
+      locked: false,
+      aspectRatioLocked: false,
+      attributes: { id: 'headline' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 130, unit: 'px' },
+          width: { value: 280, unit: 'px' },
+          height: { value: 38, unit: 'px' },
+          fontSize: '20px',
+          textAlign: 'center',
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.8, unit: 's' },
+              delay: { value: 0.6, unit: 's' },
+              easing: 'ease-in-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 2',
+              type: 'slideUp',
+              from: { value: 20, unit: 'px' },
+              duration: { value: 0.6, unit: 's' },
+              delay: { value: 0.6, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
+        },
+        '336x280': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 138, unit: 'px' },
+          width: { value: 316, unit: 'px' },
+          height: { value: 42, unit: 'px' },
+          fontSize: '22px',
+          textAlign: 'center',
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.8, unit: 's' },
+              delay: { value: 0.6, unit: 's' },
+              easing: 'ease-in-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 2',
+              type: 'slideUp',
+              from: { value: 20, unit: 'px' },
+              duration: { value: 0.6, unit: 's' },
+              delay: { value: 0.6, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
+        },
+        '728x90': {
+          positionX: { value: 140, unit: 'px' },
+          positionY: { value: 8, unit: 'px' },
+          width: { value: 240, unit: 'px' },
+          height: { value: 28, unit: 'px' },
+          fontSize: '16px',
+          textAlign: 'center',
+        },
+        '160x600': {
+          positionX: { value: 10, unit: 'px' },
+          positionY: { value: 150, unit: 'px' },
+          width: { value: 140, unit: 'px' },
+          height: { value: 60, unit: 'px' },
+          fontSize: '18px',
+          textAlign: 'center',
+        },
+      },
+      content: '<strong>Introducing</strong> <span style="color: #00d4ff;">Next Gen</span>',
+      styles: {
+        color: '#ffffff',
+        fontFamily: 'Roboto',
+        opacity: 1,
+      },
+    },
+    {
+      id: `sa-${crypto.randomUUID()}`,
+      label: 'Features',
+      type: 'text',
+      locked: false,
+      aspectRatioLocked: false,
+      attributes: { id: 'features' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 50, unit: 'px' },
+          positionY: { value: 170, unit: 'px' },
+          width: { value: 200, unit: 'px' },
+          height: { value: 48, unit: 'px' },
+          fontSize: '11px',
+          textAlign: 'left',
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.8, unit: 's' },
+              delay: { value: 0.9, unit: 's' },
+              easing: 'ease-in-out',
+            },
+          ],
+        },
+        '336x280': {
+          positionX: { value: 65, unit: 'px' },
+          positionY: { value: 185, unit: 'px' },
+          width: { value: 206, unit: 'px' },
+          height: { value: 50, unit: 'px' },
+          fontSize: '12px',
+          textAlign: 'left',
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.8, unit: 's' },
+              delay: { value: 0.9, unit: 's' },
+              easing: 'ease-in-out',
+            },
+          ],
+        },
+        '728x90': {
+          positionX: { value: 140, unit: 'px' },
+          positionY: { value: 40, unit: 'px' },
+          width: { value: 380, unit: 'px' },
+          height: { value: 40, unit: 'px' },
+          fontSize: '9px',
+          textAlign: 'left',
+        },
+        '160x600': {
+          positionX: { value: 15, unit: 'px' },
+          positionY: { value: 218, unit: 'px' },
+          width: { value: 130, unit: 'px' },
+          height: { value: 72, unit: 'px' },
+          fontSize: '11px',
+          textAlign: 'left',
+        },
+      },
+      content: '⚡ Lightning Fast\n🔒 Ultra Secure\n🤖 AI Powered',
+      styles: {
+        color: '#b8c1ec',
+        fontFamily: 'Inter',
+        opacity: 1,
+      },
+    },
+    {
+      id: `sa-${crypto.randomUUID()}`,
+      label: 'CTA Button',
+      type: 'button',
+      locked: false,
+      aspectRatioLocked: false,
+      attributes: { id: 'cta' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 85, unit: 'px' },
+          positionY: { value: 205, unit: 'px' },
+          width: { value: 130, unit: 'px' },
+          height: { value: 34, unit: 'px' },
+          fontSize: '13px',
+          borderRadius: { topLeft: 17, topRight: 17, bottomLeft: 17, bottomRight: 17 },
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.6, unit: 's' },
+              delay: { value: 1.2, unit: 's' },
+              easing: 'ease-in-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 2',
+              type: 'slideUp',
+              from: { value: 15, unit: 'px' },
+              duration: { value: 0.5, unit: 's' },
+              delay: { value: 1.2, unit: 's' },
+              easing: 'ease-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 3',
+              type: 'scale',
+              from: { value: 0.95, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.4, unit: 's' },
+              delay: { value: 1.3, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
+          animationLoopDelay: { value: 6, unit: 's' },
+          animationResetDuration: { value: 0.2, unit: 's' },
+        },
+        '336x280': {
+          positionX: { value: 103, unit: 'px' },
+          positionY: { value: 235, unit: 'px' },
+          width: { value: 130, unit: 'px' },
+          height: { value: 35, unit: 'px' },
+          fontSize: '14px',
+          borderRadius: { topLeft: 20, topRight: 20, bottomLeft: 20, bottomRight: 20 },
+          animations: [
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 1',
+              type: 'fadeIn',
+              from: { value: 0, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.6, unit: 's' },
+              delay: { value: 1.2, unit: 's' },
+              easing: 'ease-in-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 2',
+              type: 'slideUp',
+              from: { value: 15, unit: 'px' },
+              duration: { value: 0.5, unit: 's' },
+              delay: { value: 1.2, unit: 's' },
+              easing: 'ease-out',
+            },
+            {
+              id: `sa-${crypto.randomUUID()}`,
+              name: 'Animation 3',
+              type: 'scale',
+              from: { value: 0.95, unit: '' },
+              to: { value: 1, unit: '' },
+              duration: { value: 0.4, unit: 's' },
+              delay: { value: 1.3, unit: 's' },
+              easing: 'ease-out',
+            },
+          ],
+          animationLoopDelay: { value: 6, unit: 's' },
+          animationResetDuration: { value: 0.2, unit: 's' },
+        },
+        '728x90': {
+          positionX: { value: 615, unit: 'px' },
+          positionY: { value: 25, unit: 'px' },
+          width: { value: 105, unit: 'px' },
+          height: { value: 40, unit: 'px' },
+          fontSize: '12px',
+          borderRadius: { topLeft: 20, topRight: 20, bottomLeft: 20, bottomRight: 20 },
+        },
+        '160x600': {
+          positionX: { value: 15, unit: 'px' },
+          positionY: { value: 298, unit: 'px' },
+          width: { value: 130, unit: 'px' },
+          height: { value: 36, unit: 'px' },
+          fontSize: '13px',
+          borderRadius: { topLeft: 18, topRight: 18, bottomLeft: 18, bottomRight: 18 },
+        },
+      },
+      text: 'Pre-Order Now',
+      actionType: 'link',
+      url: 'https://www.example.com',
+      icon: { type: 'none', position: 'before' },
+      styles: {
+        backgroundColor: '#667eea',
+        color: '#ffffff',
+        fontFamily: 'Roboto',
+        opacity: 1,
+      },
+    },
+    {
+      id: `sa-${crypto.randomUUID()}`,
+      label: 'Background Gradient',
+      type: 'image',
+      locked: true,
+      aspectRatioLocked: false,
+      attributes: { id: 'bg-gradient' },
+      sizeConfig: {
+        '300x250': {
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 300, unit: 'px' },
+          height: { value: 250, unit: 'px' },
+        },
+        '336x280': {
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 336, unit: 'px' },
+          height: { value: 280, unit: 'px' },
+        },
+        '728x90': {
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 728, unit: 'px' },
+          height: { value: 90, unit: 'px' },
+        },
+        '160x600': {
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
+          width: { value: 160, unit: 'px' },
+          height: { value: 600, unit: 'px' },
+        },
+      },
+      url: 'https://images.unsplash.com/photo-1518770660439-4636190af475',
+      styles: {
+        opacity: 0.3,
+        objectFit: 'cover',
+      },
+    },
+  ],
+  animationLoop: -1,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

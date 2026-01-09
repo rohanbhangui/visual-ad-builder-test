@@ -28,7 +28,9 @@ export const ColorInput = ({
 
   // 3. Sync local state when Zustand value changes (e.g., undo/redo, external updates)
   useEffect(() => {
-    setLocalValue(value);
+    // Normalize the incoming value
+    const normalizedValue = value === '' || value === undefined ? 'transparent' : value;
+    setLocalValue(normalizedValue);
   }, [value]);
 
   // 4. When debounced value changes, update Zustand store
