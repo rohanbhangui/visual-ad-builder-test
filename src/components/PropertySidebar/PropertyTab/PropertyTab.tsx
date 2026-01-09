@@ -351,7 +351,6 @@ export const PropertyTab = ({
           onTextAlignChange={onTextAlignChange}
           contentEditableRef={contentEditableRef}
           onCopyFontSize={onCopyFontSize}
-          onCopyTextAlign={onCopyTextAlign}
           allowedSizes={allowedSizes}
         />
       ) : null}

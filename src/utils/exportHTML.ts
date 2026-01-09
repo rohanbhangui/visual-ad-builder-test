@@ -435,12 +435,12 @@ export const generateResponsiveHTML = (
           typeSpecificRules = `
         color: ${layer.styles?.color || DEFAULT_CSS_VALUES.TEXT_COLOR};
         font-family: ${layer.styles?.fontFamily || DEFAULT_CSS_VALUES.FONT_FAMILY};
-        text-align: ${layer.styles?.textAlign || DEFAULT_CSS_VALUES.TEXT_ALIGN};`;
+        text-align: ${config.textAlign || DEFAULT_CSS_VALUES.TEXT_ALIGN};`;
         } else if (layer.type === 'richtext') {
           typeSpecificRules = `
         color: ${layer.styles?.color || DEFAULT_CSS_VALUES.TEXT_COLOR};
         font-family: ${layer.styles?.fontFamily || DEFAULT_CSS_VALUES.FONT_FAMILY};
-        text-align: ${layer.styles?.textAlign || DEFAULT_CSS_VALUES.TEXT_ALIGN};`;
+        text-align: ${config.textAlign || DEFAULT_CSS_VALUES.TEXT_ALIGN};`;
         } else if (layer.type === 'button') {
           const bgColor = layer.styles?.backgroundColor || DEFAULT_CSS_VALUES.BUTTON_BG_COLOR;
           const textColor = layer.styles?.color || DEFAULT_CSS_VALUES.BUTTON_TEXT_COLOR;

@@ -16,7 +16,6 @@ interface RichtextLayerFieldsProps {
   onTextAlignChange: (layerId: string, textAlign: 'left' | 'center' | 'right') => void;
   contentEditableRef?: React.RefObject<HTMLDivElement | null>;
   onCopyFontSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
-  onCopyTextAlign?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   allowedSizes?: AdSize[];
 }
 
@@ -30,7 +29,6 @@ export const RichtextLayerFields = ({
   onTextAlignChange,
   contentEditableRef,
   onCopyFontSize,
-  onCopyTextAlign,
   allowedSizes,
 }: RichtextLayerFieldsProps) => {
   const config = layer.sizeConfig[selectedSize];
