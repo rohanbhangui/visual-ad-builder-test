@@ -3,22 +3,24 @@ import { temporal } from 'zundo';
 import { useStore as useZustandStore } from 'zustand';
 import { sampleCanvas, type LayerContent, type AdSize } from '../data';
 
-// State that gets tracked in history (content + context)
+// State that gets tracked in history (content + size context)
 interface HistoricalState {
   // Content state - what changed
   layers: LayerContent[];
   canvasName: string;
   canvasBackgroundColor: string;
   animationLoop: number;
-  
-  // Context state - where the change was made
+  // Size context - which size was being edited
   selectedSize: AdSize;
-  selectedLayerIds: string[];
-  activePropertyTab: 'properties' | 'animations';
 }
 
 // Ephemeral UI state that doesn't get tracked
 interface EphemeralState {
+  // UI context (not tracked in history)
+  selectedLayerIds: string[];
+  activePropertyTab: 'properties' | 'animations';
+  
+  // Other ephemeral state
   mode: 'edit' | 'preview';
   zoom: number;
   pan: { x: number; y: number };
@@ -52,8 +54,8 @@ interface AppStore extends HistoricalState, EphemeralState {
   setCanvasBackgroundColor: (color: string) => void;
   setAnimationLoop: (loop: number) => void;
   
-  // Context actions (tracked)
-  setSelectedSize: (size: AdSize) => void;
+  // Context actions
+  setSelectedSize: (size: AdSize) => void; // Tracked in history for size-specific changes
   setSelectedLayerIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   setActivePropertyTab: (tab: 'properties' | 'animations') => void;
   setIsLayersPanelCollapsed: (collapsed: boolean) => void;
@@ -86,13 +88,13 @@ export const useStore = create<AppStore>()(
       canvasBackgroundColor: sampleCanvas.styles?.backgroundColor || '#ffffff',
       animationLoop: sampleCanvas.animationLoop ?? -1,
       selectedSize: '336x280' as AdSize,
+      
+      // Ephemeral state (not tracked)
       selectedLayerIds: [],
       activePropertyTab: 'properties' as 'properties' | 'animations',
       isLayersPanelCollapsed: false,
       layersPanelPos: { x: -1, y: 10 },
       layersPanelSide: 'right' as 'left' | 'right',
-      
-      // Ephemeral state (not tracked)
       mode: 'edit',
       zoom: 1,
       pan: { x: 0, y: 0 },
@@ -147,8 +149,8 @@ export const useStore = create<AppStore>()(
       setCanvasBackgroundColor: (canvasBackgroundColor: string) => set({ canvasBackgroundColor }),
       setAnimationLoop: (animationLoop: number) => set({ animationLoop }),
       
-      // Context actions (tracked)
-      setSelectedSize: (selectedSize: AdSize) => set({ selectedSize }),
+      // Context actions
+      setSelectedSize: (selectedSize: AdSize) => set({ selectedSize }), // Tracked in history
       setSelectedLayerIds: (ids: string[] | ((prev: string[]) => string[])) =>
         set((state: AppStore) => ({
           selectedLayerIds: typeof ids === 'function' ? ids(state.selectedLayerIds) : ids,
@@ -186,14 +188,12 @@ export const useStore = create<AppStore>()(
     {
       limit: 50, // Keep last 50 history entries
       partialize: (state): HistoricalState => ({
-        // Only track these fields in history
+        // Track content changes and size context, but not layer selection
         layers: state.layers,
         canvasName: state.canvasName,
         canvasBackgroundColor: state.canvasBackgroundColor,
         animationLoop: state.animationLoop,
         selectedSize: state.selectedSize,
-        selectedLayerIds: state.selectedLayerIds,
-        activePropertyTab: state.activePropertyTab,
       }),
     }
   )

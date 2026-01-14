@@ -630,6 +630,7 @@ const PropertySidebarComponent = ({
         <div className="mt-4">
           {activeTab === 'properties' ? (
             <PropertyTab
+              key={layer.id}
               layer={layer}
               layers={layers}
               selectedSize={selectedSize}
@@ -664,6 +665,7 @@ const PropertySidebarComponent = ({
             />
           ) : (
             <AnimationTab
+              key={layer.id}
               layer={layer}
               selectedSize={selectedSize}
               onAnimationChange={onAnimationChange}
