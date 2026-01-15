@@ -25,7 +25,7 @@ const LAYER_NAME_WIDTH = 200;
 const MARKER_SIZE = 8; // Size of the 45° rotated square
 const ANIMATION_BAR_HEIGHT = 16; // Thinner animation bars
 
-export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange, onAnimationLoopDelayChange }: TimelinePanelProps) => {
+export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange }: TimelinePanelProps) => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const timelineHeaderScrollRef = useRef<HTMLDivElement>(null);
