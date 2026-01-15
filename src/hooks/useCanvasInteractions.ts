@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { type LayerContent, type AdSize } from '../data';
 import { HTML5_AD_SIZES } from '../consts';
+import { pauseHistory, resumeHistory } from '../store/useStore';
 
 interface UseCanvasInteractionsProps {
   mode: 'edit' | 'preview';
@@ -46,6 +47,7 @@ export const useCanvasInteractions = ({
   const [tempLayerUpdates, setTempLayerUpdates] = useState<LayerContent[]>([]);
   const isDraggingRef = useRef(false);
   const isResizingRef = useRef(false);
+  const rafIdRef = useRef<number | null>(null); // For throttling updates via requestAnimationFrame
   
   const dragStartRef = useRef<{
     x: number;
@@ -130,6 +132,10 @@ export const useCanvasInteractions = ({
 
     setIsDragging(true);
     isDraggingRef.current = true;
+    
+    // Pause history tracking during drag operation
+    pauseHistory();
+    
     setTempLayerUpdates(layers); // Store initial state
     dragStartRef.current = {
       x: e.clientX,
@@ -162,6 +168,10 @@ export const useCanvasInteractions = ({
 
     setIsResizing(true);
     isResizingRef.current = true;
+    
+    // Pause history tracking during resize operation
+    pauseHistory();
+    
     setTempLayerUpdates(layers); // Store initial state
     resizeStartRef.current = {
       x: e.clientX,
@@ -176,7 +186,15 @@ export const useCanvasInteractions = ({
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent | MouseEvent) => {
-      if (isDragging && selectedLayerIds.length > 0) {
+      // Throttle updates using requestAnimationFrame for smooth 60fps performance
+      if (rafIdRef.current !== null) {
+        return; // Skip if a frame is already scheduled
+      }
+
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+
+        if (isDragging && selectedLayerIds.length > 0) {
         // Convert screen coordinates to canvas coordinates accounting for zoom
         const dx = (e.clientX - dragStartRef.current.x) / zoomRef.current;
         const dy = (e.clientY - dragStartRef.current.y) / zoomRef.current;
@@ -859,10 +877,11 @@ export const useCanvasInteractions = ({
             return layer;
           })
         );
-      } else {
-        // Clear snap lines when not dragging or resizing
-        setSnapLines([]);
-      }
+        } else {
+          // Clear snap lines when not dragging or resizing
+          setSnapLines([]);
+        }
+      }); // End of requestAnimationFrame
     },
     [
       isDragging,
@@ -885,8 +904,16 @@ export const useCanvasInteractions = ({
 
   /** Handler for ending drag or resize operations */
   const handleMouseUp = useCallback(() => {
+    // Cancel any pending animation frame
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    
     // Commit temp layer updates to the store when drag/resize ends
     if ((isDraggingRef.current || isResizingRef.current) && tempLayerUpdates.length > 0) {
+      // Resume history before committing changes
+      resumeHistory();
       setLayers(tempLayerUpdates);
     }
     

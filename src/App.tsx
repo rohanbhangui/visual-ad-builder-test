@@ -4,7 +4,7 @@ import { HTML5_AD_SIZES, UI_LAYOUT } from './consts';
 import { TopBar } from './components/TopBar';
 import { LayersPanel } from './components/LayersPanel';
 import { PropertySidebar } from './components/PropertySidebar';
-import { Canvas } from './components/Canvas';
+import Canvas from './components/Canvas';
 import { ExportHTMLModal } from './components/ExportHTMLModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ZoomControls } from './components/ZoomControls';
@@ -12,7 +12,7 @@ import { TimelinePanel } from './components/TimelinePanel';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
-import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory } from './store/useStore';
+import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory, pauseHistory, resumeHistory } from './store/useStore';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 import ReplayIcon from './assets/icons/reset-view-ccw.svg?react';
@@ -79,6 +79,8 @@ const App = () => {
   const setIsExportModalOpen = useStore((state) => state.setIsExportModalOpen);
   const setIsSettingsModalOpen = useStore((state) => state.setIsSettingsModalOpen);
   const setAdSelectorPosition = useStore((state) => state.setAdSelectorPosition);
+  const commitZoom = useStore((state) => state.commitZoom);
+  const commitPan = useStore((state) => state.commitPan);
   
   // Undo/redo
   const canUndo = useCanUndo();
@@ -355,7 +357,18 @@ const App = () => {
     setZoom(newZoom);
   }, [zoom, setPan, setZoom]);
 
+  // Commit zoom to history (called after interaction completes)
+  const handleZoomCommit = useCallback((finalZoom: number) => {
+    commitZoom(finalZoom);
+    commitPan(pan); // Also commit pan since it may have changed during zoom
+  }, [commitZoom, commitPan, pan]);
+
   useEffect(() => {
+    let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
+    let lastZoom = zoom;
+    let lastPan = pan;
+    let isWheeling = false;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !isSpacePressed) {
         // Check if user is typing
@@ -377,6 +390,8 @@ const App = () => {
       if (e.code === 'Space') {
         setIsSpacePressed(false);
         setIsPanning(false);
+        // Commit pan after space release
+        commitPan(pan);
       }
     };
 
@@ -389,12 +404,27 @@ const App = () => {
       const canvasContainer = document.querySelector('[data-canvas-container]');
       if (!canvasContainer?.contains(target)) return;
 
+      // Pause history on first wheel event
+      if (!isWheeling) {
+        pauseHistory();
+        isWheeling = true;
+      }
+
       if (e.shiftKey) {
         // Shift + scroll = zoom
         e.preventDefault();
         const delta = -e.deltaY * 0.005; // Reduced multiplier for smoother zoom
         const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
         handleZoomChange(newZoom, e.clientX, e.clientY);
+        lastZoom = newZoom;
+
+        // Debounce commit: wait 150ms after last wheel event
+        if (wheelTimeout) clearTimeout(wheelTimeout);
+        wheelTimeout = setTimeout(() => {
+          resumeHistory();
+          isWheeling = false;
+          handleZoomCommit(lastZoom);
+        }, 150);
       } else if (e.ctrlKey || e.metaKey) {
         // Trackpad pinch = zoom (browser sends ctrl+wheel)
         e.preventDefault();
@@ -418,6 +448,15 @@ const App = () => {
         // Apply zoom - responsive to pinch speed
         const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
         handleZoomChange(newZoom, e.clientX, e.clientY);
+        lastZoom = newZoom;
+
+        // Debounce commit: wait 150ms after last wheel event
+        if (wheelTimeout) clearTimeout(wheelTimeout);
+        wheelTimeout = setTimeout(() => {
+          resumeHistory();
+          isWheeling = false;
+          handleZoomCommit(lastZoom);
+        }, 150);
       } else {
         // Two-finger swipe = pan (regular scroll over canvas)
         e.preventDefault();
@@ -438,10 +477,20 @@ const App = () => {
         }
         // DOM_DELTA_PIXEL (default) - use as-is for 1:1 responsive panning
 
-        setPan((prev) => ({
-          x: prev.x - deltaX,
-          y: prev.y - deltaY,
-        }));
+        const newPan = {
+          x: pan.x - deltaX,
+          y: pan.y - deltaY,
+        };
+        setPan(newPan);
+        lastPan = newPan;
+
+        // Debounce commit: wait 150ms after last wheel event
+        if (wheelTimeout) clearTimeout(wheelTimeout);
+        wheelTimeout = setTimeout(() => {
+          resumeHistory();
+          isWheeling = false;
+          commitPan(lastPan);
+        }, 150);
       }
     };
 
@@ -450,11 +499,18 @@ const App = () => {
     window.addEventListener('wheel', handleWheel, { passive: false });
 
     return () => {
+      if (wheelTimeout) {
+        clearTimeout(wheelTimeout);
+        // Resume history if component unmounts during wheeling
+        if (isWheeling) {
+          resumeHistory();
+        }
+      }
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [isSpacePressed, zoom, pan, handleZoomChange, setIsPanning, setPan, mode]);
+  }, [isSpacePressed, zoom, pan, handleZoomChange, handleZoomCommit, setIsPanning, setPan, commitPan, mode]);
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     // Disable panning in preview mode
@@ -463,6 +519,8 @@ const App = () => {
     if (isSpacePressed) {
       e.preventDefault();
       setIsPanning(true);
+      // Pause history during panning
+      pauseHistory();
       panStartRef.current = {
         x: e.clientX,
         y: e.clientY,
@@ -492,6 +550,9 @@ const App = () => {
 
     if (isPanning) {
       setIsPanning(false);
+      // Resume history and commit pan position after drag
+      resumeHistory();
+      commitPan(pan);
     }
   };
 
@@ -1693,10 +1754,17 @@ const App = () => {
               {mode === 'edit' ? (
                 <ZoomControls
                   zoom={zoom}
-                  onZoomChange={handleZoomChange}
+                  onZoomChange={(newZoom) => {
+                    handleZoomChange(newZoom);
+                    // Commit immediately since this is a deliberate click action
+                    setTimeout(() => handleZoomCommit(newZoom), 0);
+                  }}
                   onResetPan={() => {
                     setPan({ x: 0, y: 0 });
                     setZoom(1);
+                    // Commit reset to history
+                    commitPan({ x: 0, y: 0 });
+                    commitZoom(1);
                   }}
                 />
               ) : null}

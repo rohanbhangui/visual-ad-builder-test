@@ -519,6 +519,8 @@ export const Canvas: React.FC<CanvasProps> = ({
       opacity: layer.styles?.opacity || 1,
       borderRadius: borderRadiusValue,
       overflow: config.borderRadius ? 'hidden' : undefined,
+      // GPU acceleration hint for selected layers that might be dragged
+      willChange: isSelected ? 'transform, top, left' : undefined,
     };
 
     const contentWrapperClassName = `w-full h-full relative ${
@@ -677,7 +679,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     return (
       <div
         key={layer.id}
-        style={style}
+        style={{ ...style, contain: 'layout style paint' }}
         onMouseDown={(e) => {
           if (!layer.locked && !isSpacePressed && !isPanning) {
             // Clear any hover states from all elements before handling click
@@ -996,3 +998,6 @@ export const Canvas: React.FC<CanvasProps> = ({
     </div>
   );
 };
+
+// Memoize Canvas to prevent re-renders when props haven't changed
+export default React.memo(Canvas);

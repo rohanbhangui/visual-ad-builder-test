@@ -3,29 +3,29 @@ import { temporal } from 'zundo';
 import { useStore as useZustandStore } from 'zustand';
 import { sampleCanvas, type LayerContent, type AdSize } from '../data';
 
-// State that gets tracked in history (content + size context)
+// State that gets tracked in history (content + meaningful UI changes)
 interface HistoricalState {
-  // Content state - what changed
+  // Core content state
   layers: LayerContent[];
   canvasName: string;
   canvasBackgroundColor: string;
   animationLoop: number;
-  // Size context - which size was being edited
-  selectedSize: AdSize;
+  // Editing context - tracked to provide context for layer modifications
+  selectedSize: AdSize; // Layer properties are size-specific
+  selectedLayerIds: string[]; // Which layers are being edited
+  // UI state that represents meaningful user actions
+  activePropertyTab: 'properties' | 'animations'; // Tab switches
+  isTimelinePanelOpen: boolean; // Timeline open/close
+  zoom: number; // Final zoom level (committed after interaction)
+  pan: { x: number; y: number }; // Final pan position (committed after interaction)
 }
 
 // Ephemeral UI state that doesn't get tracked
 interface EphemeralState {
-  // UI context (not tracked in history)
-  selectedLayerIds: string[];
-  activePropertyTab: 'properties' | 'animations';
+  // Application settings (not canvas state)
   animationMode: 'basic' | 'advanced' | 'both';
-  isTimelinePanelOpen: boolean;
-  
-  // Other ephemeral state
+  // Temporary interaction state
   mode: 'edit' | 'preview';
-  zoom: number;
-  pan: { x: number; y: number };
   isPanning: boolean;
   isSnappingEnabled: boolean;
   isClippingEnabled: boolean;
@@ -70,6 +70,8 @@ interface AppStore extends HistoricalState, EphemeralState {
   setMode: (mode: 'edit' | 'preview') => void;
   setZoom: (zoom: number) => void;
   setPan: (pan: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) => void;
+  commitZoom: (zoom: number) => void; // Commit final zoom value to history
+  commitPan: (pan: { x: number; y: number }) => void; // Commit final pan value to history
   setIsPanning: (isPanning: boolean) => void;
   setIsSnappingEnabled: (enabled: boolean) => void;
   setIsClippingEnabled: (enabled: boolean) => void;
@@ -92,18 +94,18 @@ export const useStore = create<AppStore>()(
       canvasBackgroundColor: sampleCanvas.styles?.backgroundColor || '#ffffff',
       animationLoop: sampleCanvas.animationLoop ?? -1,
       selectedSize: '336x280' as AdSize,
-      
-      // Ephemeral state (not tracked)
       selectedLayerIds: [],
       activePropertyTab: 'properties' as 'properties' | 'animations',
-      animationMode: 'both' as 'basic' | 'advanced' | 'both',
       isTimelinePanelOpen: false,
+      zoom: 1,
+      pan: { x: 0, y: 0 },
+      
+      // Ephemeral state (not tracked)
+      animationMode: 'both' as 'basic' | 'advanced' | 'both',
       isLayersPanelCollapsed: false,
       layersPanelPos: { x: -1, y: 10 },
       layersPanelSide: 'right' as 'left' | 'right',
       mode: 'edit',
-      zoom: 1,
-      pan: { x: 0, y: 0 },
       isPanning: false,
       isSnappingEnabled: true,
       isClippingEnabled: false,
@@ -160,24 +162,30 @@ export const useStore = create<AppStore>()(
       setSelectedLayerIds: (ids: string[] | ((prev: string[]) => string[])) =>
         set((state: AppStore) => ({
           selectedLayerIds: typeof ids === 'function' ? ids(state.selectedLayerIds) : ids,
-        })),
-      setActivePropertyTab: (activePropertyTab: 'properties' | 'animations') => set({ activePropertyTab }),
-      setAnimationMode: (animationMode: 'basic' | 'advanced' | 'both') => set({ animationMode }),
-      setIsTimelinePanelOpen: (isTimelinePanelOpen: boolean) => set({ isTimelinePanelOpen }),
-      setIsLayersPanelCollapsed: (isLayersPanelCollapsed: boolean) => set({ isLayersPanelCollapsed }),
+        })), // Tracked - provides context for layer edits
+      setActivePropertyTab: (activePropertyTab: 'properties' | 'animations') => set({ activePropertyTab }), // Tracked
+      setAnimationMode: (animationMode: 'basic' | 'advanced' | 'both') => set({ animationMode }), // Not tracked
+      setIsTimelinePanelOpen: (isTimelinePanelOpen: boolean) => set({ isTimelinePanelOpen }), // Tracked
+      setIsLayersPanelCollapsed: (isLayersPanelCollapsed: boolean) => set({ isLayersPanelCollapsed }), // Not tracked
       setLayersPanelPos: (pos: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) =>
         set((state: AppStore) => ({
           layersPanelPos: typeof pos === 'function' ? pos(state.layersPanelPos) : pos,
-        })),
-      setLayersPanelSide: (layersPanelSide: 'left' | 'right') => set({ layersPanelSide }),
+        })), // Not tracked
+      setLayersPanelSide: (layersPanelSide: 'left' | 'right') => set({ layersPanelSide }), // Not tracked
       
-      // Ephemeral actions (not tracked)
+      // Ephemeral actions (not tracked by partialize)
       setMode: (mode: 'edit' | 'preview') => set({ mode }),
+      // setZoom updates zoom without tracking (during interaction)
       setZoom: (zoom: number) => set({ zoom }),
+      // setPan updates pan without tracking (during interaction)
       setPan: (pan: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) =>
         set((state: AppStore) => ({
           pan: typeof pan === 'function' ? pan(state.pan) : pan,
         })),
+      // commitZoom saves final zoom value to history (will be picked up by partialize)
+      commitZoom: (zoom: number) => set({ zoom }),
+      // commitPan saves final pan value to history (will be picked up by partialize)
+      commitPan: (pan: { x: number; y: number }) => set({ pan }),
       setIsPanning: (isPanning: boolean) => set({ isPanning }),
       setIsSnappingEnabled: (isSnappingEnabled: boolean) => set({ isSnappingEnabled }),
       setIsSettingsModalOpen: (isSettingsModalOpen: boolean) => set({ isSettingsModalOpen }),
@@ -196,13 +204,21 @@ export const useStore = create<AppStore>()(
     {
       limit: 50, // Keep last 50 history entries
       partialize: (state): HistoricalState => ({
-        // Track content changes and size context, but not layer selection
+        // Track meaningful canvas modifications
         layers: state.layers,
         canvasName: state.canvasName,
         canvasBackgroundColor: state.canvasBackgroundColor,
         animationLoop: state.animationLoop,
-        selectedSize: state.selectedSize,
+        // Track editing context
+        selectedSize: state.selectedSize, // Layer properties are size-specific
+        selectedLayerIds: state.selectedLayerIds, // Which layers are being edited
+        // Track meaningful UI changes that represent user intent
+        activePropertyTab: state.activePropertyTab, // Tab switches
+        isTimelinePanelOpen: state.isTimelinePanelOpen, // Timeline open/close
+        zoom: state.zoom, // Final zoom level
+        pan: state.pan, // Final pan position
       }),
+      // Let zundo handle equality checks (more efficient than JSON.stringify)
     }
   )
 );
