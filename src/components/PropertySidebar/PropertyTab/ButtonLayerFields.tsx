@@ -1,6 +1,6 @@
 import { type ButtonLayer, type AdSize, type LayerContent } from '../../../data';
-import { ColorInput } from '../../ColorInput';
-import { UrlInput } from '../../UrlInput';
+import { ColorInput } from '../../inputs/ColorInput';
+import { UrlInput } from '../../inputs/UrlInput';
 import { Label } from '../../Label/Label';
 import { FONT_SIZE_OPTIONS, MAX_BUTTON_TEXT_LENGTH, GOOGLE_FONTS } from '../../../consts';
 

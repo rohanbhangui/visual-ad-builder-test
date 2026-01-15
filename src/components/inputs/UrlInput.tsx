@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Label } from './Label/Label';
+import { Label } from '../Label/Label';
 import { DebouncedInput } from './DebouncedInput';
 
 interface UrlInputProps {

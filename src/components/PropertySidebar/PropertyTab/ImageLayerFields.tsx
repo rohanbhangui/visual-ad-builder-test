@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { type ImageLayer } from '../../../data';
-import { UrlInput } from '../../UrlInput';
+import { UrlInput } from '../../inputs/UrlInput';
 import { Label } from '../../Label/Label';
 
 interface ImageLayerFieldsProps {

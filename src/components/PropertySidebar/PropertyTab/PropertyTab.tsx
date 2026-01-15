@@ -8,10 +8,10 @@ import {
   type TextLayer,
   type RichtextLayer,
 } from '../../../data';
-import { PositionSizeInput } from '../../PositionSizeInput';
+import { PositionSizeInput } from '../../inputs/PositionSizeInput';
 import { Label } from '../../Label/Label';
-import { ColorInput } from '../../ColorInput';
-import { CornersInput } from '../../CornersInput';
+import { ColorInput } from '../../inputs/ColorInput';
+import { CornersInput } from '../../inputs/CornersInput';
 import LockIcon from '../../../assets/icons/lock.svg?react';
 import UnlockIcon from '../../../assets/icons/unlock.svg?react';
 import AlignLeftIcon from '../../../assets/icons/align-left.svg?react';

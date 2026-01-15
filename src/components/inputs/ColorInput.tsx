@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Label } from './Label/Label';
-import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
-import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { Label } from '../Label/Label';
+import ChevronDownIcon from '../../assets/icons/chevron-down.svg?react';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 
 interface ColorInputProps {
   label: string;

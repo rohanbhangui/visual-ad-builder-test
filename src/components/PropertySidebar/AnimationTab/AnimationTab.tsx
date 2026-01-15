@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../../data';
 import { Label } from '../../Label/Label';
 import { CopySizePopover } from '../../Label/CopySizePopover';
-import { ColorInput } from '../../ColorInput';
+import { ColorInput } from '../../inputs/ColorInput';
 import TrashIcon from '../../../assets/icons/trash.svg?react';
 import EditIcon from '../../../assets/icons/edit.svg?react';
 import ChevronDownIcon from '../../../assets/icons/chevron-down.svg?react';

@@ -1,5 +1,5 @@
 import { type TextLayer, type AdSize } from '../../../data';
-import { ColorInput } from '../../ColorInput';
+import { ColorInput } from '../../inputs/ColorInput';
 import { Label } from '../../Label/Label';
 import {
   FONT_SIZE_OPTIONS,

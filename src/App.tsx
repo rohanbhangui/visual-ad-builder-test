@@ -16,7 +16,7 @@ import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory } fro
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 import ReplayIcon from './assets/icons/reset-view-ccw.svg?react';
-import ChevronUpIcon from './assets/icons/chevron-up.svg?react';
+import TimelineIcon from './assets/icons/timeline.svg?react';
 
 // UI Layout Constant (moved inside component)
 const App = () => {
@@ -1500,7 +1500,7 @@ const App = () => {
         allowedSizes={sampleCanvas.allowedSizes}
         canUndo={canUndo}
         canRedo={canRedo}
-        showAdSelector={mode === 'preview' || adSelectorPosition === 'top'}
+        showAdSelector={adSelectorPosition === 'top'}
         onModeChange={setMode}
         onSizeChange={setSelectedSize}
         onExportHTML={handleExportHTML}
@@ -1599,7 +1599,7 @@ const App = () => {
           {/* Bottom Controls Bar - Always visible */}
           <div className="absolute bottom-0 left-0 right-0 h-16 flex items-center px-4 gap-4">
             {/* Left side controls */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 w-64">
               {/* Replay Button in Preview Mode OR Snapping Toggle in Edit Mode */}
               {mode === 'preview' ? (
                 <button
@@ -1646,8 +1646,8 @@ const App = () => {
                       }`}
                       title={isTimelinePanelOpen ? 'Close Timeline' : 'Open Timeline'}
                     >
-                      <ChevronUpIcon
-                        className={`w-5 h-5 transition-transform ${isTimelinePanelOpen ? 'rotate-180' : ''}`}
+                      <TimelineIcon
+                        className="w-5 h-5"
                       />
                     </button>
                   ) : null}
@@ -1655,8 +1655,8 @@ const App = () => {
               )}
             </div>
 
-            {/* Ad Selector - Center (when position is 'bottom' in edit mode, or always in preview mode) */}
-            {(mode === 'edit' && adSelectorPosition === 'bottom') || mode === 'preview' ? (
+            {/* Ad Selector - Center (when position is 'bottom') */}
+            {adSelectorPosition === 'bottom' ? (
               <div className="flex-1 flex items-center justify-center gap-4">
                 {sampleCanvas.allowedSizes.map((size) => {
                   const { width, height } = HTML5_AD_SIZES[size];
@@ -1689,8 +1689,8 @@ const App = () => {
             ) : null}
 
             {/* Zoom Controls - Right side (hidden in preview mode) */}
-            {mode === 'edit' ? (
-              <div className="ml-auto">
+            <div className="w-64">
+              {mode === 'edit' ? (
                 <ZoomControls
                   zoom={zoom}
                   onZoomChange={handleZoomChange}
@@ -1699,8 +1699,8 @@ const App = () => {
                     setZoom(1);
                   }}
                 />
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -1763,7 +1763,9 @@ const App = () => {
             layers={layers}
             selectedSize={selectedSize}
             isOpen={isTimelinePanelOpen}
+            selectedLayerIds={selectedLayerIds}
             onAnimationChange={handleAnimationChange}
+            onAnimationLoopDelayChange={handleAnimationLoopDelayChange}
           />
         ) : null}
       </div>

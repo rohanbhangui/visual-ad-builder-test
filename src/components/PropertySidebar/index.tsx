@@ -1,7 +1,7 @@
 import { useState, useEffect, memo, useRef } from 'react';
 import { type LayerContent, type AdSize, type Animation } from '../../data';
-import { ColorInput } from '../ColorInput';
-import { PositionSizeInput } from '../PositionSizeInput';
+import { ColorInput } from '../inputs/ColorInput';
+import { PositionSizeInput } from '../inputs/PositionSizeInput';
 import { Label } from '../Label/Label';
 import EditIcon from '../../assets/icons/edit.svg?react';
 import XIcon from '../../assets/icons/x.svg?react';

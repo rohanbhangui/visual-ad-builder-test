@@ -1,5 +1,5 @@
 import { type RichtextLayer, type AdSize } from '../../../data';
-import { ColorInput } from '../../ColorInput';
+import { ColorInput } from '../../inputs/ColorInput';
 import { Label } from '../../Label/Label';
 import { FONT_SIZE_OPTIONS, GOOGLE_FONTS, UI_COLORS } from '../../../consts';
 import TextAlignLeftIcon from '../../../assets/icons/text-align-left.svg?react';

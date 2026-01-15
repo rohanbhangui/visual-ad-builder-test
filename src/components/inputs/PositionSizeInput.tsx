@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Label } from './Label/Label';
+import { Label } from '../Label/Label';
 import { DebouncedInput } from './DebouncedInput';
-import type { AdSize } from '../data';
+import type { AdSize } from '../../data';
 
 interface PositionSizeInputProps {
   label: string;

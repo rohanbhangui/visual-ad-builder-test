@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Label } from './Label/Label';
+import { Label } from '../Label/Label';
 import { DebouncedInput } from './DebouncedInput';
-import { type AdSize } from '../data';
-import cornersIcon from '../assets/icons/corners.svg';
+import { type AdSize } from '../../data';
+import cornersIcon from '../../assets/icons/corners.svg';
 
 interface CornersInputProps {
   label?: string;

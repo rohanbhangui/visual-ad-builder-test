@@ -1,5 +1,5 @@
 import { useState, useEffect, type InputHTMLAttributes } from 'react';
-import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 
 interface DebouncedInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   value: string | number;

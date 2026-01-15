@@ -3,12 +3,17 @@ import { type LayerContent, type AdSize } from '../data';
 import { TIMELINE_COLOR_PAIRS } from '../consts';
 import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
 import ChevronUpIcon from '../assets/icons/chevron-up.svg?react';
+import EditIcon from '../assets/icons/edit.svg?react';
+import TrashIcon from '../assets/icons/trash.svg?react';
+import { AddEditAnimationModal } from './AddEditAnimationModal';
 
 interface TimelinePanelProps {
   layers: LayerContent[];
   selectedSize: AdSize;
   isOpen: boolean;
+  selectedLayerIds: string[];
   onAnimationChange?: (layerId: string, size: AdSize, animations: import('../data').Animation[]) => void;
+  onAnimationLoopDelayChange?: (layerId: string, size: AdSize, delay: { value: number; unit: 'ms' | 's' }) => void;
 }
 
 const TIMELINE_HEIGHT = 300; // Panel height
@@ -20,7 +25,7 @@ const LAYER_NAME_WIDTH = 200;
 const MARKER_SIZE = 8; // Size of the 45° rotated square
 const ANIMATION_BAR_HEIGHT = 16; // Thinner animation bars
 
-export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange }: TimelinePanelProps) => {
+export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange, onAnimationLoopDelayChange }: TimelinePanelProps) => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const timelineHeaderScrollRef = useRef<HTMLDivElement>(null);
@@ -37,7 +42,10 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
   const [isHoveringResize, setIsHoveringResize] = useState(false);
   const [tempResizeHeight, setTempResizeHeight] = useState<number | null>(null);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [loopDuration, setLoopDuration] = useState(5); // Default loop at 5 seconds
+  const [hoveredAnimationRow, setHoveredAnimationRow] = useState<string | null>(null);
+  const [viewportWidth, setViewportWidth] = useState(1400); // Track viewport width
+  const [editingLoopMarker, setEditingLoopMarker] = useState(false);
+  const [editingLoopValue, setEditingLoopValue] = useState('');
   
   const [draggingMarker, setDraggingMarker] = useState<{
     layerId: string;
@@ -46,6 +54,11 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
     initialX: number;
     initialBarLeft?: number;
     initialDelay: number;
+    initialDuration: number;
+  } | null>(null);
+  
+  const [draggingLoopMarker, setDraggingLoopMarker] = useState<{
+    initialX: number;
     initialDuration: number;
   } | null>(null);
   
@@ -59,6 +72,13 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
   } | null>(null);
   
   const [editingValue, setEditingValue] = useState<string>('');
+
+  const [animationModal, setAnimationModal] = useState<{
+    isOpen: boolean;
+    mode: 'add' | 'edit';
+    layerId: string;
+    animationId?: string;
+  } | null>(null);
 
   // Handle timeline resize
   const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
@@ -99,11 +119,49 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
     });
   };
 
+  const handleAddAnimation = useCallback((layerId: string) => {
+    setAnimationModal({ isOpen: true, mode: 'add', layerId });
+    // Expand the layer to show animations
+    setExpandedLayerIds((prev) => new Set(prev).add(layerId));
+  }, []);
+
+  const handleEditAnimation = useCallback((layerId: string, animationId: string) => {
+    setAnimationModal({ isOpen: true, mode: 'edit', layerId, animationId });
+  }, []);
+
+  const handleDeleteAnimation = useCallback((layerId: string, animationId: string) => {
+    const layer = layers.find(l => l.id === layerId);
+    if (!layer || !onAnimationChange) return;
+    
+    const animations = layer.sizeConfig[selectedSize]?.animations || [];
+    const animation = animations.find(a => a.id === animationId);
+    if (!animation) return;
+    
+    if (window.confirm(`Are you sure you want to delete "${animation.name}"?`)) {
+      const updatedAnimations = animations.filter(a => a.id !== animationId);
+      onAnimationChange(layerId, selectedSize, updatedAnimations);
+    }
+  }, [layers, selectedSize, onAnimationChange]);
+
   // Sync scroll between timeline header and content
   useEffect(() => {
     const scrollContainerEl = scrollContainerRef.current;
     const timelineHeaderEl = timelineHeaderScrollRef.current;
     if (!scrollContainerEl || !timelineHeaderEl) return;
+
+    // Track viewport width for timeline duration calculation
+    const updateViewportWidth = () => {
+      if (scrollContainerEl) {
+        setViewportWidth(scrollContainerEl.clientWidth);
+      }
+    };
+    
+    // Initial measurement
+    updateViewportWidth();
+    
+    // Watch for resize
+    const resizeObserver = new ResizeObserver(updateViewportWidth);
+    resizeObserver.observe(scrollContainerEl);
 
     let isSyncingFromHeader = false;
     let isSyncingFromContent = false;
@@ -149,6 +207,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
     handleContentScroll();
     
     return () => {
+      resizeObserver.disconnect();
       scrollContainerEl.removeEventListener('scroll', handleContentScroll);
       timelineHeaderEl.removeEventListener('scroll', handleHeaderScroll);
     };
@@ -159,8 +218,21 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
     return timeValue.unit === 's' ? timeValue.value : timeValue.value / 1000;
   };
 
+  // Format seconds to MM:SS format
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    const centisecs = Math.floor((seconds % 1) * 100);
+    return `${mins}:${secs.toString().padStart(2, '0')}.${centisecs.toString().padStart(2, '0')}`;
+  };
+
   // Calculate dynamic values based on zoom and animations
   const PIXELS_PER_SECOND = BASE_PIXELS_PER_SECOND * zoomLevel;
+
+  // Get loop duration from first layer's animationLoopDelay
+  const firstLayer = layers[0];
+  const loopDelay = firstLayer?.sizeConfig[selectedSize]?.animationLoopDelay;
+  const loopDuration = loopDelay ? (loopDelay.unit === 's' ? loopDelay.value : loopDelay.value / 1000) : 0;
   
   const maxAnimationTime = useMemo(() => {
     let max = 0;
@@ -176,19 +248,29 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
 
   // Timeline extends intelligently: for short animations, show reasonable length;
   // for longer animations, extend to fit with buffer
+  // At lower zoom levels, extend to fill viewport width
   const TIMELINE_DURATION = useMemo(() => {
-    const minDuration = 30; // Minimum 30 seconds
+    // Calculate minimum duration based on viewport width and zoom
+    const availableWidth = viewportWidth - LAYER_NAME_WIDTH;
+    const pixelsPerSecond = BASE_PIXELS_PER_SECOND * zoomLevel;
+    const viewportSeconds = availableWidth / pixelsPerSecond;
+    
+    // Minimum duration should fill the viewport, with a base minimum of 40s
+    const minDuration = Math.max(40, Math.ceil(viewportSeconds));
     if (maxAnimationTime === 0) return minDuration;
     
     // Add buffer of 20% or at least 5 seconds
     const buffer = Math.max(5, maxAnimationTime * 0.2);
     const withBuffer = maxAnimationTime + buffer;
     
+    // Use larger of minimum or buffered time
+    const targetDuration = Math.max(minDuration, withBuffer);
+    
     // Round up to nice number based on size
-    if (withBuffer <= 30) return 30;
-    if (withBuffer <= 60) return Math.ceil(withBuffer / 5) * 5; // Round to nearest 5
-    return Math.ceil(withBuffer / 10) * 10; // Round to nearest 10
-  }, [maxAnimationTime]);
+    if (targetDuration <= 30) return 30;
+    if (targetDuration <= 60) return Math.ceil(targetDuration / 5) * 5; // Round to nearest 5
+    return Math.ceil(targetDuration / 10) * 10; // Round to nearest 10
+  }, [maxAnimationTime, zoomLevel, viewportWidth]);
   
   // Dynamic marker interval based on zoom level
   const TIME_MARKER_INTERVAL = zoomLevel >= 2 ? 1 : zoomLevel >= 1 ? 2 : zoomLevel >= 0.5 ? 5 : 10;
@@ -202,10 +284,10 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
       markers.push(
         <div
           key={i}
-          className="absolute top-0 bottom-0 flex flex-col items-start justify-end"
+          className="absolute top-0 bottom-0 flex flex-col items-start justify-end select-none"
           style={{ left: `${i * PIXELS_PER_SECOND}px`, transform: 'translateX(-0.5px)' }}
         >
-          <span className="text-[10px] text-gray-600 mb-0.5" style={{ transform: 'translateX(-50%)', marginLeft: '0.5px' }}>{i}s</span>
+          <span className="text-[10px] text-gray-600 mb-0.5 -translate-x-1/2 ml-[0.5px]">{formatTime(i)}</span>
           <div className="h-3 w-px bg-gray-400" />
         </div>
       );
@@ -226,7 +308,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
           markers.push(
             <div
               key={`sub-${i.toFixed(2)}`}
-              className="absolute top-0 bottom-0 flex flex-col items-start justify-end"
+              className="absolute top-0 bottom-0 flex flex-col items-start justify-end select-none"
               style={{ left: `${i * PIXELS_PER_SECOND}px`, transform: 'translateX(-0.5px)' }}
             >
               <div className="h-1.5 w-px bg-gray-400" />
@@ -237,17 +319,70 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
     }
     
     // Add red line marker with circle dot for loop duration
-    markers.push(
-      <div
-        key="loop-marker"
-        className="absolute top-0 bottom-0 flex flex-col items-center justify-end cursor-pointer group"
-        style={{ left: `${loopDuration * PIXELS_PER_SECOND}px` }}
-        title={`Loop at ${loopDuration}s`}
-      >
-        <div className="w-2.5 h-2.5 rounded-full bg-red-500 group-hover:bg-red-600 ring-2 ring-white shadow-sm mt-0.5" />
-        <div className="h-full w-0.5 bg-red-500 group-hover:bg-red-600" />
-      </div>
-    );
+    // Show marker when loop duration is set to a positive value
+    if (loopDuration > 0 && firstLayer) {
+      markers.push(
+        <div
+          key="loop-marker"
+          className="absolute top-0 bottom-0 flex flex-col items-center justify-end cursor-pointer group select-none"
+          style={{ left: `${loopDuration * PIXELS_PER_SECOND}px` }}
+          title={`Loop at ${formatTime(loopDuration)}`}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setDraggingLoopMarker({
+              initialX: e.clientX,
+              initialDuration: loopDuration,
+            });
+          }}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            setEditingLoopMarker(true);
+            setEditingLoopValue(loopDuration.toFixed(2));
+          }}
+        >
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500 group-hover:bg-red-600 ring-2 ring-white shadow-sm mt-0.5" />
+          <div className="h-full w-0.5 bg-red-500 group-hover:bg-red-600" />
+          {editingLoopMarker ? (
+            <input
+              type="number"
+              value={editingLoopValue}
+              onChange={(e) => setEditingLoopValue(e.target.value)}
+              onBlur={() => {
+                const newDuration = parseFloat(editingLoopValue);
+                if (!isNaN(newDuration) && newDuration >= 0 && loopDelay) {
+                  onAnimationLoopDelayChange?.(firstLayer.id, selectedSize, {
+                    value: loopDelay.unit === 's' ? newDuration : newDuration * 1000,
+                    unit: loopDelay.unit,
+                  });
+                }
+                setEditingLoopMarker(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const newDuration = parseFloat(editingLoopValue);
+                  if (!isNaN(newDuration) && newDuration >= 0 && loopDelay) {
+                    onAnimationLoopDelayChange?.(firstLayer.id, selectedSize, {
+                      value: loopDelay.unit === 's' ? newDuration : newDuration * 1000,
+                      unit: loopDelay.unit,
+                    });
+                  }
+                  setEditingLoopMarker(false);
+                } else if (e.key === 'Escape') {
+                  setEditingLoopMarker(false);
+                }
+              }}
+              onFocus={(e) => e.target.select()}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="absolute top-6 w-16 px-1 py-0.5 text-[10px] border border-red-500 rounded shadow-lg bg-white pointer-events-auto z-[100]"
+              style={{ left: '50%', transform: 'translateX(-50%)' }}
+              step="0.01"
+              min="0"
+              autoFocus
+            />
+          ) : null}
+        </div>
+      );
+    }
     
     return markers;
   };
@@ -257,6 +392,9 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
     (e: React.MouseEvent, layerId: string, animationId: string, type: 'start' | 'end' | 'bar') => {
       e.preventDefault();
       e.stopPropagation();
+      
+      // Hide hover tooltip when starting to drag
+      setMarkerHoverTime(null);
       
       // Find the animation and capture its initial values NOW
       const layer = layers.find((l) => l.id === layerId);
@@ -394,6 +532,45 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
     };
   }, [draggingMarker, layers, selectedSize, onAnimationChange]);
 
+  // Handle loop marker dragging
+  useEffect(() => {
+    if (!draggingLoopMarker || !onAnimationLoopDelayChange || !firstLayer || !loopDelay) return;
+
+    let rafId: number | null = null;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (rafId) return;
+      
+      rafId = requestAnimationFrame(() => {
+        const deltaX = e.clientX - draggingLoopMarker.initialX;
+        const deltaTime = deltaX / PIXELS_PER_SECOND;
+        const newDuration = Math.max(0, draggingLoopMarker.initialDuration + deltaTime);
+        
+        // Round to 2 decimal places and convert to appropriate unit
+        const roundedDuration = Math.round(newDuration * 100) / 100;
+        onAnimationLoopDelayChange(firstLayer.id, selectedSize, {
+          value: loopDelay.unit === 's' ? roundedDuration : roundedDuration * 1000,
+          unit: loopDelay.unit,
+        });
+        rafId = null;
+      });
+    };
+
+    const handleMouseUp = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      setDraggingLoopMarker(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingLoopMarker, onAnimationLoopDelayChange, firstLayer, loopDelay, selectedSize]);
+
   // Render a single animation bar
   const renderAnimationBar = (
     animation: import('../data').Animation,
@@ -432,7 +609,9 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
             }}
             onMouseDown={(e) => handleMarkerMouseDown(e, layerId, animation.id!, 'start')}
             onMouseEnter={(e) => {
-              setMarkerHoverTime({ time: delay, x: e.clientX, y: e.clientY });
+              if (!draggingMarker) {
+                setMarkerHoverTime({ time: delay, x: e.clientX, y: e.clientY });
+              }
             }}
             onMouseLeave={() => setMarkerHoverTime(null)}
             onDoubleClick={(e) => {
@@ -477,8 +656,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
               }}
               onFocus={(e) => e.target.select()}
               onMouseDown={(e) => e.stopPropagation()}
-              className="absolute left-0 top-6 w-16 px-1 py-0.5 text-[10px] border border-blue-500 rounded shadow-lg bg-white pointer-events-auto"
-              style={{ zIndex: 100 }}
+              className="absolute left-0 top-6 w-16 px-1 py-0.5 text-[10px] border border-blue-500 rounded shadow-lg bg-white pointer-events-auto z-[100]"
               step="0.01"
               min="0"
             />
@@ -506,7 +684,9 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
             }}
             onMouseDown={(e) => handleMarkerMouseDown(e, layerId, animation.id!, 'end')}
             onMouseEnter={(e) => {
-              setMarkerHoverTime({ time: delay + duration, x: e.clientX, y: e.clientY });
+              if (!draggingMarker) {
+                setMarkerHoverTime({ time: delay + duration, x: e.clientX, y: e.clientY });
+              }
             }}
             onMouseLeave={() => setMarkerHoverTime(null)}
             onDoubleClick={(e) => {
@@ -557,8 +737,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
               }}
               onFocus={(e) => e.target.select()}
               onMouseDown={(e) => e.stopPropagation()}
-              className="absolute right-0 top-6 w-16 px-1 py-0.5 text-[10px] border border-blue-500 rounded shadow-lg bg-white pointer-events-auto"
-              style={{ zIndex: 100 }}
+              className="absolute right-0 top-6 w-16 px-1 py-0.5 text-[10px] border border-blue-500 rounded shadow-lg bg-white pointer-events-auto z-[100]"
               step="0.01"
               min="0.1"
             />
@@ -576,7 +755,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
   };
 
   // Render layer names column (fixed, doesn't scroll horizontally)
-  const renderLayerColumn = (layer: LayerContent, layerIndex: number) => {
+  const renderLayerColumn = (layer: LayerContent) => {
     const config = layer.sizeConfig[selectedSize];
     const animations = config?.animations || [];
     const isExpanded = expandedLayerIds.has(layer.id);
@@ -589,7 +768,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
           className="flex items-center border-b border-gray-300"
           style={{ height: `${ROW_HEIGHT}px` }}
         >
-          <div className="flex items-center px-3 w-full" style={{ height: '100%' }}>
+          <div className="flex items-center px-3 w-full h-full">
             {hasAnimations ? (
               <button
                 onClick={() => toggleLayerExpanded(layer.id)}
@@ -605,11 +784,25 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
               <div className="w-4 mr-2" />
             )}
             <span className="text-sm text-gray-900 font-medium truncate">{layer.label}</span>
-            {hasAnimations ? (
-              <span className="ml-auto text-[10px] text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded">
-                {animations.length}
-              </span>
-            ) : null}
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddAnimation(layer.id);
+                }}
+                className="p-0.5 hover:bg-gray-300 rounded cursor-pointer transition-colors"
+                title="Add animation"
+              >
+                <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+              {hasAnimations ? (
+                <span className="text-[10px] text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded">
+                  {animations.length}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -620,11 +813,37 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
                 key={`${layer.id}-animation-${animIndex}`}
                 className="flex items-center border-b border-gray-200"
                 style={{ height: `${ROW_HEIGHT}px` }}
+                onMouseEnter={() => setHoveredAnimationRow(`${layer.id}-${animation.id}`)}
+                onMouseLeave={() => setHoveredAnimationRow(null)}
               >
-                <div className="flex items-center px-3 pl-8 w-full" style={{ height: '100%' }}>
+                <div className="flex items-center justify-between px-3 pl-8 w-full h-full">
                   <span className="text-xs text-gray-700 truncate">
                     {animation.name} <span className="text-gray-500">({animation.type})</span>
                   </span>
+                  {hoveredAnimationRow === `${layer.id}-${animation.id}` ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditAnimation(layer.id, animation.id!);
+                        }}
+                        className="p-0.5 hover:bg-gray-300 rounded cursor-pointer transition-colors"
+                        title="Edit animation"
+                      >
+                        <EditIcon className="w-3 h-3 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAnimation(layer.id, animation.id!);
+                        }}
+                        className="p-0.5 hover:bg-red-100 rounded cursor-pointer transition-colors"
+                        title="Delete animation"
+                      >
+                        <TrashIcon className="w-3 h-3 text-red-600" />
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ))
@@ -654,7 +873,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
               lines.push(
                 <div
                   key={i}
-                  className="absolute top-0 bottom-0 w-px bg-gray-200"
+                  className="absolute top-0 bottom-0 w-px bg-gray-200 select-none"
                   style={{ left: `${i * PIXELS_PER_SECOND}px` }}
                 />
               );
@@ -678,7 +897,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
                     lines.push(
                       <div
                         key={i}
-                        className="absolute top-0 bottom-0 w-px bg-gray-200"
+                        className="absolute top-0 bottom-0 w-px bg-gray-200 select-none"
                         style={{ left: `${i * PIXELS_PER_SECOND}px` }}
                       />
                     );
@@ -717,7 +936,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
       ) : null}
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-stretch border-b border-gray-300 bg-gray-100" style={{ height: '32px' }}>
+        <div className="flex items-stretch border-b border-gray-300 bg-gray-100 h-8">
           {/* Fixed left section with label and zoom controls */}
           <div
             className="flex items-center justify-between px-3 bg-gray-100 z-30 relative flex-shrink-0"
@@ -758,17 +977,17 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
                   display: none;
                 }
               `}</style>
-              <div className="relative timeline-ruler-container" style={{ height: '32px', width: `${TIMELINE_DURATION * PIXELS_PER_SECOND}px` }}>
+              <div className="relative timeline-ruler-container h-8" style={{ width: `${TIMELINE_DURATION * PIXELS_PER_SECOND}px` }}>
                 {renderTimeRuler()}
               </div>
             </div>
             {/* Left fade overlay */}
             {scrollLeft > 0 ? (
-              <div className="absolute left-0 top-0 bottom-0 w-12 pointer-events-none z-10" style={{ background: 'linear-gradient(to right, rgb(243 244 246) 0%, transparent 100%)' }} />
+              <div className="absolute left-0 top-0 bottom-0 w-6 pointer-events-none z-10" style={{ background: 'linear-gradient(to right, rgb(243 244 246) 0%, transparent 100%)' }} />
             ) : null}
             {/* Right fade overlay */}
             {scrollLeft < maxScrollLeft - 1 ? (
-              <div className="absolute right-0 top-0 bottom-0 w-12 pointer-events-none z-10" style={{ background: 'linear-gradient(to left, rgb(243 244 246) 0%, transparent 100%)' }} />
+              <div className="absolute right-0 top-0 bottom-0 w-6 pointer-events-none z-10" style={{ background: 'linear-gradient(to left, rgb(243 244 246) 0%, transparent 100%)' }} />
             ) : null}
           </div>
         </div>
@@ -778,7 +997,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
           <div className="flex">
             {/* Fixed layer names column */}
             <div className="flex-shrink-0 bg-gray-50 sticky left-0 z-30 relative" style={{ width: `${LAYER_NAME_WIDTH}px` }}>
-              {layers.map((layer, index) => renderLayerColumn(layer, index))}
+              {layers.map((layer) => renderLayerColumn(layer))}
               {/* Border line that doesn't affect width */}
               <div className="absolute top-0 bottom-0 right-0 w-px bg-gray-300" />
             </div>
@@ -803,7 +1022,7 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
             top: `${hoverTime.y - 30}px`,
           }}
         >
-          {hoverTime.time.toFixed(2)}s
+          {formatTime(hoverTime.time)}
         </div>
       ) : null}
       
@@ -816,8 +1035,27 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange 
             top: `${markerHoverTime.y - 30}px`,
           }}
         >
-          {markerHoverTime.time.toFixed(2)}s
+          {formatTime(markerHoverTime.time)}
         </div>
+      ) : null}
+
+      {/* Add/Edit Animation Modal */}
+      {animationModal ? (
+        <AddEditAnimationModal
+          isOpen={animationModal.isOpen}
+          mode={animationModal.mode}
+          layer={layers.find((l) => l.id === animationModal.layerId)!}
+          selectedSize={selectedSize}
+          animation={
+            animationModal.mode === 'edit'
+              ? layers
+                  .find((l) => l.id === animationModal.layerId)
+                  ?.sizeConfig[selectedSize]?.animations?.find((a) => a.id === animationModal.animationId)
+              : undefined
+          }
+          onClose={() => setAnimationModal(null)}
+          onSave={onAnimationChange!}
+        />
       ) : null}
     </div>
   );
