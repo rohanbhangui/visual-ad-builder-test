@@ -36,6 +36,7 @@ interface PropertySidebarProps {
   onClippingEnabledChange?: (enabled: boolean) => void;
   activeTab?: 'properties' | 'animations';
   onActiveTabChange?: (tab: 'properties' | 'animations') => void;
+  animationMode?: 'basic' | 'advanced' | 'both';
   onPropertyChange: (
     layerId: string,
     property: 'positionX' | 'positionY' | 'width' | 'height',
@@ -172,6 +173,7 @@ const PropertySidebarComponent = ({
   allowedSizes,
   activeTab: activeTabProp = 'properties',
   onActiveTabChange,
+  animationMode = 'basic',
 }: PropertySidebarProps) => {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [editedLabel, setEditedLabel] = useState('');
@@ -613,16 +615,18 @@ const PropertySidebarComponent = ({
         >
           Properties
         </button>
-        <button
-          onClick={() => setActiveTab('animations')}
-          className={`flex-1 px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
-            activeTab === 'animations'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Animations
-        </button>
+        {animationMode === 'basic' || animationMode === 'both' ? (
+          <button
+            onClick={() => setActiveTab('animations')}
+            className={`flex-1 px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+              activeTab === 'animations'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Animations
+          </button>
+        ) : null}
       </div>
 
       {/* Tab Content */}

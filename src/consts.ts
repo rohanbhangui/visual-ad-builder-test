@@ -48,6 +48,20 @@ export const COLORS = {
   RED_GUIDELINE: '#ef4444', // Tailwind red-500 - Snap guidelines color
 } as const;
 
+// Timeline animation color pairs (marker + fill)
+export const TIMELINE_COLOR_PAIRS = [
+  { marker: '#3b82f6', fill: '#93c5fd' }, // Blue
+  { marker: '#10b981', fill: '#86efac' }, // Green
+  { marker: '#f59e0b', fill: '#fcd34d' }, // Amber
+  { marker: '#8b5cf6', fill: '#c4b5fd' }, // Purple
+  { marker: '#ec4899', fill: '#f9a8d4' }, // Pink
+  { marker: '#06b6d4', fill: '#67e8f9' }, // Cyan
+  { marker: '#f97316', fill: '#fdba74' }, // Orange
+  { marker: '#14b8a6', fill: '#5eead4' }, // Teal
+  { marker: '#6366f1', fill: '#a5b4fc' }, // Indigo
+  { marker: '#84cc16', fill: '#bef264' }, // Lime
+] as const;
+
 // Tailwind color classes for UI elements
 export const UI_COLORS = {
   SELECTED_LAYER_BG: 'bg-blue-100', // Darker blue background for selected layer in panel
@@ -67,6 +81,8 @@ export const UI_LAYOUT = {
   LAYERS_PANEL_EXPANDED_HEIGHT: 322, // Height of the layers panel when expanded in pixels
   LAYERS_PANEL_COLLAPSED_HEIGHT: 48, // Height of the layers panel when collapsed in pixels
   AD_SELECTOR_SCALE: 0.06, // Scale factor for ad size previews in bottom selector
+  TIMELINE_PANEL_HEIGHT: 300, // Height of the timeline panel in pixels
+  BOTTOM_CONTROLS_HEIGHT: 64, // Height of bottom controls bar (16px vertical padding + content)
 } as const;
 
 // Default CSS values for HTML export

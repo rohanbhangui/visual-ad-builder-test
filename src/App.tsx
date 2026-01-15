@@ -8,6 +8,7 @@ import { Canvas } from './components/Canvas';
 import { ExportHTMLModal } from './components/ExportHTMLModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ZoomControls } from './components/ZoomControls';
+import { TimelinePanel } from './components/TimelinePanel';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
@@ -15,6 +16,7 @@ import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory } fro
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 import ReplayIcon from './assets/icons/reset-view-ccw.svg?react';
+import ChevronUpIcon from './assets/icons/chevron-up.svg?react';
 
 // UI Layout Constant (moved inside component)
 const App = () => {
@@ -28,6 +30,8 @@ const App = () => {
   const selectedLayerIds = useStore((state) => state.selectedLayerIds);
   const selectedSize = useStore((state) => state.selectedSize);
   const activePropertyTab = useStore((state) => state.activePropertyTab);
+  const animationMode = useStore((state) => state.animationMode);
+  const isTimelinePanelOpen = useStore((state) => state.isTimelinePanelOpen);
   const layersPanelSide = useStore((state) => state.layersPanelSide);
   const layersPanelPos = useStore((state) => state.layersPanelPos);
   const isLayersPanelCollapsed = useStore((state) => state.isLayersPanelCollapsed);
@@ -56,6 +60,8 @@ const App = () => {
   const setSelectedLayerIds = useStore((state) => state.setSelectedLayerIds);
   const setSelectedSize = useStore((state) => state.setSelectedSize);
   const setActivePropertyTab = useStore((state) => state.setActivePropertyTab);
+  const setAnimationMode = useStore((state) => state.setAnimationMode);
+  const setIsTimelinePanelOpen = useStore((state) => state.setIsTimelinePanelOpen);
   const setMode = useStore((state) => state.setMode);
   const setZoom = useStore((state) => state.setZoom);
   const setPan = useStore((state) => state.setPan);
@@ -577,7 +583,9 @@ const App = () => {
         : UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT;
       // Calculate max Y relative to canvas container (which is below TopBar)
       const containerHeight = windowHeight - UI_LAYOUT.TOP_BAR_HEIGHT;
-      const maxY = containerHeight - currentHeight - LAYERS_PANEL_BOTTOM_GAP;
+      // Account for timeline panel if it's open in advanced or both mode
+      const timelineOffset = (animationMode === 'advanced' || animationMode === 'both') && isTimelinePanelOpen ? UI_LAYOUT.TIMELINE_PANEL_HEIGHT : 0;
+      const maxY = containerHeight - currentHeight - LAYERS_PANEL_BOTTOM_GAP - timelineOffset;
 
       if (newX < edgeSnapThreshold) {
         newX = edgeGap;
@@ -600,8 +608,10 @@ const App = () => {
     if (!newCollapsedState) {
       const windowHeight = window.innerHeight;
       const containerHeight = windowHeight - UI_LAYOUT.TOP_BAR_HEIGHT;
+      // Account for timeline panel if it's open in advanced or both mode
+      const timelineOffset = (animationMode === 'advanced' || animationMode === 'both') && isTimelinePanelOpen ? UI_LAYOUT.TIMELINE_PANEL_HEIGHT : 0;
       const maxY =
-        containerHeight - UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT - LAYERS_PANEL_BOTTOM_GAP;
+        containerHeight - UI_LAYOUT.LAYERS_PANEL_EXPANDED_HEIGHT - LAYERS_PANEL_BOTTOM_GAP - timelineOffset;
 
       if (layersPanelPos.y > maxY) {
         setLayersPanelPos({ x: layersPanelPos.x, y: maxY });
@@ -1508,19 +1518,24 @@ const App = () => {
         onClose={() => setIsSettingsModalOpen(false)}
         adSelectorPosition={adSelectorPosition}
         onAdSelectorPositionChange={setAdSelectorPosition}
+        animationMode={animationMode}
+        onAnimationModeChange={setAnimationMode}
       />
 
+      {/* Main content area - flex column to stack canvas/sidebar above timeline */}
       <div
-        className="flex-1 flex overflow-hidden relative"
+        className="flex-1 flex flex-col overflow-hidden"
         onMouseMove={handleLayersPanelMouseMove}
         onMouseUp={handleExtendedMouseUp}
       >
-        <div
-          className="flex-1 bg-[#d4d4d4] overflow-hidden flex flex-col items-center justify-center relative"
-          onClick={() => setSelectedLayerIds([])}
-          onMouseDown={handleCanvasMouseDown}
-          onMouseMove={handleCanvasMouseMove}
-          onMouseUp={handleCanvasMouseUp}
+        {/* Canvas and Sidebar - horizontal flex */}
+        <div className="flex-1 flex overflow-hidden relative">
+          <div
+            className="flex-1 bg-[#d4d4d4] overflow-hidden flex flex-col items-center justify-center relative"
+            onClick={() => setSelectedLayerIds([])}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
           style={{ cursor: isPanning ? 'grabbing' : isSpacePressed ? 'grab' : 'default' }}
         >
           {/* Floating Layers Panel */}
@@ -1596,22 +1611,47 @@ const App = () => {
                   Replay
                 </button>
               ) : (
-                <button
-                  onClick={() => setIsSnappingEnabled(!isSnappingEnabled)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all border w-24 cursor-pointer ${
-                    isSnappingEnabled
-                      ? 'bg-blue-600 border-blue-700 text-white'
-                      : 'bg-white border-gray-200 text-gray-700'
-                  }`}
-                  title={isSnappingEnabled ? 'Snapping enabled' : 'Snapping disabled'}
-                >
-                  <img
-                    src={isSnappingEnabled ? magnetOutlineIcon : freeMoveIcon}
-                    alt={isSnappingEnabled ? 'magnet' : 'free move'}
-                    className={`w-5 h-5 ${isSnappingEnabled ? 'brightness-0 invert' : 'text-gray-700'}`}
-                  />
-                  <span className="text-sm font-medium">{isSnappingEnabled ? 'Snap' : 'Free'}</span>
-                </button>
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsSnappingEnabled(!isSnappingEnabled);
+                    }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg shadow-md hover:shadow-lg transition-all border w-24 cursor-pointer ${
+                      isSnappingEnabled
+                        ? 'bg-blue-600 border-blue-700 text-white'
+                        : 'bg-white border-gray-200 text-gray-700'
+                    }`}
+                    title={isSnappingEnabled ? 'Snapping enabled' : 'Snapping disabled'}
+                  >
+                    <img
+                      src={isSnappingEnabled ? magnetOutlineIcon : freeMoveIcon}
+                      alt={isSnappingEnabled ? 'magnet' : 'free move'}
+                      className={`w-5 h-5 ${isSnappingEnabled ? 'brightness-0 invert' : 'text-gray-700'}`}
+                    />
+                    <span className="text-sm font-medium">{isSnappingEnabled ? 'Snap' : 'Free'}</span>
+                  </button>
+                  
+                  {/* Timeline Toggle Button - only show in advanced mode */}
+                  {animationMode === 'advanced' || animationMode === 'both' ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsTimelinePanelOpen(!isTimelinePanelOpen);
+                      }}
+                      className={`flex items-center justify-center p-2 rounded-lg shadow-md hover:shadow-lg transition-all border cursor-pointer ${
+                        isTimelinePanelOpen
+                          ? 'bg-blue-600 border-blue-700 text-white'
+                          : 'bg-white border-gray-200 text-gray-700'
+                      }`}
+                      title={isTimelinePanelOpen ? 'Close Timeline' : 'Open Timeline'}
+                    >
+                      <ChevronUpIcon
+                        className={`w-5 h-5 transition-transform ${isTimelinePanelOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                  ) : null}
+                </>
               )}
             </div>
 
@@ -1626,7 +1666,10 @@ const App = () => {
                   return (
                     <button
                       key={size}
-                      onClick={() => setSelectedSize(size)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSize(size);
+                      }}
                       className="flex flex-col items-center gap-1 p-1 transition-opacity hover:opacity-80 cursor-pointer"
                     >
                       <div
@@ -1673,6 +1716,7 @@ const App = () => {
             onClippingEnabledChange={setIsClippingEnabled}
             activeTab={activePropertyTab}
             onActiveTabChange={setActivePropertyTab}
+            animationMode={animationMode}
             onCanvasNameChange={setCanvasName}
             onAnimationLoopChange={setAnimationLoop}
             onPropertyChange={handlePropertyChange}
@@ -1709,6 +1753,17 @@ const App = () => {
             onCopyIconSize={handleCopyIconSize}
             onCopyBorderRadius={handleCopyBorderRadius}
             allowedSizes={sampleCanvas.allowedSizes}
+          />
+        ) : null}
+        </div>
+
+        {/* Timeline Panel - only in edit mode with advanced animation mode */}
+        {mode === 'edit' && (animationMode === 'advanced' || animationMode === 'both') ? (
+          <TimelinePanel
+            layers={layers}
+            selectedSize={selectedSize}
+            isOpen={isTimelinePanelOpen}
+            onAnimationChange={handleAnimationChange}
           />
         ) : null}
       </div>

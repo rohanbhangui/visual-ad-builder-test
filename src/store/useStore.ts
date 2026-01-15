@@ -19,6 +19,8 @@ interface EphemeralState {
   // UI context (not tracked in history)
   selectedLayerIds: string[];
   activePropertyTab: 'properties' | 'animations';
+  animationMode: 'basic' | 'advanced' | 'both';
+  isTimelinePanelOpen: boolean;
   
   // Other ephemeral state
   mode: 'edit' | 'preview';
@@ -58,6 +60,8 @@ interface AppStore extends HistoricalState, EphemeralState {
   setSelectedSize: (size: AdSize) => void; // Tracked in history for size-specific changes
   setSelectedLayerIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   setActivePropertyTab: (tab: 'properties' | 'animations') => void;
+  setAnimationMode: (mode: 'basic' | 'advanced' | 'both') => void;
+  setIsTimelinePanelOpen: (open: boolean) => void;
   setIsLayersPanelCollapsed: (collapsed: boolean) => void;
   setLayersPanelPos: (pos: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) => void;
   setLayersPanelSide: (side: 'left' | 'right') => void;
@@ -92,6 +96,8 @@ export const useStore = create<AppStore>()(
       // Ephemeral state (not tracked)
       selectedLayerIds: [],
       activePropertyTab: 'properties' as 'properties' | 'animations',
+      animationMode: 'both' as 'basic' | 'advanced' | 'both',
+      isTimelinePanelOpen: false,
       isLayersPanelCollapsed: false,
       layersPanelPos: { x: -1, y: 10 },
       layersPanelSide: 'right' as 'left' | 'right',
@@ -156,6 +162,8 @@ export const useStore = create<AppStore>()(
           selectedLayerIds: typeof ids === 'function' ? ids(state.selectedLayerIds) : ids,
         })),
       setActivePropertyTab: (activePropertyTab: 'properties' | 'animations') => set({ activePropertyTab }),
+      setAnimationMode: (animationMode: 'basic' | 'advanced' | 'both') => set({ animationMode }),
+      setIsTimelinePanelOpen: (isTimelinePanelOpen: boolean) => set({ isTimelinePanelOpen }),
       setIsLayersPanelCollapsed: (isLayersPanelCollapsed: boolean) => set({ isLayersPanelCollapsed }),
       setLayersPanelPos: (pos: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) =>
         set((state: AppStore) => ({

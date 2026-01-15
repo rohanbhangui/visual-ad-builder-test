@@ -52,7 +52,10 @@ export const ZoomControls = ({ zoom, onZoomChange, onResetPan }: ZoomControlsPro
     <div className="absolute bottom-4 right-4 flex items-center gap-2">
       {/* Reset Pan Button */}
       <button
-        onClick={onResetPan}
+        onClick={(e) => {
+          e.stopPropagation();
+          onResetPan();
+        }}
         className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200/80 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
         title="Reset View"
       >
@@ -63,7 +66,10 @@ export const ZoomControls = ({ zoom, onZoomChange, onResetPan }: ZoomControlsPro
       <div className="flex items-center">
         {/* Zoom Out Button */}
         <button
-          onClick={handleZoomOut}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleZoomOut();
+          }}
           disabled={zoom <= minZoom}
           className="w-6 h-6 flex items-center justify-center rounded-l hover:bg-gray-200/80 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 hover:text-gray-900 font-medium text-base transition-colors cursor-pointer"
           title="Zoom Out"
@@ -74,7 +80,10 @@ export const ZoomControls = ({ zoom, onZoomChange, onResetPan }: ZoomControlsPro
         {/* Zoom Percentage Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDropdownOpen(!isDropdownOpen);
+            }}
             className="min-w-[50px] px-1.5 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-200/80 transition-colors cursor-pointer border-l border-r border-gray-300"
             title="Select Zoom Level"
           >
@@ -86,7 +95,10 @@ export const ZoomControls = ({ zoom, onZoomChange, onResetPan }: ZoomControlsPro
               {ZOOM_LEVELS.map((level) => (
                 <button
                   key={level}
-                  onClick={() => handleZoomLevelClick(level)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleZoomLevelClick(level);
+                  }}
                   className={`w-full px-2.5 py-1 text-xs text-left hover:bg-gray-100 ${
                     Math.abs(zoom - level) < 0.01
                       ? 'bg-blue-50 text-blue-600 font-medium'
@@ -102,7 +114,10 @@ export const ZoomControls = ({ zoom, onZoomChange, onResetPan }: ZoomControlsPro
 
         {/* Zoom In Button */}
         <button
-          onClick={handleZoomIn}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleZoomIn();
+          }}
           disabled={zoom >= maxZoom}
           className="w-6 h-6 flex items-center justify-center rounded-r hover:bg-gray-200/80 disabled:opacity-30 disabled:cursor-not-allowed text-gray-600 hover:text-gray-900 font-medium text-base transition-colors cursor-pointer"
           title="Zoom In"

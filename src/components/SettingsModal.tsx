@@ -8,6 +8,8 @@ interface SettingsModalProps {
   onClose: () => void;
   adSelectorPosition: 'top' | 'bottom';
   onAdSelectorPositionChange: (position: 'top' | 'bottom') => void;
+  animationMode: 'basic' | 'advanced' | 'both';
+  onAnimationModeChange: (mode: 'basic' | 'advanced' | 'both') => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -15,14 +17,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   adSelectorPosition,
   onAdSelectorPositionChange,
+  animationMode,
+  onAnimationModeChange,
 }) => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isAdSelectorDropdownOpen, setIsAdSelectorDropdownOpen] = useState(false);
+  const [isAnimationModeDropdownOpen, setIsAnimationModeDropdownOpen] = useState(false);
+  const adSelectorDropdownRef = useRef<HTMLDivElement>(null);
+  const animationModeDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
+      if (adSelectorDropdownRef.current && !adSelectorDropdownRef.current.contains(event.target as Node)) {
+        setIsAdSelectorDropdownOpen(false);
+      }
+      if (animationModeDropdownRef.current && !animationModeDropdownRef.current.contains(event.target as Node)) {
+        setIsAnimationModeDropdownOpen(false);
       }
     };
 
@@ -55,28 +64,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 space-y-4">
+          {/* Ad Selector Setting */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-900">Ad Selector</span>
             
             {/* Dropdown */}
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative" ref={adSelectorDropdownRef}>
               <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                onClick={() => setIsAdSelectorDropdownOpen(!isAdSelectorDropdownOpen)}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer min-w-[120px] justify-between"
               >
                 <span className="text-sm font-medium text-gray-900 capitalize">{adSelectorPosition}</span>
                 <ChevronDownIcon
-                  className={`w-4 h-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                  className={`w-4 h-4 text-gray-500 transition-transform ${isAdSelectorDropdownOpen ? 'rotate-180' : ''}`}
                 />
               </button>
 
-              {isDropdownOpen ? (
+              {isAdSelectorDropdownOpen ? (
                 <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[200] min-w-[120px]">
                   <button
                     onClick={() => {
                       onAdSelectorPositionChange('top');
-                      setIsDropdownOpen(false);
+                      setIsAdSelectorDropdownOpen(false);
                     }}
                     className={`w-full px-4 py-2 text-sm font-medium text-left transition-colors cursor-pointer ${
                       adSelectorPosition === 'top' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
@@ -87,13 +97,69 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     onClick={() => {
                       onAdSelectorPositionChange('bottom');
-                      setIsDropdownOpen(false);
+                      setIsAdSelectorDropdownOpen(false);
                     }}
                     className={`w-full px-4 py-2 text-sm font-medium text-left transition-colors cursor-pointer ${
                       adSelectorPosition === 'bottom' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                     }`}
                   >
                     Bottom
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Animation Mode Setting */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-900">Animation Mode</span>
+            
+            {/* Dropdown */}
+            <div className="relative" ref={animationModeDropdownRef}>
+              <button
+                onClick={() => setIsAnimationModeDropdownOpen(!isAnimationModeDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer min-w-[120px] justify-between"
+              >
+                <span className="text-sm font-medium text-gray-900 capitalize">{animationMode}</span>
+                <ChevronDownIcon
+                  className={`w-4 h-4 text-gray-500 transition-transform ${isAnimationModeDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {isAnimationModeDropdownOpen ? (
+                <div className="absolute top-full right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[200] min-w-[120px]">
+                  <button
+                    onClick={() => {
+                      onAnimationModeChange('basic');
+                      setIsAnimationModeDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-sm font-medium text-left transition-colors cursor-pointer ${
+                      animationMode === 'basic' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    Basic
+                  </button>
+                  <button
+                    onClick={() => {
+                      onAnimationModeChange('advanced');
+                      setIsAnimationModeDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-sm font-medium text-left transition-colors cursor-pointer ${
+                      animationMode === 'advanced' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    Advanced
+                  </button>
+                  <button
+                    onClick={() => {
+                      onAnimationModeChange('both');
+                      setIsAnimationModeDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-sm font-medium text-left transition-colors cursor-pointer ${
+                      animationMode === 'both' ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    Both
                   </button>
                 </div>
               ) : null}
