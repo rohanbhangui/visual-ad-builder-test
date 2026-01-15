@@ -44,8 +44,6 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange,
   const [zoomLevel, setZoomLevel] = useState(1);
   const [hoveredAnimationRow, setHoveredAnimationRow] = useState<string | null>(null);
   const [viewportWidth, setViewportWidth] = useState(1400); // Track viewport width
-  const [editingLoopMarker, setEditingLoopMarker] = useState(false);
-  const [editingLoopValue, setEditingLoopValue] = useState('');
   
   const [draggingMarker, setDraggingMarker] = useState<{
     layerId: string;
@@ -54,11 +52,6 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange,
     initialX: number;
     initialBarLeft?: number;
     initialDelay: number;
-    initialDuration: number;
-  } | null>(null);
-  
-  const [draggingLoopMarker, setDraggingLoopMarker] = useState<{
-    initialX: number;
     initialDuration: number;
   } | null>(null);
   
@@ -228,11 +221,6 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange,
 
   // Calculate dynamic values based on zoom and animations
   const PIXELS_PER_SECOND = BASE_PIXELS_PER_SECOND * zoomLevel;
-
-  // Get loop duration from first layer's animationLoopDelay
-  const firstLayer = layers[0];
-  const loopDelay = firstLayer?.sizeConfig[selectedSize]?.animationLoopDelay;
-  const loopDuration = loopDelay ? (loopDelay.unit === 's' ? loopDelay.value : loopDelay.value / 1000) : 0;
   
   const maxAnimationTime = useMemo(() => {
     let max = 0;
@@ -316,72 +304,6 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange,
           );
         }
       }
-    }
-    
-    // Add red line marker with circle dot for loop duration
-    // Show marker when loop duration is set to a positive value
-    if (loopDuration > 0 && firstLayer) {
-      markers.push(
-        <div
-          key="loop-marker"
-          className="absolute top-0 bottom-0 flex flex-col items-center justify-end cursor-pointer group select-none"
-          style={{ left: `${loopDuration * PIXELS_PER_SECOND}px` }}
-          title={`Loop at ${formatTime(loopDuration)}`}
-          onMouseDown={(e) => {
-            e.stopPropagation();
-            setDraggingLoopMarker({
-              initialX: e.clientX,
-              initialDuration: loopDuration,
-            });
-          }}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            setEditingLoopMarker(true);
-            setEditingLoopValue(loopDuration.toFixed(2));
-          }}
-        >
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500 group-hover:bg-red-600 ring-2 ring-white shadow-sm mt-0.5" />
-          <div className="h-full w-0.5 bg-red-500 group-hover:bg-red-600" />
-          {editingLoopMarker ? (
-            <input
-              type="number"
-              value={editingLoopValue}
-              onChange={(e) => setEditingLoopValue(e.target.value)}
-              onBlur={() => {
-                const newDuration = parseFloat(editingLoopValue);
-                if (!isNaN(newDuration) && newDuration >= 0 && loopDelay) {
-                  onAnimationLoopDelayChange?.(firstLayer.id, selectedSize, {
-                    value: loopDelay.unit === 's' ? newDuration : newDuration * 1000,
-                    unit: loopDelay.unit,
-                  });
-                }
-                setEditingLoopMarker(false);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const newDuration = parseFloat(editingLoopValue);
-                  if (!isNaN(newDuration) && newDuration >= 0 && loopDelay) {
-                    onAnimationLoopDelayChange?.(firstLayer.id, selectedSize, {
-                      value: loopDelay.unit === 's' ? newDuration : newDuration * 1000,
-                      unit: loopDelay.unit,
-                    });
-                  }
-                  setEditingLoopMarker(false);
-                } else if (e.key === 'Escape') {
-                  setEditingLoopMarker(false);
-                }
-              }}
-              onFocus={(e) => e.target.select()}
-              onMouseDown={(e) => e.stopPropagation()}
-              className="absolute top-6 w-16 px-1 py-0.5 text-[10px] border border-red-500 rounded shadow-lg bg-white pointer-events-auto z-[100]"
-              style={{ left: '50%', transform: 'translateX(-50%)' }}
-              step="0.01"
-              min="0"
-              autoFocus
-            />
-          ) : null}
-        </div>
-      );
     }
     
     return markers;
@@ -531,45 +453,6 @@ export const TimelinePanel = ({ layers, selectedSize, isOpen, onAnimationChange,
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [draggingMarker, layers, selectedSize, onAnimationChange]);
-
-  // Handle loop marker dragging
-  useEffect(() => {
-    if (!draggingLoopMarker || !onAnimationLoopDelayChange || !firstLayer || !loopDelay) return;
-
-    let rafId: number | null = null;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (rafId) return;
-      
-      rafId = requestAnimationFrame(() => {
-        const deltaX = e.clientX - draggingLoopMarker.initialX;
-        const deltaTime = deltaX / PIXELS_PER_SECOND;
-        const newDuration = Math.max(0, draggingLoopMarker.initialDuration + deltaTime);
-        
-        // Round to 2 decimal places and convert to appropriate unit
-        const roundedDuration = Math.round(newDuration * 100) / 100;
-        onAnimationLoopDelayChange(firstLayer.id, selectedSize, {
-          value: loopDelay.unit === 's' ? roundedDuration : roundedDuration * 1000,
-          unit: loopDelay.unit,
-        });
-        rafId = null;
-      });
-    };
-
-    const handleMouseUp = () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      setDraggingLoopMarker(null);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [draggingLoopMarker, onAnimationLoopDelayChange, firstLayer, loopDelay, selectedSize]);
 
   // Render a single animation bar
   const renderAnimationBar = (
