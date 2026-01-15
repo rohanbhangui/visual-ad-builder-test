@@ -244,7 +244,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               contentHtml = layer.text;
             }
 
-            const baseStyle = `${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || '#333333'}; color: ${layer.styles?.color || '#ffffff'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
+            const baseStyle = `${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || 'transparent'}; color: ${layer.styles?.color || '#ffffff'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
 
             // Use button for video controls, anchor for links
             if (layer.actionType === 'videoControl' && layer.videoControl) {
@@ -657,7 +657,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             {...(layer.attributes.id && { id: layer.attributes.id })}
             className="w-full h-full flex items-center justify-center pointer-events-none"
             style={{
-              backgroundColor: layer.styles?.backgroundColor || '#333333',
+              backgroundColor: layer.styles?.backgroundColor || 'transparent',
               color: layer.styles?.color || '#ffffff',
               fontSize: config.fontSize || '14px',
               fontFamily: layer.styles?.fontFamily || 'Arial',
