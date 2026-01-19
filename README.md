@@ -28,6 +28,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Zoom and pan support (`Ctrl/Cmd + scroll` to zoom scroll / `spacebar + mouse drag` is pan)
 - Trackpad support for pan and pinch to zoom in/out
 - Undo/Redo Buttons (with shortcuts: `alt/option + z` for Undo or `alt/option + shift + z` for Redo)
+- Animation timeline editor (as an advanced mode)
 
 ### Layers Panel
 
@@ -89,4 +90,3 @@ The app exposes a `window.vb` object in the browser console for debugging and de
 - More sizes (+ being able to manually add in preset sizes)
 - Preset components like canvas (eg. when a new button is added have a preset of buttons ready to go)
 - Custom scripting and css support (as an advanced mode)
-- Animation timeline editor (as an advanced mode)
