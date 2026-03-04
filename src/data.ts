@@ -54,7 +54,7 @@ export interface SizeConfig {
 }
 
 // Union type for layer content based on type
-export type LayerContent = TextLayer | RichtextLayer | ImageLayer | VideoLayer | ButtonLayer;
+export type LayerContent = TextLayer | RichtextLayer | ImageLayer | VideoLayer | ButtonLayer | GroupLayer;
 
 export interface BaseLayer {
   id: string;
@@ -154,6 +154,15 @@ export interface ButtonLayer extends BaseLayer {
   };
 }
 
+export interface GroupLayer extends BaseLayer {
+  type: 'group';
+  children: string[]; // Ordered list of child layer IDs (relative positions in sizeConfig)
+  styles: {
+    backgroundColor?: string;
+    opacity: number;
+  };
+}
+
 // Canvas/Document structure
 export interface Canvas {
   id: string;
@@ -167,6 +176,11 @@ export interface Canvas {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Stable IDs so the video group can reference its children
+const _sampleVideoGroupId = 'sa-video-group';
+const _samplePlayPauseBtnId = 'sa-play-pause-btn';
+const _sampleDemoVideoId = 'sa-demo-video';
 
 // Sample data with 4-5 layers
 export const sampleCanvas: Canvas = {
@@ -325,8 +339,26 @@ export const sampleCanvas: Canvas = {
         opacity: 1,
       },
     },
+    // ── Video Group ──────────────────────────────────────────────────────────
     {
-      id: `sa-${crypto.randomUUID()}`,
+      id: _sampleVideoGroupId,
+      label: 'Video Group',
+      type: 'group' as const,
+      locked: false,
+      children: [_samplePlayPauseBtnId, _sampleDemoVideoId],
+      attributes: { id: '' },
+      styles: { opacity: 1 },
+      sizeConfig: {
+        // Bounding box enclosing both video and play/pause button
+        '300x250': { positionX: { value: 68, unit: 'px' }, positionY: { value: 19, unit: 'px' }, width: { value: 164, unit: 'px' }, height: { value: 92, unit: 'px' } },
+        '336x280': { positionX: { value: 69, unit: 'px' }, positionY: { value: 14, unit: 'px' }, width: { value: 198, unit: 'px' }, height: { value: 111, unit: 'px' } },
+        '728x90':  { positionX: { value: 568, unit: 'px' }, positionY: { value: 0, unit: 'px' }, width: { value: 160, unit: 'px' }, height: { value: 90, unit: 'px' } },
+        '160x600': { positionX: { value: -100, unit: 'px' }, positionY: { value: 0, unit: 'px' }, width: { value: 360.8, unit: 'px' }, height: { value: 201, unit: 'px' } },
+      },
+    },
+    // ── Play/Pause Button (child of Video Group — positions are relative to group origin) ─
+    {
+      id: _samplePlayPauseBtnId,
       label: 'Play/Pause Button',
       type: 'button',
       locked: false,
@@ -334,8 +366,8 @@ export const sampleCanvas: Canvas = {
       attributes: { id: 'play-pause-btn' },
       sizeConfig: {
         '300x250': {
-          positionX: { value: 68, unit: 'px' },
-          positionY: { value: 87, unit: 'px' },
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 68, unit: 'px' },
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
           iconSize: 16,
@@ -353,8 +385,8 @@ export const sampleCanvas: Canvas = {
           ],
         },
         '336x280': {
-          positionX: { value: 73, unit: 'px' },
-          positionY: { value: 97, unit: 'px' },
+          positionX: { value: 4, unit: 'px' },
+          positionY: { value: 83, unit: 'px' },
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
           iconSize: 16,
@@ -374,14 +406,14 @@ export const sampleCanvas: Canvas = {
           animationResetDuration: { value: 0.1, unit: 's' },
         },
         '728x90': {
-          positionX: { value: 573, unit: 'px' },
+          positionX: { value: 5, unit: 'px' },
           positionY: { value: 62, unit: 'px' },
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
           iconSize: 16,
         },
         '160x600': {
-          positionX: { value: 3, unit: 'px' },
+          positionX: { value: 103, unit: 'px' },
           positionY: { value: 173, unit: 'px' },
           width: { value: 24, unit: 'px' },
           height: { value: 24, unit: 'px' },
@@ -406,8 +438,9 @@ export const sampleCanvas: Canvas = {
         opacity: 1,
       },
     },
+    // ── Demo Video (child of Video Group — positions are relative to group origin) ─────
     {
-      id: `sa-${crypto.randomUUID()}`,
+      id: _sampleDemoVideoId,
       label: 'Demo Video',
       type: 'video',
       locked: false,
@@ -415,8 +448,8 @@ export const sampleCanvas: Canvas = {
       attributes: { id: 'demo-video' },
       sizeConfig: {
         '300x250': {
-          positionX: { value: 68, unit: 'px' },
-          positionY: { value: 19, unit: 'px' },
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
           width: { value: 164, unit: 'px' },
           height: { value: 92, unit: 'px' },
           animations: [
@@ -435,8 +468,8 @@ export const sampleCanvas: Canvas = {
           animationResetDuration: { value: 0.1, unit: 's' },
         },
         '336x280': {
-          positionX: { value: 69, unit: 'px' },
-          positionY: { value: 5, unit: '%' },
+          positionX: { value: 0, unit: 'px' },
+          positionY: { value: 0, unit: 'px' },
           width: { value: 198, unit: 'px' },
           height: { value: 111, unit: 'px' },
           animations: [
@@ -455,13 +488,13 @@ export const sampleCanvas: Canvas = {
           animationResetDuration: { value: 0.1, unit: 's' },
         },
         '728x90': {
-          positionX: { value: 568, unit: 'px' },
+          positionX: { value: 0, unit: 'px' },
           positionY: { value: 0, unit: 'px' },
           width: { value: 160, unit: 'px' },
           height: { value: 90, unit: 'px' },
         },
         '160x600': {
-          positionX: { value: -100, unit: 'px' },
+          positionX: { value: 0, unit: 'px' },
           positionY: { value: 0, unit: 'px' },
           width: { value: 360.8, unit: 'px' },
           height: { value: 201, unit: 'px' },

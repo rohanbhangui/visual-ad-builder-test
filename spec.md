@@ -21,7 +21,7 @@ Quick reference for navigating the codebase:
 | `src/consts.ts` | All UI constants (`TOP_BAR_HEIGHT`, font lists, character limits, colour values, `HTML5_AD_SIZES` mirror, etc.) |
 | `src/components/Canvas.tsx` | Canvas edit + preview rendering; preview HTML generation; layer element generation; snap line rendering; `React.memo` wrapped |
 | `src/components/TopBar.tsx` | Top bar with title, size selector (conditional), undo/redo, mode toggle, export, settings |
-| `src/components/LayersPanel.tsx` | Floating layers panel; drag-to-reorder; add layer menu; lock toggles |
+| `src/components/LayersPanel.tsx` | Floating layers panel; drag-to-reorder; add layer menu; lock toggles; group/ungroup button; group hierarchy with expand/collapse |
 | `src/components/PropertySidebar/index.tsx` | Right sidebar; no-selection canvas settings; single/multi-select property views |
 | `src/components/PropertySidebar/PropertyTab/ButtonLayerFields.tsx` | Button-specific property fields including video control target/action wiring |
 | `src/components/PropertySidebar/PropertyTab/PropertyTab.tsx` | Per-type property field dispatcher |
@@ -148,7 +148,17 @@ interface ButtonLayer extends BaseLayer {
   };
   styles: { backgroundColor?: string; color?: string; fontFamily?: FontFamily; opacity: number };
 }
+
+interface GroupLayer extends BaseLayer {
+  type: 'group';
+  children: string[]; // ordered list of child layer IDs (in render order)
+  styles: { backgroundColor?: string; opacity: number };
+}
 ```
+
+`LayerContent` is the union of all layer types: `TextLayer | RichtextLayer | ImageLayer | VideoLayer | ButtonLayer | GroupLayer`.
+
+Groups live alongside their children in the **flat `layers` array**. `GroupLayer.children` contains the IDs of the member layers. Once grouped, child positions in `sizeConfig` are **relative to the group's top-left corner**. On ungroup, they are converted back to absolute canvas coordinates, preserving visual position.
 
 ### SizeConfig (per-layer, per-size)
 
@@ -225,6 +235,7 @@ State is split into two categories:
 | `exportedHTML` | Last generated HTML string |
 | `animationKey` | Incremented to replay animations |
 | `draggedLayerIndex / dragOverLayerIndex` | DnD reorder state |
+| `draggedLayerParentGroupId` | Group ID of the layer currently being dragged (if it is a group child); `null` for top-level layers |
 | `layersPanelPos / layersPanelSide / isLayersPanelCollapsed / isLayersPanelDragging` | Floating panel state |
 
 ### Hook-Local State (`useCanvasInteractions`)
@@ -286,7 +297,7 @@ The central editing surface. Renders layers as absolutely-positioned DOM element
 - Selected layer(s) get `willChange: transform, top, left` hinted for the GPU during drag
 - Selected layer(s) get a unified bounding-box outline: `2/zoom px solid #2563eb`, offset `-2/zoom px` inward (keeps 1 visual pixel at any zoom)
 - Resize handles (single-selection only): 4 corner circles (`12/zoom px`, white, rounded, `2/zoom px` blue border) + 4 edge invisible zones (`8/zoom px`)
-- Layer hover effect: non-selected, non-locked, non-panning layers get `outline: 2px solid rgba(59,130,246,0.5)` on `mouseenter`; cleared on `mouseleave` and on `mousedown` (which clears all `[data-layer-hover]` elements first)
+- Layer hover effect: non-selected, non-locked, non-panning layers get `box-shadow: inset 0 0 0 2px rgba(59,130,246,0.5)` on `mouseenter`; cleared on `mouseleave` and on `mousedown` (which clears all `[data-layer-hover]` elements first). An inset box-shadow is used instead of `outline` so the highlight correctly clips to any `border-radius` on rounded layers
 - Snap guide lines: visually 1px (`1/zoom px` width), red `#ef4444`, z-index 9999, rendered **outside** the clipping container so they always show
 - Clipping: inner `div` with `overflow: hidden | visible` wraps layer content; snap lines are outside this div
 - Text/richtext content wrapper gets `overflow: hidden`; a layer with `borderRadius` gets `overflow: hidden` on its outer element
@@ -320,7 +331,9 @@ Floating panel (300px wide). Behaviours:
 - **Collapsible** — collapses to header-only (48px); expanded height capped at 322px with overflow scroll
 - **Layer list** — shows layer type icon, label text (truncated), selected indicator, lock toggle
 - **Add layer dropdown** — plus button opens menu with: Text, Button, Image, Video, Rich Text
-- **Drag to reorder** — HTML5 drag events (`dragstart / dragover / drop / dragend`), visual drag indicator shows insertion position
+- **Group/Ungroup button** — folder icon shown when 2+ non-group layers are selected (executes group); folder-open icon shown when a single group is selected (executes ungroup); hidden otherwise
+- **Drag to reorder** — HTML5 drag events (`dragstart / dragover / drop / dragend`), visual drag indicator shows insertion position. Dragging a child row across its group boundary removes it from the group; dragging a layer onto a group row adds it as a child
+- **Group hierarchy** — `GroupLayer` rows show a chevron (expand/collapse) and folder icon. Children are indented below their parent group row; per-group collapse state tracked in local React state, default expanded
 - **Multi-select** — clicking a layer with Shift adds/removes from selection
 - Contains a canvas settings gear icon that opens the settings modal
 
@@ -552,6 +565,8 @@ Continuous wheel/trackpad events must not flood the undo/redo history with hundr
 
 | Key | Action |
 |---|---|
+| `Cmd/Ctrl + G` | Group selected layers (2+ non-group layers must be selected) |
+| `Cmd/Ctrl + Shift + G` | Ungroup the selected group layer |
 | `Delete` / `Backspace` | Delete selected layer(s) (with confirmation dialog) |
 | `Arrow keys` | Move selected layer(s) by 1px |
 | `Shift + Arrow keys` | Move selected layer(s) by 10px |
@@ -660,9 +675,78 @@ A **"Copy all properties to…"** button appears at the bottom of the Properties
 
 Animations, loop delay, and reset duration are **not** affected. The entire operation is a single `setLayers` call, producing one undo/redo history entry. Implemented in `handleCopyAllSizeProperties` in `App.tsx`.
 
-### HTML ID Validation
+### Layer Groups
 
-When editing the HTML ID field in the sidebar:
+Layers can be grouped together to form a logical container unit. A group has its own bounding box, position, and size. Children store positions **relative** to the group's top-left corner.
+
+#### Data model
+
+- `GroupLayer` is a member of the `LayerContent` union with `type: 'group'`
+- `GroupLayer.children: string[]` — ordered list of child layer IDs
+- Children remain in the flat `layers` array; `children` is the authoritative membership list
+- When grouped: children's `sizeConfig[size].positionX/Y` are converted from absolute → relative for each size with a config entry
+- When ungrouped: children's `sizeConfig[size].positionX/Y` are converted from relative → absolute, preserving visual position
+
+#### Creating a group (`Cmd/Ctrl+G` or Group button)
+
+Requires 2+ non-group layers to be selected. Steps:
+1. For each size that has at least one selected layer with a `sizeConfig` entry: compute the bounding box (min posX/posY, max posX+width / posY+height)
+2. Create a new `GroupLayer` with `sizeConfig[size]` = { bounding box position and size }
+3. Update each child's `sizeConfig[size].positionX/Y` to be relative (subtract group top-left)
+4. Insert group layer into the flat array at the position of the first selected layer; children follow immediately after in their original relative order
+5. Select the new group (`setSelectedLayerIds([groupId])`)
+
+#### Ungrouping (`Cmd/Ctrl+Shift+G` or Ungroup button)
+
+Requires exactly one `GroupLayer` to be selected. Steps:
+1. For each size in the group's `sizeConfig`: add group's `positionX/Y` back to each child's `positionX/Y` (relative → absolute)
+2. Remove the group layer from the flat `layers` array; children remain and are now top-level
+3. Select all formerly grouped layer IDs (`setSelectedLayerIds(childIds)`)
+
+#### Canvas interaction
+
+- **Click on group**: selects the group
+- **Click on child inside group (group not selected)**: selects the group
+- **Click on child inside group (group already selected)**: selects the child
+- **Double-click on child inside selected group**: directly selects the child
+- **Drag group**: moves the group's `sizeConfig` position; children move visually because their positions are relative to the group
+- **Drag child (when child is selected)**: moves the child layer within the group; the group's bounding box (`positionX`, `positionY`, `width`, `height`) is recalculated each frame during the drag to tightly encompass all children. If children shift such that the minimum relative X/Y is no longer 0, the group origin is shifted and all children's relative coordinates are renormalized
+- **Resize group**: container-only — the group bounding box resizes, child positions and sizes are unchanged (children may extend beyond group bounds)
+
+#### Layers Panel
+
+- Group rows render with a **chevron** (expand/collapse) and a folder-type icon
+- Children are rendered **indented** immediately after their group row (only visible when expanded)
+- Collapsed groups hide child rows; expanded state is tracked per-group in React local state (`Map<groupId, boolean>`, default expanded)
+- **Group button** (folder icon): shown in the panel header only when 2+ layers are selected and none of them is a `GroupLayer`; executes group action
+- **Ungroup button** (folder-open icon): shown when exactly one `GroupLayer` is selected; executes ungroup action
+- Layers panel drag-to-reorder for groups has three distinct cases:
+  - **Reorder within same group**: dragging one child row above/below another child of the same group updates `group.children` order; no position conversion needed
+  - **Child → top-level**: dragging a child row out of its group converts its position from group-relative back to absolute canvas coordinates, removes it from `group.children`, and recalculates the source group's bounding box to tightly fit the remaining children
+  - **Layer → group**: dragging any non-group layer onto **the group header row** (the entire row is a drop target) or onto a child row inside the group converts the dragged layer's position to group-relative, inserts it into `group.children`, and recalculates the target group's bounding box to encompass all children including the new one. **Groups cannot be dropped onto other groups** — when the dragged layer is itself a `GroupLayer` the group row does not highlight and the drop falls through to normal reorder
+- `draggedLayerParentGroupId` is stored as ephemeral state on `dragstart` so the source group context is available when `drop` fires
+- After any cross-boundary membership change (add or remove), `recalcGroupBounds` recomputes the affected group's `sizeConfig` bounding box for every ad size and renormalizes child relative positions so the group origin remains at the top-left of its children's bounding box
+
+#### Property Sidebar
+
+When a group is selected:
+- Shows: alignment buttons, bounding box position (X, Y) and size (W, H) for the current size, opacity slider, aspect ratio lock toggle
+- **Hidden for groups**: Background Color, Corners/border-radius, Element ID input, and "Copy all properties to…" (these are not meaningful for a logical container that has no visual fill or HTML element ID)
+- No layer-type-specific fields and no Animations tab
+
+#### Export HTML
+
+A group exports as a positioned `<div>` wrapping its children:
+
+```html
+<div id="group-id" style="position:absolute; left:Xpx; top:Ypx; width:Wpx; height:Hpx; opacity:N;">
+  <!-- child elements with position:absolute relative to this div -->
+</div>
+```
+
+Children inherit the group's coordinate space. If the group has a `backgroundColor` it is set on the container div.
+
+### HTML ID Validation
 - **Spaces**: silently rejected (returns without updating or alerting)
 - **Starts with a digit**: `alert()` shown, not saved
 - **Duplicate across layers**: `alert()` shown, not saved

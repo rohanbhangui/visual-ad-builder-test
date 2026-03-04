@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { sampleCanvas, type LayerContent, type AdSize } from './data';
+import { sampleCanvas, type LayerContent, type GroupLayer, type AdSize, type SizeConfig } from './data';
 import { HTML5_AD_SIZES, UI_LAYOUT } from './consts';
 import { TopBar } from './components/TopBar';
 import { LayersPanel } from './components/LayersPanel';
@@ -50,6 +50,7 @@ const App = () => {
   const animationKey = useStore((state) => state.animationKey);
   const draggedLayerIndex = useStore((state) => state.draggedLayerIndex);
   const dragOverLayerIndex = useStore((state) => state.dragOverLayerIndex);
+  const draggedLayerParentGroupId = useStore((state) => state.draggedLayerParentGroupId);
   const isLayersPanelDragging = useStore((state) => state.isLayersPanelDragging);
   
   // Zustand actions - only ones actually used in App.tsx
@@ -74,6 +75,7 @@ const App = () => {
   const setIsLayersPanelDragging = useStore((state) => state.setIsLayersPanelDragging);
   const setDraggedLayerIndex = useStore((state) => state.setDraggedLayerIndex);
   const setDragOverLayerIndex = useStore((state) => state.setDragOverLayerIndex);
+  const setDraggedLayerParentGroupId = useStore((state) => state.setDraggedLayerParentGroupId);
   const setAnimationKey = useStore((state) => state.setAnimationKey);
   const setExportedHTML = useStore((state) => state.setExportedHTML);
   const setIsExportModalOpen = useStore((state) => state.setIsExportModalOpen);
@@ -81,6 +83,8 @@ const App = () => {
   const setAdSelectorPosition = useStore((state) => state.setAdSelectorPosition);
   const commitZoom = useStore((state) => state.commitZoom);
   const commitPan = useStore((state) => state.commitPan);
+  const groupLayers = useStore((state) => state.groupLayers);
+  const ungroupLayers = useStore((state) => state.ungroupLayers);
   
   // Undo/redo
   const canUndo = useCanUndo();
@@ -241,6 +245,29 @@ const App = () => {
         (activeElement.tagName === 'INPUT' ||
           activeElement.tagName === 'TEXTAREA' ||
           (activeElement as HTMLElement).isContentEditable);
+
+      // Group / Ungroup shortcuts (Cmd+G / Ctrl+G and Cmd+Shift+G / Ctrl+Shift+G)
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyG' && !e.shiftKey && !isTyping) {
+        e.preventDefault();
+        // Determine eligible layers for grouping (non-group layers)
+        const nonGroupSelected = selectedLayerIds.filter(
+          (id) => !layers.find((l) => l.id === id && l.type === 'group')
+        );
+        if (nonGroupSelected.length >= 2) {
+          groupLayers(nonGroupSelected);
+        }
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyG' && e.shiftKey && !isTyping) {
+        e.preventDefault();
+        const selectedGroup = selectedLayerIds.find((id) =>
+          layers.find((l) => l.id === id && l.type === 'group')
+        );
+        if (selectedGroup) {
+          ungroupLayers(selectedGroup);
+        }
+        return;
+      }
 
       // Undo/Redo shortcuts (Cmd+Z / Cmd+Shift+Z on macOS, Ctrl+Z / Ctrl+Shift+Z on Windows)
       if ((e.metaKey || e.ctrlKey) && e.code === 'KeyZ' && !e.shiftKey && !isTyping) {
@@ -723,9 +750,79 @@ const App = () => {
     setIsLayersPanelCollapsed(newCollapsedState);
   };
 
-  const handleLayerDragStart = (e: React.DragEvent, index: number) => {
+  const handleGroupLayers = () => {
+    const nonGroupSelected = selectedLayerIds.filter(
+      (id) => !layers.find((l) => l.id === id && l.type === 'group')
+    );
+    if (nonGroupSelected.length >= 2) {
+      groupLayers(nonGroupSelected);
+    }
+  };
+
+  const handleUngroupLayers = () => {
+    const selectedGroup = selectedLayerIds.find((id) =>
+      layers.find((l) => l.id === id && l.type === 'group')
+    );
+    if (selectedGroup) {
+      ungroupLayers(selectedGroup);
+    }
+  };
+
+  /**
+   * Called when a layer is dragged and dropped onto a group header in the LayersPanel.
+   * Adds the dragged layer to the group and converts its position to relative.
+   */
+  const handleDropOnGroup = (draggedFlatIndex: number, targetGroupId: string) => {
+    const draggedLayer = layers[draggedFlatIndex];
+    if (!draggedLayer) return;
+    // Don't allow adding a group into another group
+    if (draggedLayer.type === 'group') return;
+    // Don't add if already in this group
+    const targetGroup = layers.find((l) => l.id === targetGroupId) as GroupLayer | undefined;
+    if (!targetGroup || targetGroup.children.includes(draggedLayer.id)) return;
+
+    // For each size: convert draggedLayer's absolute position to relative (subtract group offset)
+    const updatedDraggedLayer = { ...draggedLayer, sizeConfig: { ...draggedLayer.sizeConfig } };
+    Object.keys(draggedLayer.sizeConfig).forEach((size) => {
+      const adSize = size as AdSize;
+      const layerConfig = draggedLayer.sizeConfig[adSize];
+      const groupConfig = targetGroup.sizeConfig[adSize];
+      if (!layerConfig || !groupConfig) return;
+      const dims = HTML5_AD_SIZES[adSize];
+      const lx = layerConfig.positionX.unit === '%' ? (layerConfig.positionX.value / 100) * dims.width : layerConfig.positionX.value;
+      const ly = layerConfig.positionY.unit === '%' ? (layerConfig.positionY.value / 100) * dims.height : layerConfig.positionY.value;
+      const gx = groupConfig.positionX.unit === '%' ? (groupConfig.positionX.value / 100) * dims.width : groupConfig.positionX.value;
+      const gy = groupConfig.positionY.unit === '%' ? (groupConfig.positionY.value / 100) * dims.height : groupConfig.positionY.value;
+      updatedDraggedLayer.sizeConfig[adSize] = {
+        ...layerConfig,
+        positionX: { value: lx - gx, unit: 'px' },
+        positionY: { value: ly - gy, unit: 'px' },
+      };
+    });
+
+    // Update the flat layers array: update dragged layer and add to group's children
+    setLayers((prev) => {
+      return prev.map((l) => {
+        if (l.id === draggedLayer.id) return updatedDraggedLayer as LayerContent;
+        if (l.id === targetGroupId) {
+          return { ...l, children: [...(l as GroupLayer).children, draggedLayer.id] } as LayerContent;
+        }
+        return l;
+      });
+    });
+    setSelectedLayerIds([targetGroupId]);
+    setDraggedLayerIndex(null);
+    setDragOverLayerIndex(null);
+  };
+
+  const handleLayerDoubleClick = (_e: React.MouseEvent, layerId: string) => {
+    setSelectedLayerIds([layerId]);
+  };
+
+  const handleLayerDragStart = (e: React.DragEvent, index: number, parentGroupId?: string) => {
     e.stopPropagation();
     setDraggedLayerIndex(index);
+    setDraggedLayerParentGroupId(parentGroupId ?? null);
   };
 
   const handleLayerDragOver = (e: React.DragEvent, index: number) => {
@@ -734,24 +831,207 @@ const App = () => {
     setDragOverLayerIndex(index);
   };
 
-  const handleLayerDrop = (e: React.DragEvent, dropIndex: number) => {
+  const handleLayerDrop = (e: React.DragEvent, dropFlatIndex: number, dropParentGroupId?: string) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (draggedLayerIndex === null) return;
+    const draggedLayer = layers[draggedLayerIndex];
+    if (!draggedLayer) return;
 
-    const newLayers = [...layers];
-    const [draggedLayer] = newLayers.splice(draggedLayerIndex, 1);
-    newLayers.splice(dropIndex, 0, draggedLayer);
+    // Groups cannot be nested inside other groups
+    if (draggedLayer.type === 'group' && dropParentGroupId) {
+      setDraggedLayerIndex(null);
+      setDragOverLayerIndex(null);
+      setDraggedLayerParentGroupId(null);
+      return;
+    }
 
-    setLayers(newLayers);
+    const sourceParentGroupId = draggedLayerParentGroupId ?? undefined;
+
+    const allSizes = Object.keys(HTML5_AD_SIZES) as AdSize[];
+
+    // Convert child-relative positions → absolute canvas positions
+    const toAbsolute = (layer: LayerContent, group: GroupLayer): LayerContent => {
+      const sc = { ...layer.sizeConfig };
+      allSizes.forEach((size) => {
+        const lc = layer.sizeConfig[size];
+        const gc = group.sizeConfig[size];
+        if (!lc || !gc) return;
+        const dims = HTML5_AD_SIZES[size];
+        const gx = gc.positionX.unit === '%' ? (gc.positionX.value / 100) * dims.width : gc.positionX.value;
+        const gy = gc.positionY.unit === '%' ? (gc.positionY.value / 100) * dims.height : gc.positionY.value;
+        const cx = lc.positionX.unit === '%' ? (lc.positionX.value / 100) * dims.width : lc.positionX.value;
+        const cy = lc.positionY.unit === '%' ? (lc.positionY.value / 100) * dims.height : lc.positionY.value;
+        sc[size] = { ...lc, positionX: { value: gx + cx, unit: 'px' }, positionY: { value: gy + cy, unit: 'px' } };
+      });
+      return { ...layer, sizeConfig: sc };
+    };
+
+    // Convert absolute canvas positions → relative to group origin
+    const toRelative = (layer: LayerContent, group: GroupLayer): LayerContent => {
+      const sc = { ...layer.sizeConfig };
+      allSizes.forEach((size) => {
+        const lc = layer.sizeConfig[size];
+        const gc = group.sizeConfig[size];
+        if (!lc || !gc) return;
+        const dims = HTML5_AD_SIZES[size];
+        const gx = gc.positionX.unit === '%' ? (gc.positionX.value / 100) * dims.width : gc.positionX.value;
+        const gy = gc.positionY.unit === '%' ? (gc.positionY.value / 100) * dims.height : gc.positionY.value;
+        const cx = lc.positionX.unit === '%' ? (lc.positionX.value / 100) * dims.width : lc.positionX.value;
+        const cy = lc.positionY.unit === '%' ? (lc.positionY.value / 100) * dims.height : lc.positionY.value;
+        sc[size] = { ...lc, positionX: { value: cx - gx, unit: 'px' }, positionY: { value: cy - gy, unit: 'px' } };
+      });
+      return { ...layer, sizeConfig: sc };
+    };
+
+    setLayers((prev) => {
+      const dragged = prev.find((l) => l.id === draggedLayer.id);
+      if (!dragged) return prev;
+
+      const sourceGroup = sourceParentGroupId
+        ? (prev.find((l) => l.id === sourceParentGroupId) as GroupLayer | undefined)
+        : undefined;
+      const targetGroup = dropParentGroupId
+        ? (prev.find((l) => l.id === dropParentGroupId) as GroupLayer | undefined)
+        : undefined;
+
+      // CASE D – reorder within the same group: only update children order, no position conversion
+      if (sourceParentGroupId && sourceParentGroupId === dropParentGroupId && sourceGroup) {
+        const dropTargetId = prev[dropFlatIndex]?.id;
+        const newChildren = sourceGroup.children.filter((id) => id !== dragged.id);
+        const insertAt = dropTargetId ? newChildren.indexOf(dropTargetId) : -1;
+        newChildren.splice(insertAt >= 0 ? insertAt : newChildren.length, 0, dragged.id);
+        return prev.map((l) =>
+          l.id === sourceParentGroupId ? ({ ...l, children: newChildren } as LayerContent) : l
+        );
+      }
+
+      // Convert dragged layer positions as needed
+      let updatedDragged: LayerContent = dragged;
+      if (sourceGroup) updatedDragged = toAbsolute(updatedDragged, sourceGroup);
+      if (targetGroup) updatedDragged = toRelative(updatedDragged, targetGroup);
+
+      // Remove layer from source group's children
+      const updatedSourceGroup: GroupLayer | null = sourceGroup
+        ? { ...sourceGroup, children: sourceGroup.children.filter((id) => id !== dragged.id) }
+        : null;
+
+      // Insert layer into target group's children at the correct position
+      let updatedTargetGroup: GroupLayer | null = null;
+      if (targetGroup) {
+        const dropTargetId = prev[dropFlatIndex]?.id;
+        const baseChildren =
+          updatedSourceGroup && updatedSourceGroup.id === targetGroup.id
+            ? [...updatedSourceGroup.children]
+            : [...targetGroup.children];
+        if (!baseChildren.includes(dragged.id)) {
+          const insertAt = dropTargetId ? baseChildren.indexOf(dropTargetId) : -1;
+          baseChildren.splice(insertAt >= 0 ? insertAt : baseChildren.length, 0, dragged.id);
+        }
+        updatedTargetGroup = { ...targetGroup, children: baseChildren };
+      }
+
+      // Recalculate a group's bounding box from its current children (relative coords).
+      // Returns updated newLayers with the group sizeConfig and all child relative
+      // positions renormalized so the bounding box origin is at (0,0) relative.
+      const recalcGroupBounds = (layers: LayerContent[], groupId: string): LayerContent[] => {
+        const group = layers.find((l) => l.id === groupId) as GroupLayer | undefined;
+        if (!group || group.children.length === 0) return layers;
+
+        const newGroupSizeConfig = { ...group.sizeConfig };
+        // Per-child offset corrections (only non-zero when minRX/minRY != 0)
+        const childOffsets: Record<AdSize, { dx: number; dy: number }> = {} as Record<AdSize, { dx: number; dy: number }>;
+
+        allSizes.forEach((size) => {
+          const gc = group.sizeConfig[size];
+          if (!gc) return;
+
+          const childConfigs = group.children
+            .map((cid) => layers.find((l) => l.id === cid)?.sizeConfig[size])
+            .filter(Boolean) as SizeConfig[];
+          if (childConfigs.length === 0) return;
+
+          const dims = HTML5_AD_SIZES[size];
+          const gx = gc.positionX.unit === '%' ? (gc.positionX.value / 100) * dims.width : gc.positionX.value;
+          const gy = gc.positionY.unit === '%' ? (gc.positionY.value / 100) * dims.height : gc.positionY.value;
+
+          let minRX = Infinity, minRY = Infinity, maxRX = -Infinity, maxRY = -Infinity;
+          childConfigs.forEach((cc) => {
+            const rx = cc.positionX.unit === '%' ? (cc.positionX.value / 100) * dims.width : cc.positionX.value;
+            const ry = cc.positionY.unit === '%' ? (cc.positionY.value / 100) * dims.height : cc.positionY.value;
+            const w = cc.width.unit === '%' ? (cc.width.value / 100) * dims.width : cc.width.value;
+            const h = cc.height.unit === '%' ? (cc.height.value / 100) * dims.height : cc.height.value;
+            minRX = Math.min(minRX, rx);
+            minRY = Math.min(minRY, ry);
+            maxRX = Math.max(maxRX, rx + w);
+            maxRY = Math.max(maxRY, ry + h);
+          });
+
+          newGroupSizeConfig[size] = {
+            ...gc,
+            positionX: { value: gx + minRX, unit: 'px' },
+            positionY: { value: gy + minRY, unit: 'px' },
+            width:     { value: maxRX - minRX, unit: 'px' },
+            height:    { value: maxRY - minRY, unit: 'px' },
+          };
+          childOffsets[size] = { dx: -minRX, dy: -minRY };
+        });
+
+        return layers.map((l) => {
+          if (l.id === groupId) return { ...l, sizeConfig: newGroupSizeConfig } as LayerContent;
+          if (group.children.includes(l.id)) {
+            const newSc = { ...l.sizeConfig };
+            allSizes.forEach((size) => {
+              const cc = l.sizeConfig[size];
+              const off = childOffsets[size];
+              if (!cc || !off || (off.dx === 0 && off.dy === 0)) return;
+              const dims = HTML5_AD_SIZES[size];
+              const rx = cc.positionX.unit === '%' ? (cc.positionX.value / 100) * dims.width : cc.positionX.value;
+              const ry = cc.positionY.unit === '%' ? (cc.positionY.value / 100) * dims.height : cc.positionY.value;
+              newSc[size] = { ...cc, positionX: { value: rx + off.dx, unit: 'px' }, positionY: { value: ry + off.dy, unit: 'px' } };
+            });
+            return { ...l, sizeConfig: newSc } as LayerContent;
+          }
+          return l;
+        });
+      };
+
+      // Apply all layer-level updates
+      let newLayers = prev.map((l) => {
+        if (l.id === dragged.id) return updatedDragged;
+        if (updatedSourceGroup && l.id === updatedSourceGroup.id) return updatedSourceGroup as LayerContent;
+        if (updatedTargetGroup && l.id === updatedTargetGroup.id && l.id !== (updatedSourceGroup?.id ?? '')) return updatedTargetGroup as LayerContent;
+        return l;
+      });
+
+      // Recalculate bounding boxes for affected groups
+      if (updatedTargetGroup) newLayers = recalcGroupBounds(newLayers, updatedTargetGroup.id);
+      if (updatedSourceGroup && updatedSourceGroup.children.length > 0) newLayers = recalcGroupBounds(newLayers, updatedSourceGroup.id);
+
+      // For top-level drops: also reorder the flat array
+      if (!dropParentGroupId) {
+        const currentIdx = newLayers.findIndex((l) => l.id === dragged.id);
+        const [removed] = newLayers.splice(currentIdx, 1);
+        const insertIdx = Math.max(0, Math.min(
+          currentIdx < dropFlatIndex ? dropFlatIndex - 1 : dropFlatIndex,
+          newLayers.length
+        ));
+        newLayers.splice(insertIdx, 0, removed);
+      }
+
+      return newLayers;
+    });
+
     setDraggedLayerIndex(null);
     setDragOverLayerIndex(null);
+    setDraggedLayerParentGroupId(null);
   };
 
   const handleLayerDragEnd = () => {
     setDraggedLayerIndex(null);
     setDragOverLayerIndex(null);
+    setDraggedLayerParentGroupId(null);
   };
 
   const handlePropertyChange = (
@@ -1705,6 +1985,9 @@ const App = () => {
               onLayerDragEnd={handleLayerDragEnd}
               onAddLayer={handleAddLayer}
               onToggleLock={handleToggleLock}
+              onGroupLayers={handleGroupLayers}
+              onUngroupLayers={handleUngroupLayers}
+              onDropOnGroup={handleDropOnGroup}
             />
           ) : null}
 
@@ -1724,6 +2007,7 @@ const App = () => {
             animationKey={animationKey}
             animationLoop={animationLoop}
             onLayerMouseDown={handleLayerMouseDown}
+            onLayerDoubleClick={handleLayerDoubleClick}
             onResizeMouseDown={handleResizeMouseDown}
             onMouseMove={(e) => {
               handleCanvasMouseMove(e);

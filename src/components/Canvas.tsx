@@ -1,5 +1,5 @@
 import React from 'react';
-import { type LayerContent, type AdSize } from '../data';
+import { type LayerContent, type GroupLayer, type AdSize } from '../data';
 import { COLORS } from '../consts';
 import { getGoogleFontsLink } from '../utils/googleFonts';
 import SettingsIcon from '../assets/icons/settings.svg?react';
@@ -44,6 +44,8 @@ interface CanvasProps {
   isPanning?: boolean;
   animationKey?: number; // Key to force iframe reload for replay
   animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
+  /** Called when a double-click should directly select a specific layer (e.g. enter group) */
+  onLayerDoubleClick?: (e: React.MouseEvent, layerId: string) => void;
 }
 
 export const Canvas: React.FC<CanvasProps> = ({
@@ -68,7 +70,45 @@ export const Canvas: React.FC<CanvasProps> = ({
   isPanning = false,
   animationKey = 0,
   animationLoop = 0,
+  onLayerDoubleClick,
 }) => {
+  // ─── Group helpers ─────────────────────────────────────────────
+  const isGroupLayer = (l: LayerContent): l is GroupLayer => l.type === 'group';
+  // Set of all layer IDs that are children of some group
+  const childLayerIds = new Set<string>(
+    layers.filter(isGroupLayer).flatMap((g) => g.children)
+  );
+  // Map from child layer ID → parent group ID
+  const childToGroupMap = new Map<string, string>();
+  layers.filter(isGroupLayer).forEach((g) => {
+    g.children.forEach((cid) => childToGroupMap.set(cid, g.id));
+  });
+
+  /** Returns {x, y, w, h} in absolute canvas px for any layer (resolves group offset for children) */
+  const getAbsoluteRect = (layer: LayerContent): { x: number; y: number; w: number; h: number } | null => {
+    const config = layer.sizeConfig[selectedSize];
+    if (!config) return null;
+    const toPx = (v: { value: number; unit?: string }, dim: number) =>
+      v.unit === '%' ? (v.value / 100) * dim : v.value;
+    let x = toPx(config.positionX, dimensions.width);
+    let y = toPx(config.positionY, dimensions.height);
+    const w = toPx(config.width, dimensions.width);
+    const h = toPx(config.height, dimensions.height);
+    // Add parent group's absolute offset if this is a group child
+    const parentGroupId = childToGroupMap.get(layer.id);
+    if (parentGroupId) {
+      const pg = layers.find((l) => l.id === parentGroupId);
+      if (pg) {
+        const pgc = pg.sizeConfig[selectedSize];
+        if (pgc) {
+          x += toPx(pgc.positionX, dimensions.width);
+          y += toPx(pgc.positionY, dimensions.height);
+        }
+      }
+    }
+    return { x, y, w, h };
+  };
+  // ─────────────────────────────────────────────────────────────── 
   const generatePreviewHTML = (): string => {
     // Get loop delay and reset duration from the first layer's selected size config (or defaults)
     const firstLayerConfig = layers[0]?.sizeConfig[selectedSize];
@@ -90,188 +130,206 @@ export const Canvas: React.FC<CanvasProps> = ({
         : animationResetDuration.value;
     const totalCycleTime = loopTimeMs + resetDelayMs; // in ms
 
+    // Build group membership lookup so children are skipped at the top level
+    const previewChildLayerIds = new Set<string>(
+      layers.filter((l): l is GroupLayer => l.type === 'group').flatMap((g) => g.children)
+    );
+
+    // Helper: build the full HTML string for a single non-group layer given its z-index
+    const buildLayerHTML = (layer: LayerContent, zIndex: number): string => {
+      const config = layer.sizeConfig[selectedSize];
+      if (!config) return '';
+
+      const posX = config.positionX;
+      const posY = config.positionY;
+      const width = config.width;
+      const height = config.height;
+      const opacity = layer.styles.opacity;
+
+      const animations = config.animations || [];
+      const hasOpacityAnimation = animations.some((a) => a.type === 'fadeIn');
+      const iterationCount =
+        animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
+      const animationValue =
+        animations.length > 0
+          ? animations
+              .map(
+                (anim) =>
+                  `anim-${layer.id}-${anim.id} ${totalCycleTime}ms ${anim.easing} 0s ${iterationCount} normal both`
+              )
+              .join(', ')
+          : '';
+
+      const borderRadiusStyle = config.borderRadius
+        ? typeof config.borderRadius === 'number'
+          ? `border-radius: ${config.borderRadius}px;`
+          : `border-radius: ${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px;`
+        : '';
+
+      const opacityStyle = !hasOpacityAnimation ? `opacity: ${opacity};` : '';
+      const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; ${opacityStyle} ${borderRadiusStyle}`;
+
+      let content = '';
+
+      switch (layer.type) {
+        case 'image':
+          content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" ${animationValue ? `data-animation="${animationValue}"` : ''} alt="${layer.label}">`;
+          break;
+        case 'text':
+          content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${config.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
+          break;
+        case 'richtext':
+          content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${config.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
+          break;
+        case 'video':
+          if (width.value > 0 && height.value > 0) {
+            const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
+            const controls = layer.properties?.controls !== false ? ' controls' : '';
+            content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls} ${animationValue ? `data-animation="${animationValue}"` : ''}></video>`;
+          }
+          break;
+        case 'button': {
+          const icon = layer.icon || { type: 'none', position: 'before' };
+          const iconSize = config.iconSize || 24;
+          const iconColor = icon.color || layer.styles?.color || '#ffffff';
+
+          let iconHtml = '';
+          let isToggleIcon = false;
+
+          if (icon.type === 'play') {
+            iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+          } else if (icon.type === 'pause') {
+            iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+          } else if (icon.type === 'replay') {
+            iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>`;
+          } else if (icon.type === 'play-fill') {
+            iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+          } else if (icon.type === 'pause-fill') {
+            iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>`;
+          } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
+            isToggleIcon = true;
+            const targetVideo =
+              layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                ? layers.find(
+                    (l) =>
+                      l.type === 'video' &&
+                      l.attributes?.id === layer.videoControl?.targetElementId
+                  )
+                : null;
+            const hasAutoplay =
+              targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+            const isFilled = icon.type === 'toggle-filled';
+            const playIcon = isFilled
+              ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
+              : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+            const pauseIcon = isFilled
+              ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`
+              : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+            const initialIcon = hasAutoplay ? pauseIcon : playIcon;
+            iconHtml = `<span class="btn-icon" data-play-icon="${playIcon.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIcon.replace(/"/g, '&quot;')}">${initialIcon}</span>`;
+          } else if (icon.type === 'toggle-custom') {
+            isToggleIcon = true;
+            const targetVideo =
+              layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                ? layers.find(
+                    (l) =>
+                      l.type === 'video' &&
+                      l.attributes?.id === layer.videoControl?.targetElementId
+                  )
+                : null;
+            const hasAutoplay =
+              targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+            const playImg = icon.customPlayImage
+              ? `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
+              : '';
+            const pauseImg = icon.customPauseImage
+              ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
+              : '';
+            const initialIcon = hasAutoplay && pauseImg ? pauseImg : playImg;
+            iconHtml = `<span class="btn-icon" data-play-icon="${playImg.replace(/"/g, '&quot;')}" data-pause-icon="${pauseImg.replace(/"/g, '&quot;')}">${initialIcon}</span>`;
+          } else if (icon.type === 'custom' && icon.customImage) {
+            iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
+          }
+
+          const hasText = layer.text && layer.text.trim().length > 0;
+          const hasIcon = icon.type !== 'none' && iconHtml;
+          const gap = hasText && hasIcon ? '6px' : '0';
+
+          let contentHtml = '';
+          if (hasIcon && hasText) {
+            contentHtml =
+              icon.position === 'before'
+                ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
+                : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
+          } else if (hasIcon) {
+            contentHtml = iconHtml;
+          } else {
+            contentHtml = layer.text;
+          }
+
+          const baseStyle = `${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || 'transparent'}; color: ${layer.styles?.color || '#ffffff'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
+
+          if (layer.actionType === 'videoControl' && layer.videoControl) {
+            const iconToggleLogic = isToggleIcon
+              ? ` setTimeout(() => { const iconEl = this.querySelector('.btn-icon'); if (iconEl) { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; } }, 0);`
+              : '';
+            const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${
+              layer.videoControl.action === 'play'
+                ? `v.play();${iconToggleLogic}`
+                : layer.videoControl.action === 'pause'
+                  ? `v.pause();${iconToggleLogic}`
+                  : layer.videoControl.action === 'restart'
+                    ? `v.currentTime = 0; v.play();${iconToggleLogic}`
+                    : `if (v.paused) { v.play(); } else { v.pause(); }${iconToggleLogic}`
+            } }`;
+            content = `<button ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} onclick="${onclickHandler}" style="${baseStyle}" ${animationValue ? `data-animation="${animationValue}"` : ''}>${contentHtml}</button>`;
+          } else {
+            const href = layer.actionType === 'link' ? layer.url : '#';
+            const target = layer.actionType === 'link' ? ' target="_blank"' : '';
+            content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${href}"${target} style="${baseStyle} text-decoration: none;" ${animationValue ? `data-animation="${animationValue}"` : ''}>${contentHtml}</a>`;
+          }
+          break;
+        }
+      }
+
+      return content;
+    };
+
     const layerElements = layers
       .filter((layer) => {
         // Only render layers that have data for the selected size
-        const config = layer.sizeConfig[selectedSize];
-        return !!config;
+        if (!layer.sizeConfig[selectedSize]) return false;
+        // Children are rendered inside their group container — skip at top level
+        if (previewChildLayerIds.has(layer.id)) return false;
+        return true;
       })
-      .map((layer, index) => {
-        const config = layer.sizeConfig[selectedSize]!;
-        const posX = config.positionX;
-        const posY = config.positionY;
-        const width = config.width;
-        const height = config.height;
-        const zIndex = layers.length - index;
-        const opacity = layer.styles.opacity;
+      .map((layer) => {
+        const flatIndex = layers.indexOf(layer);
+        const zIndex = layers.length - flatIndex;
 
-        // Get animations for this size
-        const animations = config.animations || [];
-
-        // Check if properties are animated
-        const hasOpacityAnimation = animations.some((a) => a.type === 'fadeIn');
-
-        // Calculate iteration count: -1 = infinite, 0 = run once (no loop), >0 = that many times
-        const iterationCount =
-          animationLoop === -1 ? 'infinite' : animationLoop === 0 ? '1' : animationLoop.toString();
-
-        // Build animation string to be applied via script on DOMContentLoaded
-        const animationValue =
-          animations.length > 0
-            ? animations
-                .map(
-                  (anim) =>
-                    `anim-${layer.id}-${anim.id} ${totalCycleTime}ms ${anim.easing} 0s ${iterationCount} normal both`
-                )
-                .join(', ')
-            : '';
-
-        // Format border-radius
-        const borderRadiusStyle = config.borderRadius
-          ? typeof config.borderRadius === 'number'
-            ? `border-radius: ${config.borderRadius}px;`
-            : `border-radius: ${config.borderRadius.topLeft}px ${config.borderRadius.topRight}px ${config.borderRadius.bottomRight}px ${config.borderRadius.bottomLeft}px;`
-          : '';
-
-        // Build style, excluding animated properties (animation applied via script)
-        const opacityStyle = !hasOpacityAnimation ? `opacity: ${opacity};` : '';
-        const style = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; ${opacityStyle} ${borderRadiusStyle}`;
-
-        let content = '';
-
-        switch (layer.type) {
-          case 'image':
-            content = `<img ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" style="${style} object-fit: ${layer.styles.objectFit || 'cover'};" ${animationValue ? `data-animation="${animationValue}"` : ''} alt="${layer.label}">`;
-            break;
-          case 'text':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${config.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
-            break;
-          case 'richtext':
-            content = `<div ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} style="${style} color: ${layer.styles?.color || '#000000'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; text-align: ${config.textAlign || 'left'};" ${animationValue ? `data-animation="${animationValue}"` : ''}>${layer.content}</div>`;
-            break;
-          case 'video':
-            if (width.value > 0 && height.value > 0) {
-              const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
-              const controls = layer.properties?.controls !== false ? ' controls' : '';
-              content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls} ${animationValue ? `data-animation="${animationValue}"` : ''}></video>`;
-            }
-            break;
-          case 'button': {
-            const icon = layer.icon || { type: 'none', position: 'before' };
-            const iconSize = config.iconSize || 24;
-            const iconColor = icon.color || layer.styles?.color || '#ffffff';
-
-            let iconHtml = '';
-            let isToggleIcon = false;
-
-            if (icon.type === 'play') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-            } else if (icon.type === 'pause') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
-            } else if (icon.type === 'replay') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>`;
-            } else if (icon.type === 'play-fill') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-            } else if (icon.type === 'pause-fill') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>`;
-            } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
-              isToggleIcon = true;
-              // Find target video to check autoplay status
-              const targetVideo =
-                layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
-                  ? layers.find(
-                      (l) =>
-                        l.type === 'video' &&
-                        l.attributes?.id === layer.videoControl?.targetElementId
-                    )
-                  : null;
-              const hasAutoplay =
-                targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
-
-              // Generate both play and pause icons
-              const isFilled = icon.type === 'toggle-filled';
-              const playIcon = isFilled
-                ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
-                : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-              const pauseIcon = isFilled
-                ? `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`
-                : `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
-
-              // Show pause icon if autoplay is on, play icon if off
-              const initialIcon = hasAutoplay ? pauseIcon : playIcon;
-              iconHtml = `<span class="btn-icon" data-play-icon="${playIcon.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIcon.replace(/"/g, '&quot;')}">${initialIcon}</span>`;
-            } else if (icon.type === 'toggle-custom') {
-              isToggleIcon = true;
-              // Find target video to check autoplay status
-              const targetVideo =
-                layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
-                  ? layers.find(
-                      (l) =>
-                        l.type === 'video' &&
-                        l.attributes?.id === layer.videoControl?.targetElementId
-                    )
-                  : null;
-              const hasAutoplay =
-                targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
-
-              const playImg = icon.customPlayImage
-                ? `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
-                : '';
-              const pauseImg = icon.customPauseImage
-                ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`
-                : '';
-
-              // Show pause image if autoplay is on, play image if off
-              const initialIcon = hasAutoplay && pauseImg ? pauseImg : playImg;
-              iconHtml = `<span class="btn-icon" data-play-icon="${playImg.replace(/"/g, '&quot;')}" data-pause-icon="${pauseImg.replace(/"/g, '&quot;')}">${initialIcon}</span>`;
-            } else if (icon.type === 'custom' && icon.customImage) {
-              iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" style="object-fit: contain;" />`;
-            }
-
-            const hasText = layer.text && layer.text.trim().length > 0;
-            const hasIcon = icon.type !== 'none' && iconHtml;
-            const gap = hasText && hasIcon ? '6px' : '0';
-
-            let contentHtml = '';
-            if (hasIcon && hasText) {
-              contentHtml =
-                icon.position === 'before'
-                  ? `${iconHtml}<span style="margin-left: ${gap};">${layer.text}</span>`
-                  : `<span style="margin-right: ${gap};">${layer.text}</span>${iconHtml}`;
-            } else if (hasIcon) {
-              contentHtml = iconHtml;
-            } else {
-              contentHtml = layer.text;
-            }
-
-            const baseStyle = `${style} display: flex; align-items: center; justify-content: center; background-color: ${layer.styles?.backgroundColor || 'transparent'}; color: ${layer.styles?.color || '#ffffff'}; font-size: ${config.fontSize || '14px'}; font-family: ${layer.styles?.fontFamily || 'Arial'}; cursor: pointer; border: none;`;
-
-            // Use button for video controls, anchor for links
-            if (layer.actionType === 'videoControl' && layer.videoControl) {
-              const iconToggleLogic = isToggleIcon
-                ? ` setTimeout(() => { const iconEl = this.querySelector('.btn-icon'); if (iconEl) { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; } }, 0);`
-                : '';
-              const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${
-                layer.videoControl.action === 'play'
-                  ? `v.play();${iconToggleLogic}`
-                  : layer.videoControl.action === 'pause'
-                    ? `v.pause();${iconToggleLogic}`
-                    : layer.videoControl.action === 'restart'
-                      ? `v.currentTime = 0; v.play();${iconToggleLogic}`
-                      : `if (v.paused) { v.play(); } else { v.pause(); }${iconToggleLogic}`
-              } }`;
-
-              content = `<button ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} onclick="${onclickHandler}" style="${baseStyle}" ${animationValue ? `data-animation="${animationValue}"` : ''}>${contentHtml}</button>`;
-            } else {
-              const href = layer.actionType === 'link' ? layer.url : '#';
-              const target = layer.actionType === 'link' ? ' target="_blank"' : '';
-              content = `<a ${layer.attributes.id ? `id="${layer.attributes.id}"` : ''} href="${href}"${target} style="${baseStyle} text-decoration: none;" ${animationValue ? `data-animation="${animationValue}"` : ''}>${contentHtml}</a>`;
-            }
-            break;
-          }
+        // Group layer: render a positioned container with children inside
+        if (layer.type === 'group') {
+          const groupLayer = layer as GroupLayer;
+          const config = layer.sizeConfig[selectedSize]!;
+          const posX = config.positionX;
+          const posY = config.positionY;
+          const width = config.width;
+          const height = config.height;
+          const groupStyle = `position: absolute; left: ${posX.value}${posX.unit || 'px'}; top: ${posY.value}${posY.unit || 'px'}; width: ${width.value}${width.unit}; height: ${height.value}${height.unit}; z-index: ${zIndex}; opacity: ${layer.styles.opacity ?? 1}; overflow: visible;`;
+          const childrenHTML = groupLayer.children
+            .map((childId) => {
+              const child = layers.find((l) => l.id === childId);
+              if (!child) return '';
+              const childFlatIdx = layers.indexOf(child);
+              // z-index for child is relative within the group
+              return buildLayerHTML(child, groupLayer.children.length - groupLayer.children.indexOf(childId));
+            })
+            .filter(Boolean)
+            .join('\n');
+          return `<div${layer.attributes.id ? ` id="${layer.attributes.id}"` : ''} style="${groupStyle}">\n${childrenHTML}\n</div>`;
         }
 
-        return content;
+        return buildLayerHTML(layer, zIndex);
       })
       .join('\n');
 
@@ -684,34 +742,106 @@ export const Canvas: React.FC<CanvasProps> = ({
           if (!layer.locked && !isSpacePressed && !isPanning) {
             // Clear any hover states from all elements before handling click
             document.querySelectorAll('[data-layer-hover]').forEach((el) => {
-              (el as HTMLElement).style.outline = '';
-              (el as HTMLElement).style.outlineOffset = '';
+              (el as HTMLElement).style.boxShadow = '';
             });
-            onLayerMouseDown(e, layer.id);
+            // Route to parent group unless this child is directly selected (entered via double-click)
+            const pgId = childToGroupMap.get(layer.id);
+            if (pgId && !selectedLayerIds.includes(layer.id)) {
+              onLayerMouseDown(e, pgId);
+            } else {
+              onLayerMouseDown(e, layer.id);
+            }
           }
         }}
-        className={
-          !layer.locked && !isSelected && !isSpacePressed && !isPanning
-            ? 'group hover:outline hover:outline-2 hover:outline-blue-400'
-            : ''
-        }
+        onDoubleClick={(e) => {
+          // Double-click on a group child directly selects the child (enters group)
+          const pgId = childToGroupMap.get(layer.id);
+          if (pgId && !layer.locked && !isSpacePressed && !isPanning) {
+            e.stopPropagation();
+            if (onLayerDoubleClick) {
+              onLayerDoubleClick(e, layer.id);
+            } else {
+              onLayerMouseDown(e, layer.id);
+            }
+          }
+        }}
         data-layer-hover={
           !layer.locked && !isSelected && !isSpacePressed && !isPanning ? 'true' : undefined
         }
         onMouseEnter={(e) => {
           if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
-            (e.currentTarget as HTMLElement).style.outline = '2px solid rgba(59, 130, 246, 0.5)';
-            (e.currentTarget as HTMLElement).style.outlineOffset = '-2px';
+            (e.currentTarget as HTMLElement).style.boxShadow = 'inset 0 0 0 2px rgba(59, 130, 246, 0.5)';
           }
         }}
         onMouseLeave={(e) => {
           if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
-            (e.currentTarget as HTMLElement).style.outline = '';
-            (e.currentTarget as HTMLElement).style.outlineOffset = '';
+            (e.currentTarget as HTMLElement).style.boxShadow = '';
           }
         }}
       >
         <div className={contentWrapperClassName}>{content}</div>
+      </div>
+    );
+  };
+
+  /** Renders a GroupLayer as a positioned div with its children inside */
+  const renderGroupLayer = (layer: GroupLayer, flatIndex: number) => {
+    const config = layer.sizeConfig[selectedSize];
+    if (!config) return null;
+    const posX = config.positionX;
+    const posY = config.positionY;
+    const width = config.width;
+    const height = config.height;
+    const isSelected = selectedLayerIds.includes(layer.id);
+
+    return (
+      <div
+        key={layer.id}
+        style={{
+          position: 'absolute',
+          left: `${posX.value}${posX.unit || 'px'}`,
+          top: `${posY.value}${posY.unit || 'px'}`,
+          width: `${width.value}${width.unit}`,
+          height: `${height.value}${height.unit}`,
+          opacity: layer.styles.opacity ?? 1,
+          backgroundColor: layer.styles.backgroundColor || 'transparent',
+          zIndex: layers.length - flatIndex,
+          cursor: mode === 'edit' && !layer.locked ? 'move' : 'default',
+          pointerEvents: layer.locked ? 'none' : 'auto',
+          overflow: 'visible',   // let children be visible beyond bounds in edit mode
+          willChange: isSelected ? 'transform, top, left' : undefined,
+          contain: 'layout style',
+        }}
+        onMouseDown={(e) => {
+          if (!layer.locked && !isSpacePressed && !isPanning) {
+            document.querySelectorAll('[data-layer-hover]').forEach((el) => {
+              (el as HTMLElement).style.boxShadow = '';
+            });
+            onLayerMouseDown(e, layer.id);
+          }
+        }}
+        data-layer-id={layer.id}
+        data-layer-hover={
+          !layer.locked && !isSelected && !isSpacePressed && !isPanning ? 'true' : undefined
+        }
+        onMouseEnter={(e) => {
+          if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
+            (e.currentTarget as HTMLElement).style.boxShadow = 'inset 0 0 0 2px rgba(59, 130, 246, 0.5)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
+            (e.currentTarget as HTMLElement).style.boxShadow = '';
+          }
+        }}
+      >
+        {/* Render children with their relative positions */}
+        {layer.children.map((childId) => {
+          const childFlatIdx = layers.findIndex((l) => l.id === childId);
+          if (childFlatIdx < 0) return null;
+          const childLayer = layers[childFlatIdx];
+          return renderLayer(childLayer, childFlatIdx);
+        })}
       </div>
     );
   };
@@ -786,7 +916,14 @@ export const Canvas: React.FC<CanvasProps> = ({
               }}
             >
               <div style={{ pointerEvents: 'auto' }}>
-                {layers.map((layer, index) => renderLayer(layer, index))}
+                {layers.map((layer, index) => {
+                  // Children are rendered inside their parent group — skip them at top level
+                  if (childLayerIds.has(layer.id)) return null;
+                  if (layer.type === 'group') {
+                    return renderGroupLayer(layer as GroupLayer, index);
+                  }
+                  return renderLayer(layer, index);
+                })}
               </div>
             </div>
             {/* Snap lines - outside clipping container */}
@@ -822,23 +959,9 @@ export const Canvas: React.FC<CanvasProps> = ({
                     maxY = -Infinity;
 
                   selectedLayers.forEach((layer) => {
-                    const config = layer.sizeConfig[selectedSize];
-                    if (!config) return;
-
-                    const posX = config.positionX;
-                    const posY = config.positionY;
-                    const width = config.width;
-                    const height = config.height;
-
-                    // Convert to pixels if using percentage
-                    const x =
-                      posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
-                    const y =
-                      posY.unit === '%' ? (posY.value / 100) * dimensions.height : posY.value;
-                    const w =
-                      width.unit === '%' ? (width.value / 100) * dimensions.width : width.value;
-                    const h =
-                      height.unit === '%' ? (height.value / 100) * dimensions.height : height.value;
+                    const rect = getAbsoluteRect(layer);
+                    if (!rect) return;
+                    const { x, y, w, h } = rect;
 
                     minX = Math.min(minX, x);
                     minY = Math.min(minY, y);

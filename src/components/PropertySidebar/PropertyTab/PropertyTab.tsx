@@ -155,27 +155,29 @@ export const PropertyTab = ({
 
   return (
     <div className="space-y-3">
-      {/* HTML ID */}
-      <div>
-        <Label htmlFor="element-id">Element ID</Label>
-        <input
-          id="element-id"
-          type="text"
-          value={layer.attributes.id || ''}
-          onChange={(e) => {
-            const value = e.target.value;
-            // Only allow valid HTML ID characters (no spaces)
-            if (!/\s/.test(value)) {
-              onHtmlIdChange(layer.id, value);
-            }
-          }}
-          placeholder="e.g., my-element"
-          disabled={layer.locked}
-          className={`w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''
-          }`}
-        />
-      </div>
+      {/* HTML ID — not shown for groups */}
+      {layer.type !== 'group' ? (
+        <div>
+          <Label htmlFor="element-id">Element ID</Label>
+          <input
+            id="element-id"
+            type="text"
+            value={layer.attributes.id || ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              // Only allow valid HTML ID characters (no spaces)
+              if (!/\s/.test(value)) {
+                onHtmlIdChange(layer.id, value);
+              }
+            }}
+            placeholder="e.g., my-element"
+            disabled={layer.locked}
+            className={`w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              layer.locked ? 'bg-gray-100 cursor-not-allowed' : ''
+            }`}
+          />
+        </div>
+      ) : null}
 
       {/* Alignment Buttons */}
       <div>
@@ -355,35 +357,39 @@ export const PropertyTab = ({
         />
       ) : null}
 
-      {/* Background Color */}
-      <div className="mt-4">
-        <ColorInput
-          label="Background Color"
-          value={layer.styles?.backgroundColor || 'transparent'}
-          onChange={(color) => onBackgroundColorChange(layer.id, color)}
-          disabled={layer.locked}
-          showNoneOption={true}
-        />
-      </div>
+      {/* Background Color — not shown for groups */}
+      {layer.type !== 'group' ? (
+        <div className="mt-4">
+          <ColorInput
+            label="Background Color"
+            value={layer.styles?.backgroundColor || 'transparent'}
+            onChange={(color) => onBackgroundColorChange(layer.id, color)}
+            disabled={layer.locked}
+            showNoneOption={true}
+          />
+        </div>
+      ) : null}
 
-      {/* Corners */}
-      <div className="mt-4">
-        <CornersInput
-          label="Corners"
-          value={config.borderRadius || 0}
-          onChange={(value) => onBorderRadiusChange(layer.id, value)}
-          disabled={layer.locked}
-          isSizeSpecific={true}
-          selectedSize={selectedSize}
-          onCopyToSize={
-            onCopyBorderRadius
-              ? (targetSizes) => onCopyBorderRadius(layer.id, selectedSize, targetSizes)
-              : undefined
-          }
-          allowedSizes={allowedSizes}
-          currentSize={selectedSize}
-        />
-      </div>
+      {/* Corners — not shown for groups (group div doesn't clip children) */}
+      {layer.type !== 'group' ? (
+        <div className="mt-4">
+          <CornersInput
+            label="Corners"
+            value={config.borderRadius || 0}
+            onChange={(value) => onBorderRadiusChange(layer.id, value)}
+            disabled={layer.locked}
+            isSizeSpecific={true}
+            selectedSize={selectedSize}
+            onCopyToSize={
+              onCopyBorderRadius
+                ? (targetSizes) => onCopyBorderRadius(layer.id, selectedSize, targetSizes)
+                : undefined
+            }
+            allowedSizes={allowedSizes}
+            currentSize={selectedSize}
+          />
+        </div>
+      ) : null}
 
       {/* Opacity */}
       <div className="mt-4">

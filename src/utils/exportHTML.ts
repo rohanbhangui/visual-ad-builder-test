@@ -1,4 +1,4 @@
-import { type LayerContent, type AdSize } from '../data';
+import { type LayerContent, type AdSize, type GroupLayer } from '../data';
 import { HTML5_AD_SIZES, DEFAULT_CSS_VALUES } from '../consts';
 import { getGoogleFontsLink } from './googleFonts';
 
@@ -64,163 +64,164 @@ export const generateResponsiveHTML = (
     }
   });
 
+  // Build group membership set for group-aware rendering
+  const isGroupLayer = (l: LayerContent): l is GroupLayer => l.type === 'group';
+  const childLayerIds = new Set<string>(layers.filter(isGroupLayer).flatMap((g) => g.children));
+
   // Generate single set of layer elements
   const generateLayerElements = (): string => {
-    return layers
-      .map((layer) => {
-        // Use attributes.id if set, otherwise fall back to UUID
-        const layerId = layer.attributes.id || layer.id;
+    // Helper that returns the HTML element string for a single (non-group) layer
+    const renderLayerHTML = (layer: LayerContent): string => {
+      const layerId = layer.attributes.id || layer.id;
+      const animationData = animationDataMap.get(layerId);
+      const animationAttr = animationData ? ` data-animation="${animationData}"` : '';
 
-        // Get animation data for this layer
-        const animationData = animationDataMap.get(layerId);
-        const animationAttr = animationData ? ` data-animation="${animationData}"` : '';
+      switch (layer.type) {
+        case 'image':
+          return `<img id="${layerId}" src="${layer.url}"${animationAttr} alt="${layer.label}">`;
+        case 'text':
+          return `<div id="${layerId}"${animationAttr}>${layer.content}</div>`;
+        case 'richtext':
+          return `<div id="${layerId}"${animationAttr}>${layer.content}</div>`;
+        case 'video': {
+          const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
+          const controls = layer.properties?.controls !== false ? ' controls' : '';
+          return `<video id="${layerId}" src="${layer.url}"${autoplay}${controls}${animationAttr}></video>`;
+        }
+        case 'button': {
+          const icon = layer.icon || { type: 'none', position: 'before' };
+          const iconSize = 24;
+          const iconColor = icon.color || layer.styles?.color || '#ffffff';
 
-        let content = '';
+          const playIconFilled = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+          const pauseIconFilled = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+          const playIconOutline = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+          const pauseIconOutline = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
 
-        switch (layer.type) {
-          case 'image': {
-            content = `<img id="${layerId}" src="${layer.url}"${animationAttr} alt="${layer.label}">`;
-            break;
+          let iconHtml = '';
+          let isToggleIcon = false;
+          let toggleIconData = '';
+
+          if (icon.type === 'play') {
+            iconHtml = playIconOutline;
+          } else if (icon.type === 'pause') {
+            iconHtml = pauseIconOutline;
+          } else if (icon.type === 'replay') {
+            iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
+          } else if (icon.type === 'play-fill') {
+            iconHtml = playIconFilled;
+          } else if (icon.type === 'pause-fill') {
+            iconHtml = pauseIconFilled;
+          } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
+            const targetVideo =
+              layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                ? layers.find(
+                    (l) =>
+                      l.type === 'video' &&
+                      l.attributes?.id === layer.videoControl?.targetElementId
+                  )
+                : null;
+            const hasAutoplay =
+              targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+            const isFilled = icon.type === 'toggle-filled';
+            const playIcon = isFilled ? playIconFilled : playIconOutline;
+            const pauseIcon = isFilled ? pauseIconFilled : pauseIconOutline;
+            iconHtml = hasAutoplay ? pauseIcon : playIcon;
+            isToggleIcon = true;
+            toggleIconData = ` data-play-icon="${playIcon.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIcon.replace(/"/g, '&quot;')}"`;
+          } else if (
+            icon.type === 'toggle-custom' &&
+            icon.customPlayImage &&
+            icon.customPauseImage
+          ) {
+            const targetVideo =
+              layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
+                ? layers.find(
+                    (l) =>
+                      l.type === 'video' &&
+                      l.attributes?.id === layer.videoControl?.targetElementId
+                  )
+                : null;
+            const hasAutoplay =
+              targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
+            iconHtml = hasAutoplay
+              ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`
+              : `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`;
+            isToggleIcon = true;
+            toggleIconData = ` data-play-icon="<img src='${icon.customPlayImage}' width='${iconSize}' height='${iconSize}' class='btn-icon-img' />" data-pause-icon="<img src='${icon.customPauseImage}' width='${iconSize}' height='${iconSize}' class='btn-icon-img' />"`;
+          } else if (icon.type === 'custom' && icon.customImage) {
+            iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`;
           }
-          case 'text':
-            content = `<div id="${layerId}"${animationAttr}>${layer.content}</div>`;
-            break;
-          case 'richtext':
-            content = `<div id="${layerId}"${animationAttr}>${layer.content}</div>`;
-            break;
-          case 'video': {
-            const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
-            const controls = layer.properties?.controls !== false ? ' controls' : '';
-            content = `<video id="${layerId}" src="${layer.url}"${autoplay}${controls}${animationAttr}></video>`;
-            break;
+
+          const hasText = layer.text && layer.text.trim().length > 0;
+          const hasIcon = icon.type !== 'none' && iconHtml;
+
+          let contentHtml = '';
+          if (hasIcon && hasText) {
+            contentHtml = isToggleIcon
+              ? icon.position === 'before'
+                ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span><span class="btn-text">${layer.text}</span>`
+                : `<span class="btn-text">${layer.text}</span><span class="btn-icon"${toggleIconData}>${iconHtml}</span>`
+              : icon.position === 'before'
+                ? `<span class="btn-icon-static">${iconHtml}</span><span class="btn-text">${layer.text}</span>`
+                : `<span class="btn-text">${layer.text}</span><span class="btn-icon-static">${iconHtml}</span>`;
+          } else if (hasIcon) {
+            contentHtml = isToggleIcon
+              ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span>`
+              : `<span class="btn-icon-static">${iconHtml}</span>`;
+          } else {
+            contentHtml = layer.text;
           }
-          case 'button': {
-            const icon = layer.icon || { type: 'none', position: 'before' };
-            // Use a default icon size since export HTML doesn't have specific config access here
-            // Actual size will be set per ad size in CSS
-            const iconSize = 24;
-            const iconColor = icon.color || layer.styles?.color || '#ffffff';
 
-            // For toggle icons, generate both play and pause SVGs
-            const playIconFilled = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-            const pauseIconFilled = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="${iconColor}" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
-            const playIconOutline = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
-            const pauseIconOutline = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
-
-            let iconHtml = '';
-            let isToggleIcon = false;
-            let toggleIconData = '';
-
-            if (icon.type === 'play') {
-              iconHtml = playIconOutline;
-            } else if (icon.type === 'pause') {
-              iconHtml = pauseIconOutline;
-            } else if (icon.type === 'replay') {
-              iconHtml = `<svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
-            } else if (icon.type === 'play-fill') {
-              iconHtml = playIconFilled;
-            } else if (icon.type === 'pause-fill') {
-              iconHtml = pauseIconFilled;
-            } else if (icon.type === 'toggle-filled' || icon.type === 'toggle-outline') {
-              // Find target video to check autoplay status
-              const targetVideo =
-                layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
-                  ? layers.find(
-                      (l) =>
-                        l.type === 'video' &&
-                        l.attributes?.id === layer.videoControl?.targetElementId
-                    )
-                  : null;
-              const hasAutoplay =
-                targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
-
-              // Set initial icon based on autoplay (pause if autoplay, play if not)
-              const isFilled = icon.type === 'toggle-filled';
-              const playIcon = isFilled ? playIconFilled : playIconOutline;
-              const pauseIcon = isFilled ? pauseIconFilled : pauseIconOutline;
-
-              iconHtml = hasAutoplay ? pauseIcon : playIcon;
-              isToggleIcon = true;
-              toggleIconData = ` data-play-icon="${playIcon.replace(/"/g, '&quot;')}" data-pause-icon="${pauseIcon.replace(/"/g, '&quot;')}"`;
-            } else if (
-              icon.type === 'toggle-custom' &&
-              icon.customPlayImage &&
-              icon.customPauseImage
-            ) {
-              // Find target video to check autoplay status
-              const targetVideo =
-                layer.actionType === 'videoControl' && layer.videoControl?.targetElementId
-                  ? layers.find(
-                      (l) =>
-                        l.type === 'video' &&
-                        l.attributes?.id === layer.videoControl?.targetElementId
-                    )
-                  : null;
-              const hasAutoplay =
-                targetVideo && targetVideo.type === 'video' && targetVideo.properties?.autoplay;
-
-              // Set initial icon based on autoplay (pause if autoplay, play if not)
-              iconHtml = hasAutoplay
-                ? `<img src="${icon.customPauseImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`
-                : `<img src="${icon.customPlayImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`;
-              isToggleIcon = true;
-              toggleIconData = ` data-play-icon="<img src='${icon.customPlayImage}' width='${iconSize}' height='${iconSize}' class='btn-icon-img' />" data-pause-icon="<img src='${icon.customPauseImage}' width='${iconSize}' height='${iconSize}' class='btn-icon-img' />"`;
-            } else if (icon.type === 'custom' && icon.customImage) {
-              iconHtml = `<img src="${icon.customImage}" width="${iconSize}" height="${iconSize}" class="btn-icon-img" />`;
-            }
-
-            const hasText = layer.text && layer.text.trim().length > 0;
-            const hasIcon = icon.type !== 'none' && iconHtml;
-
-            let contentHtml = '';
-            if (hasIcon && hasText) {
-              if (isToggleIcon) {
-                contentHtml =
-                  icon.position === 'before'
-                    ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span><span class="btn-text">${layer.text}</span>`
-                    : `<span class="btn-text">${layer.text}</span><span class="btn-icon"${toggleIconData}>${iconHtml}</span>`;
-              } else {
-                contentHtml =
-                  icon.position === 'before'
-                    ? `<span class="btn-icon-static">${iconHtml}</span><span class="btn-text">${layer.text}</span>`
-                    : `<span class="btn-text">${layer.text}</span><span class="btn-icon-static">${iconHtml}</span>`;
-              }
-            } else if (hasIcon) {
-              contentHtml = isToggleIcon
-                ? `<span class="btn-icon"${toggleIconData}>${iconHtml}</span>`
-                : `<span class="btn-icon-static">${iconHtml}</span>`;
-            } else {
-              contentHtml = layer.text;
-            }
-
-            // Use button for video controls, anchor for links
-            if (layer.actionType === 'videoControl' && layer.videoControl) {
-              const iconToggleLogic = isToggleIcon
-                ? `const iconEl = this.querySelector('.btn-icon'); if (iconEl && v) { setTimeout(() => { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; }, 0); }`
-                : '';
-
-              const videoAction =
-                layer.videoControl.action === 'play'
-                  ? 'v.play();'
-                  : layer.videoControl.action === 'pause'
-                    ? 'v.pause();'
-                    : layer.videoControl.action === 'restart'
-                      ? 'v.currentTime = 0; v.play();'
-                      : 'v.paused ? v.play() : v.pause();';
-
-              const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${videoAction} ${iconToggleLogic} }`;
-
-              content = `<button id="${layerId}" onclick="${onclickHandler}"${animationAttr}>${contentHtml}</button>`;
-            } else {
-              const href = layer.actionType === 'link' ? layer.url : '#';
-              const target = layer.actionType === 'link' ? ' target="_blank"' : '';
-              content = `<a id="${layerId}" href="${href}"${target}${animationAttr}>${contentHtml}</a>`;
-            }
-            break;
+          if (layer.actionType === 'videoControl' && layer.videoControl) {
+            const iconToggleLogic = isToggleIcon
+              ? `const iconEl = this.querySelector('.btn-icon'); if (iconEl && v) { setTimeout(() => { iconEl.innerHTML = v.paused ? iconEl.dataset.playIcon : iconEl.dataset.pauseIcon; }, 0); }`
+              : '';
+            const videoAction =
+              layer.videoControl.action === 'play'
+                ? 'v.play();'
+                : layer.videoControl.action === 'pause'
+                  ? 'v.pause();'
+                  : layer.videoControl.action === 'restart'
+                    ? 'v.currentTime = 0; v.play();'
+                    : 'v.paused ? v.play() : v.pause();';
+            const onclickHandler = `const v = document.getElementById('${layer.videoControl.targetElementId}'); if (v) { ${videoAction} ${iconToggleLogic} }`;
+            return `<button id="${layerId}" onclick="${onclickHandler}"${animationAttr}>${contentHtml}</button>`;
+          } else {
+            const href = layer.actionType === 'link' ? layer.url : '#';
+            const target = layer.actionType === 'link' ? ' target="_blank"' : '';
+            return `<a id="${layerId}" href="${href}"${target}${animationAttr}>${contentHtml}</a>`;
           }
         }
+        default:
+          return '';
+      }
+    };
 
-        return `    ${content}`;
+    return layers
+      .map((layer) => {
+        // Children are rendered inside their group container — skip at top level
+        if (childLayerIds.has(layer.id)) return '';
+
+        if (layer.type === 'group') {
+          const layerId = layer.attributes.id || layer.id;
+          const animationData = animationDataMap.get(layerId);
+          const animationAttr = animationData ? ` data-animation="${animationData}"` : '';
+          const bgStyle = layer.styles?.backgroundColor
+            ? `background-color: ${layer.styles.backgroundColor}; `
+            : '';
+          const childrenHtml = layer.children
+            .map((childId) => {
+              const child = layers.find((l) => l.id === childId);
+              if (!child) return '';
+              return `      ${renderLayerHTML(child)}`;
+            })
+            .filter(Boolean)
+            .join('\n');
+          return `    <div id="${layerId}"${animationAttr} style="${bgStyle}overflow: visible;">\n${childrenHtml}\n    </div>`;
+        }
+
+        return `    ${renderLayerHTML(layer)}`;
       })
       .filter(Boolean)
       .join('\n');

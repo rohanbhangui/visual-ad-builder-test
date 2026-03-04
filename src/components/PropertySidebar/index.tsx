@@ -671,7 +671,7 @@ const PropertySidebarComponent = ({
                 onCopyBorderRadius={onCopyBorderRadius}
                 allowedSizes={allowedSizes}
               />
-              {allowedSizes && allowedSizes.length > 1 && onCopyAllSizeProperties ? (
+              {allowedSizes && allowedSizes.length > 1 && onCopyAllSizeProperties && layer.type !== 'group' ? (
                 <div className="mt-4">
                   <CopySizePopover
                     allowedSizes={allowedSizes}

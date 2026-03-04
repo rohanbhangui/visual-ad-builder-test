@@ -29,6 +29,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Zoom and pan support (`Ctrl/Cmd + scroll` to zoom scroll / `spacebar + mouse drag` is pan)
 - Trackpad support for pan and pinch to zoom in/out
 - Undo/Redo Buttons (with shortcuts: `Cmd/Ctrl + Z` for Undo or `Cmd/Ctrl + Shift + Z` for Redo)
+- Group and ungroup layers (`Cmd/Ctrl + G` to group selected layers, `Cmd/Ctrl + Shift + G` to ungroup)
 - Animation timeline editor (as an advanced mode)
 
 ### Layers Panel
@@ -42,6 +43,9 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Canvas settings
 - Clip the edit mode to see what will be not visible in the final
 - Support for long layer labels
+- Group/ungroup layers with folder icon button or keyboard shortcuts
+- Chevron expand/collapse for group hierarchy
+- Drag layers into a group, out of a group, or reorder within a group
 
 ### Sidebar
 

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { type LayerContent, type AdSize } from '../data';
+import { type LayerContent, type GroupLayer, type AdSize } from '../data';
 import { HTML5_AD_SIZES } from '../consts';
 import { pauseHistory, resumeHistory } from '../store/useStore';
 
@@ -125,7 +125,22 @@ export const useCanvasInteractions = ({
           // Convert % to px for uniform movement
           const xInPx = posX.unit === '%' ? (posX.value / 100) * dimensions.width : posX.value;
           const yInPx = posY.unit === '%' ? (posY.value / 100) * dimensions.height : posY.value;
-          layerPositions[id] = { x: xInPx, y: yInPx };
+          // For group children, store ABSOLUTE position (relative + group offset)
+          const parentGroup = layers.find(
+            (l): l is GroupLayer => l.type === 'group' && (l as GroupLayer).children.includes(id)
+          );
+          if (parentGroup) {
+            const pgc = parentGroup.sizeConfig[selectedSize];
+            if (pgc) {
+              const pgx = pgc.positionX.unit === '%' ? (pgc.positionX.value / 100) * dimensions.width : pgc.positionX.value;
+              const pgy = pgc.positionY.unit === '%' ? (pgc.positionY.value / 100) * dimensions.height : pgc.positionY.value;
+              layerPositions[id] = { x: xInPx + pgx, y: yInPx + pgy };
+            } else {
+              layerPositions[id] = { x: xInPx, y: yInPx };
+            }
+          } else {
+            layerPositions[id] = { x: xInPx, y: yInPx };
+          }
         }
       }
     });
@@ -354,36 +369,122 @@ export const useCanvasInteractions = ({
         setSnapLines(guides);
 
         // Apply movement with snapping to temp state (not store)
-        setTempLayerUpdates((prev) =>
-          prev.map((layer) => {
+        setTempLayerUpdates((prev) => {
+          // ── First pass: update positions of all selected layers ──────────
+          const updatedMap = new Map<string, LayerContent>();
+          prev.forEach((layer) => updatedMap.set(layer.id, layer));
+
+          prev.forEach((layer) => {
             const initialPos = dragStartRef.current.layerPositions[layer.id];
-            if (!initialPos) return layer;
+            if (!initialPos) return;
 
             const config = layer.sizeConfig[selectedSize];
-            if (!config) return layer;
+            if (!config) return;
 
-            const newX = initialPos.x + dx + snapDx;
-            const newY = initialPos.y + dy + snapDy;
+            // Compute new ABSOLUTE position
+            const newAbsX = initialPos.x + dx + snapDx;
+            const newAbsY = initialPos.y + dy + snapDy;
 
-            return {
+            // For group children, write back as RELATIVE position (absolute - group offset)
+            const parentGroup = prev.find(
+              (l): l is GroupLayer => l.type === 'group' && (l as GroupLayer).children.includes(layer.id)
+            );
+            let writeX = newAbsX;
+            let writeY = newAbsY;
+            if (parentGroup) {
+              const pgc = parentGroup.sizeConfig[selectedSize];
+              if (pgc) {
+                const pgAbsX = pgc.positionX.unit === '%' ? (pgc.positionX.value / 100) * dimensions.width : pgc.positionX.value;
+                const pgAbsY = pgc.positionY.unit === '%' ? (pgc.positionY.value / 100) * dimensions.height : pgc.positionY.value;
+                writeX = newAbsX - pgAbsX;
+                writeY = newAbsY - pgAbsY;
+              }
+            }
+
+            updatedMap.set(layer.id, {
               ...layer,
               sizeConfig: {
                 ...layer.sizeConfig,
                 [selectedSize]: {
                   ...config,
-                  positionX: {
-                    value: newX,
-                    unit: 'px',
-                  },
-                  positionY: {
-                    value: newY,
-                    unit: 'px',
-                  },
+                  positionX: { value: writeX, unit: 'px' },
+                  positionY: { value: writeY, unit: 'px' },
                 },
               },
-            };
-          })
-        );
+            });
+          });
+
+          // ── Second pass: recalculate group bounds whose children moved ───
+          prev.filter((l): l is GroupLayer => l.type === 'group').forEach((group) => {
+            const hasMovingChild = group.children.some(
+              (cid) => dragStartRef.current.layerPositions[cid] !== undefined
+            );
+            if (!hasMovingChild) return;
+
+            const grpConfig = group.sizeConfig[selectedSize];
+            if (!grpConfig) return;
+
+            // Accumulate bounding box of all children using their new relative positions
+            let minRX = Infinity, minRY = Infinity, maxRX = -Infinity, maxRY = -Infinity;
+            group.children.forEach((cid) => {
+              const child = updatedMap.get(cid);
+              if (!child) return;
+              const cfg = child.sizeConfig[selectedSize];
+              if (!cfg) return;
+              const rx = cfg.positionX.unit === '%' ? (cfg.positionX.value / 100) * dimensions.width : cfg.positionX.value;
+              const ry = cfg.positionY.unit === '%' ? (cfg.positionY.value / 100) * dimensions.height : cfg.positionY.value;
+              const rw = cfg.width.unit === '%' ? (cfg.width.value / 100) * dimensions.width : cfg.width.value;
+              const rh = cfg.height.unit === '%' ? (cfg.height.value / 100) * dimensions.height : cfg.height.value;
+              minRX = Math.min(minRX, rx);
+              minRY = Math.min(minRY, ry);
+              maxRX = Math.max(maxRX, rx + rw);
+              maxRY = Math.max(maxRY, ry + rh);
+            });
+            if (minRX === Infinity) return;
+
+            const gpAbsX = grpConfig.positionX.unit === '%' ? (grpConfig.positionX.value / 100) * dimensions.width : grpConfig.positionX.value;
+            const gpAbsY = grpConfig.positionY.unit === '%' ? (grpConfig.positionY.value / 100) * dimensions.height : grpConfig.positionY.value;
+
+            // If children spill outside the group origin (negative relative coords),
+            // shift the group origin and re-normalise children's relative positions.
+            if (minRX !== 0 || minRY !== 0) {
+              group.children.forEach((cid) => {
+                const child = updatedMap.get(cid);
+                if (!child) return;
+                const cfg = child.sizeConfig[selectedSize];
+                if (!cfg) return;
+                updatedMap.set(cid, {
+                  ...child,
+                  sizeConfig: {
+                    ...child.sizeConfig,
+                    [selectedSize]: {
+                      ...cfg,
+                      positionX: { value: cfg.positionX.value - minRX, unit: 'px' },
+                      positionY: { value: cfg.positionY.value - minRY, unit: 'px' },
+                    },
+                  },
+                });
+              });
+            }
+
+            updatedMap.set(group.id, {
+              ...group,
+              sizeConfig: {
+                ...group.sizeConfig,
+                [selectedSize]: {
+                  ...grpConfig,
+                  positionX: { value: gpAbsX + minRX, unit: 'px' },
+                  positionY: { value: gpAbsY + minRY, unit: 'px' },
+                  width: { value: maxRX - minRX, unit: 'px' },
+                  height: { value: maxRY - minRY, unit: 'px' },
+                },
+              },
+            });
+          });
+
+          // Preserve original array order
+          return prev.map((l) => updatedMap.get(l.id) ?? l);
+        });
       } else if (isResizing && selectedLayerIds.length === 1) {
         // -------------------- RESIZE LOGIC --------------------
         // Convert screen coordinates to canvas coordinates accounting for zoom
