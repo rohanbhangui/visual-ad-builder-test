@@ -103,6 +103,7 @@ const App = () => {
 
   const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
   const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  const copiedLayersRef = useRef<LayerContent[]>([]);
 
   const dimensions = HTML5_AD_SIZES[selectedSize] || HTML5_AD_SIZES['336x280'];
 
@@ -251,6 +252,47 @@ const App = () => {
       if (e.altKey && e.code === 'KeyZ' && e.shiftKey && !isTyping) {
         e.preventDefault();
         handleRedo();
+        return;
+      }
+
+      // Copy shortcut (Cmd+C / Ctrl+C)
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyC' && !isTyping && selectedLayerIds.length > 0) {
+        e.preventDefault();
+        const orderedCopied = layers.filter((l) => selectedLayerIds.includes(l.id));
+        copiedLayersRef.current = orderedCopied;
+        return;
+      }
+
+      // Paste shortcut (Cmd+V / Ctrl+V)
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyV' && !isTyping && copiedLayersRef.current.length > 0) {
+        e.preventDefault();
+        const copiedLayers = copiedLayersRef.current;
+        const copiedIds = copiedLayers.map((l) => l.id);
+
+        // New copies with fresh IDs
+        const newLayers: LayerContent[] = copiedLayers.map((l) => ({
+          ...l,
+          id: `sa-${crypto.randomUUID()}`,
+          label: `${l.label} (Copy)`,
+          attributes: { ...l.attributes, id: '' },
+        }));
+
+        setLayers((prev) => {
+          // Find the highest index among the original copied layers still present
+          let insertAfterIndex = -1;
+          prev.forEach((l, idx) => {
+            if (copiedIds.includes(l.id)) {
+              insertAfterIndex = Math.max(insertAfterIndex, idx);
+            }
+          });
+          // If originals are gone, append at end; otherwise insert right after last original
+          const insertAt = insertAfterIndex === -1 ? prev.length : insertAfterIndex + 1;
+          const next = [...prev];
+          next.splice(insertAt, 0, ...newLayers);
+          return next;
+        });
+
+        setSelectedLayerIds(newLayers.map((l) => l.id));
         return;
       }
 

@@ -557,6 +557,8 @@ Continuous wheel/trackpad events must not flood the undo/redo history with hundr
 | `Shift + Arrow keys` | Move selected layer(s) by 10px |
 | `Alt/Option + Z` | Undo (uses `e.code === 'KeyZ'` not `e.key` to avoid macOS Option key producing special characters) |
 | `Alt/Option + Shift + Z` | Redo |
+| `Cmd/Ctrl + C` | Copy selected layer(s) to internal clipboard |
+| `Cmd/Ctrl + V` | Paste copied layer(s) — inserts duplicates directly below the last copied layer in the stack; pasted layers are immediately selected |
 | `Spacebar` (hold) | Enter pan mode; mouse drag pans canvas |
 | `Shift` (hold during resize) | Lock aspect ratio |
 | `Alt` (hold during resize) | Resize from both sides |
@@ -600,7 +602,24 @@ Default content/styles per type:
 - **image**: placeholder Pexels URL, `opacity: 1`
 - **video**: sample Big Buck Bunny MP4 URL, `opacity: 1`
 - **button**: `text = 'Click Here'`, `actionType: 'link'`, `url: ''`, `icon: { type: 'none', position: 'before' }`, `backgroundColor: #333333`, `color: #ffffff`, `opacity: 1`
+### Copy / Paste Layers
 
+Triggered by `Cmd+C` / `Ctrl+C` (copy) and `Cmd+V` / `Ctrl+V` (paste) when focus is **not** inside a text input, textarea, or contentEditable. Handled entirely in `App.tsx` using a `copiedLayersRef` (a `useRef<LayerContent[]>`) — no store state.
+
+**Copy (`Cmd/Ctrl + C`)**
+- Only activates when at least one layer is selected.
+- Stores the full `LayerContent` objects of all currently selected layers into `copiedLayersRef.current` (ordered by their current position in the layers array).
+- Preserves the copied data even after the originals are deleted.
+
+**Paste (`Cmd/Ctrl + V`)**
+- Only activates when `copiedLayersRef.current` is non-empty.
+- Each pasted layer is a deep copy of the original with:
+  - A new unique ID (`sa-${crypto.randomUUID()}`).
+  - Label suffixed with ` (Copy)`.
+  - `attributes.id` cleared to `''` (avoids duplicate HTML element IDs).
+- **Insertion point**: pasted layers are inserted immediately after the last copied layer's current position in the `layers` array (i.e. directly below it in the Layers Panel). If none of the original copied layers still exist in the array, the copies are appended to the end (bottom of the stack).
+- Multi-layer paste: all pasted copies are inserted together at the insertion point, preserving their relative order.
+- Pasted layers are immediately selected (`setSelectedLayerIds` set to new IDs).
 ### Delete Layer
 
 - Via sidebar “Delete” button (disabled + greyed when layer is locked) or keyboard `Delete`/`Backspace`

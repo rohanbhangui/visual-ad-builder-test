@@ -25,6 +25,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Arrow keys move elements (hold `shift` to move by 10px at a time)
 - 1 click export HTML for all relevant sizes with id overrides
 - Multiple layer select (click layers with `shift`)
+- Copy and paste layers (`Cmd/Ctrl + C` to copy, `Cmd/Ctrl + V` to paste as duplicate directly below the original in the layer stack)
 - Zoom and pan support (`Ctrl/Cmd + scroll` to zoom scroll / `spacebar + mouse drag` is pan)
 - Trackpad support for pan and pinch to zoom in/out
 - Undo/Redo Buttons (with shortcuts: `alt/option + z` for Undo or `alt/option + shift + z` for Redo)
