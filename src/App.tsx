@@ -768,53 +768,6 @@ const App = () => {
     }
   };
 
-  /**
-   * Called when a layer is dragged and dropped onto a group header in the LayersPanel.
-   * Adds the dragged layer to the group and converts its position to relative.
-   */
-  const handleDropOnGroup = (draggedFlatIndex: number, targetGroupId: string) => {
-    const draggedLayer = layers[draggedFlatIndex];
-    if (!draggedLayer) return;
-    // Don't allow adding a group into another group
-    if (draggedLayer.type === 'group') return;
-    // Don't add if already in this group
-    const targetGroup = layers.find((l) => l.id === targetGroupId) as GroupLayer | undefined;
-    if (!targetGroup || targetGroup.children.includes(draggedLayer.id)) return;
-
-    // For each size: convert draggedLayer's absolute position to relative (subtract group offset)
-    const updatedDraggedLayer = { ...draggedLayer, sizeConfig: { ...draggedLayer.sizeConfig } };
-    Object.keys(draggedLayer.sizeConfig).forEach((size) => {
-      const adSize = size as AdSize;
-      const layerConfig = draggedLayer.sizeConfig[adSize];
-      const groupConfig = targetGroup.sizeConfig[adSize];
-      if (!layerConfig || !groupConfig) return;
-      const dims = HTML5_AD_SIZES[adSize];
-      const lx = layerConfig.positionX.unit === '%' ? (layerConfig.positionX.value / 100) * dims.width : layerConfig.positionX.value;
-      const ly = layerConfig.positionY.unit === '%' ? (layerConfig.positionY.value / 100) * dims.height : layerConfig.positionY.value;
-      const gx = groupConfig.positionX.unit === '%' ? (groupConfig.positionX.value / 100) * dims.width : groupConfig.positionX.value;
-      const gy = groupConfig.positionY.unit === '%' ? (groupConfig.positionY.value / 100) * dims.height : groupConfig.positionY.value;
-      updatedDraggedLayer.sizeConfig[adSize] = {
-        ...layerConfig,
-        positionX: { value: lx - gx, unit: 'px' },
-        positionY: { value: ly - gy, unit: 'px' },
-      };
-    });
-
-    // Update the flat layers array: update dragged layer and add to group's children
-    setLayers((prev) => {
-      return prev.map((l) => {
-        if (l.id === draggedLayer.id) return updatedDraggedLayer as LayerContent;
-        if (l.id === targetGroupId) {
-          return { ...l, children: [...(l as GroupLayer).children, draggedLayer.id] } as LayerContent;
-        }
-        return l;
-      });
-    });
-    setSelectedLayerIds([targetGroupId]);
-    setDraggedLayerIndex(null);
-    setDragOverLayerIndex(null);
-  };
-
   const handleLayerDoubleClick = (_e: React.MouseEvent, layerId: string) => {
     setSelectedLayerIds([layerId]);
   };
@@ -1987,7 +1940,6 @@ const App = () => {
               onToggleLock={handleToggleLock}
               onGroupLayers={handleGroupLayers}
               onUngroupLayers={handleUngroupLayers}
-              onDropOnGroup={handleDropOnGroup}
             />
           ) : null}
 

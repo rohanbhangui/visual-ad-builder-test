@@ -43,7 +43,6 @@ interface LayersPanelProps {
   onToggleLock: (layerId: string) => void;
   onGroupLayers: () => void;
   onUngroupLayers: () => void;
-  onDropOnGroup?: (draggedFlatIndex: number, groupId: string) => void;
 }
 
 export const LayersPanel = ({
@@ -66,7 +65,6 @@ export const LayersPanel = ({
   onToggleLock,
   onGroupLayers,
   onUngroupLayers,
-  onDropOnGroup,
 }: LayersPanelProps) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});

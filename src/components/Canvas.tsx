@@ -320,7 +320,6 @@ export const Canvas: React.FC<CanvasProps> = ({
             .map((childId) => {
               const child = layers.find((l) => l.id === childId);
               if (!child) return '';
-              const childFlatIdx = layers.indexOf(child);
               // z-index for child is relative within the group
               return buildLayerHTML(child, groupLayer.children.length - groupLayer.children.indexOf(childId));
             })
