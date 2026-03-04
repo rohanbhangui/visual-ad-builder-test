@@ -555,8 +555,8 @@ Continuous wheel/trackpad events must not flood the undo/redo history with hundr
 | `Delete` / `Backspace` | Delete selected layer(s) (with confirmation dialog) |
 | `Arrow keys` | Move selected layer(s) by 1px |
 | `Shift + Arrow keys` | Move selected layer(s) by 10px |
-| `Alt/Option + Z` | Undo (uses `e.code === 'KeyZ'` not `e.key` to avoid macOS Option key producing special characters) |
-| `Alt/Option + Shift + Z` | Redo |
+| `Cmd/Ctrl + Z` | Undo |
+| `Cmd/Ctrl + Shift + Z` | Redo |
 | `Cmd/Ctrl + C` | Copy selected layer(s) to internal clipboard |
 | `Cmd/Ctrl + V` | Paste copied layer(s) — inserts duplicates directly below the last copied layer in the stack; pasted layers are immediately selected |
 | `Spacebar` (hold) | Enter pan mode; mouse drag pans canvas |

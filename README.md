@@ -28,7 +28,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Copy and paste layers (`Cmd/Ctrl + C` to copy, `Cmd/Ctrl + V` to paste as duplicate directly below the original in the layer stack)
 - Zoom and pan support (`Ctrl/Cmd + scroll` to zoom scroll / `spacebar + mouse drag` is pan)
 - Trackpad support for pan and pinch to zoom in/out
-- Undo/Redo Buttons (with shortcuts: `alt/option + z` for Undo or `alt/option + shift + z` for Redo)
+- Undo/Redo Buttons (with shortcuts: `Cmd/Ctrl + Z` for Undo or `Cmd/Ctrl + Shift + Z` for Redo)
 - Animation timeline editor (as an advanced mode)
 
 ### Layers Panel

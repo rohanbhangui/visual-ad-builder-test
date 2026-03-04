@@ -242,14 +242,13 @@ const App = () => {
           activeElement.tagName === 'TEXTAREA' ||
           (activeElement as HTMLElement).isContentEditable);
 
-      // Undo/Redo shortcuts (Option+Z / Option+Shift+Z on macOS, Alt+Z / Alt+Shift+Z on Windows)
-      // Use e.code instead of e.key because Option+Z produces special characters on macOS
-      if (e.altKey && e.code === 'KeyZ' && !e.shiftKey && !isTyping) {
+      // Undo/Redo shortcuts (Cmd+Z / Cmd+Shift+Z on macOS, Ctrl+Z / Ctrl+Shift+Z on Windows)
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyZ' && !e.shiftKey && !isTyping) {
         e.preventDefault();
         handleUndo();
         return;
       }
-      if (e.altKey && e.code === 'KeyZ' && e.shiftKey && !isTyping) {
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyZ' && e.shiftKey && !isTyping) {
         e.preventDefault();
         handleRedo();
         return;
