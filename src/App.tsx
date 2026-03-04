@@ -1250,6 +1250,51 @@ const App = () => {
     );
   };
 
+  const handleCopyAllSizeProperties = (
+    layerId: string,
+    sourceSize: AdSize,
+    targetSizes: AdSize[]
+  ) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
+
+        const sourceConfig = layer.sizeConfig[sourceSize];
+        if (!sourceConfig) return layer;
+
+        const updatedSizeConfig = { ...layer.sizeConfig };
+
+        targetSizes.forEach((targetSize) => {
+          const existingConfig = updatedSizeConfig[targetSize] || {
+            positionX: { value: 0, unit: 'px' as const },
+            positionY: { value: 0, unit: 'px' as const },
+            width: { value: 100, unit: 'px' as const },
+            height: { value: 100, unit: 'px' as const },
+          };
+
+          updatedSizeConfig[targetSize] = {
+            ...existingConfig,
+            positionX: sourceConfig.positionX,
+            positionY: sourceConfig.positionY,
+            width: sourceConfig.width,
+            height: sourceConfig.height,
+            ...(sourceConfig.fontSize !== undefined ? { fontSize: sourceConfig.fontSize } : {}),
+            ...(sourceConfig.textAlign !== undefined ? { textAlign: sourceConfig.textAlign } : {}),
+            ...(sourceConfig.iconSize !== undefined ? { iconSize: sourceConfig.iconSize } : {}),
+            ...(sourceConfig.borderRadius !== undefined
+              ? { borderRadius: sourceConfig.borderRadius }
+              : {}),
+          };
+        });
+
+        return {
+          ...layer,
+          sizeConfig: updatedSizeConfig,
+        };
+      })
+    );
+  };
+
   const handleReplayAnimations = () => {
     setAnimationKey((prev) => prev + 1);
   };
@@ -1862,6 +1907,7 @@ const App = () => {
             onCopyTextAlign={handleCopyTextAlign}
             onCopyIconSize={handleCopyIconSize}
             onCopyBorderRadius={handleCopyBorderRadius}
+            onCopyAllSizeProperties={handleCopyAllSizeProperties}
             allowedSizes={sampleCanvas.allowedSizes}
           />
         ) : null}

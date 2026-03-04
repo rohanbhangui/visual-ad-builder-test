@@ -21,6 +21,8 @@ interface CopySizePopoverProps {
   onCopy: (targetSizes: AdSize[]) => void;
   buttonClassName?: string;
   iconClassName?: string;
+  /** When provided, renders as a full-width labelled button instead of the small icon-only button */
+  label?: string;
 }
 
 export const CopySizePopover = ({
@@ -29,6 +31,7 @@ export const CopySizePopover = ({
   onCopy,
   buttonClassName,
   iconClassName = 'w-3.5 h-3.5',
+  label,
 }: CopySizePopoverProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTargets, setSelectedTargets] = useState<AdSize[]>([]);
@@ -138,15 +141,22 @@ export const CopySizePopover = ({
         onClick={() => setIsOpen(!isOpen)}
         className={
           buttonClassName ||
-          `cursor-pointer p-0.5 rounded transition-colors ${
-            isOpen
-              ? 'bg-blue-100 text-blue-600'
-              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-          }`
+          (label
+            ? `cursor-pointer flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded border transition-colors ${
+                isOpen
+                  ? 'bg-blue-50 border-blue-300 text-blue-600'
+                  : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'
+              }`
+            : `cursor-pointer p-0.5 rounded transition-colors ${
+                isOpen
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              }`)
         }
         title="Copy to other sizes"
       >
         <CopyIcon className={iconClassName} />
+        {label ? <span>{label}</span> : null}
       </button>
 
       {isOpen ? (

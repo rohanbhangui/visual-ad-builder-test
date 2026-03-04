@@ -13,6 +13,7 @@ import AlignCenterVIcon from '../../assets/icons/align-center-v.svg?react';
 import AlignBottomIcon from '../../assets/icons/align-bottom.svg?react';
 import { PropertyTab } from './PropertyTab/PropertyTab';
 import { AnimationTab } from './AnimationTab/AnimationTab';
+import { CopySizePopover } from '../Label/CopySizePopover';
 
 const ALIGNMENT_BUTTONS = [
   { alignment: 'left' as const, icon: AlignLeftIcon, title: 'Align Left' },
@@ -123,6 +124,7 @@ interface PropertySidebarProps {
   onCopyTextAlign?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyIconSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyBorderRadius?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyAllSizeProperties?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   allowedSizes?: AdSize[];
 }
 
@@ -170,6 +172,7 @@ const PropertySidebarComponent = ({
   onCopyTextAlign,
   onCopyIconSize,
   onCopyBorderRadius,
+  onCopyAllSizeProperties,
   allowedSizes,
   activeTab: activeTabProp = 'properties',
   onActiveTabChange,
@@ -633,40 +636,54 @@ const PropertySidebarComponent = ({
       <div className="px-4 pb-4 flex-1 overflow-y-auto overflow-x-visible">
         <div className="mt-4">
           {activeTab === 'properties' ? (
-            <PropertyTab
-              key={layer.id}
-              layer={layer}
-              layers={layers}
-              selectedSize={selectedSize}
-              contentEditableRef={contentEditableRef}
-              onPropertyChange={onPropertyChange}
-              onHtmlIdChange={onHtmlIdChange}
-              onAlignLayer={onAlignLayer}
-              onAspectRatioLockToggle={onAspectRatioLockToggle}
-              onContentChange={onContentChange}
-              onColorChange={onColorChange}
-              onFontSizeChange={onFontSizeChange}
-              onIconSizeChange={onIconSizeChange}
-              onFontFamilyChange={onFontFamilyChange}
-              onTextAlignChange={onTextAlignChange}
-              onTextChange={onTextChange}
-              onBackgroundColorChange={onBackgroundColorChange}
-              onImageUrlChange={onImageUrlChange}
-              onObjectFitChange={onObjectFitChange}
-              onVideoUrlChange={onVideoUrlChange}
-              onVideoPropertyChange={onVideoPropertyChange}
-              onOpacityChange={onOpacityChange}
-              onButtonActionTypeChange={onButtonActionTypeChange}
-              onButtonIconChange={onButtonIconChange}
-              onVideoControlChange={onVideoControlChange}
-              onBorderRadiusChange={onBorderRadiusChange}
-              onCopyPositionSize={onCopyPositionSize}
-              onCopyFontSize={onCopyFontSize}
-              onCopyTextAlign={onCopyTextAlign}
-              onCopyIconSize={onCopyIconSize}
-              onCopyBorderRadius={onCopyBorderRadius}
-              allowedSizes={allowedSizes}
-            />
+            <>
+              <PropertyTab
+                key={layer.id}
+                layer={layer}
+                layers={layers}
+                selectedSize={selectedSize}
+                contentEditableRef={contentEditableRef}
+                onPropertyChange={onPropertyChange}
+                onHtmlIdChange={onHtmlIdChange}
+                onAlignLayer={onAlignLayer}
+                onAspectRatioLockToggle={onAspectRatioLockToggle}
+                onContentChange={onContentChange}
+                onColorChange={onColorChange}
+                onFontSizeChange={onFontSizeChange}
+                onIconSizeChange={onIconSizeChange}
+                onFontFamilyChange={onFontFamilyChange}
+                onTextAlignChange={onTextAlignChange}
+                onTextChange={onTextChange}
+                onBackgroundColorChange={onBackgroundColorChange}
+                onImageUrlChange={onImageUrlChange}
+                onObjectFitChange={onObjectFitChange}
+                onVideoUrlChange={onVideoUrlChange}
+                onVideoPropertyChange={onVideoPropertyChange}
+                onOpacityChange={onOpacityChange}
+                onButtonActionTypeChange={onButtonActionTypeChange}
+                onButtonIconChange={onButtonIconChange}
+                onVideoControlChange={onVideoControlChange}
+                onBorderRadiusChange={onBorderRadiusChange}
+                onCopyPositionSize={onCopyPositionSize}
+                onCopyFontSize={onCopyFontSize}
+                onCopyTextAlign={onCopyTextAlign}
+                onCopyIconSize={onCopyIconSize}
+                onCopyBorderRadius={onCopyBorderRadius}
+                allowedSizes={allowedSizes}
+              />
+              {allowedSizes && allowedSizes.length > 1 && onCopyAllSizeProperties ? (
+                <div className="mt-4">
+                  <CopySizePopover
+                    allowedSizes={allowedSizes}
+                    currentSize={selectedSize}
+                    onCopy={(targetSizes) =>
+                      onCopyAllSizeProperties(layer.id, selectedSize, targetSizes)
+                    }
+                    label="Copy all properties to…"
+                  />
+                </div>
+              ) : null}
+            </>
           ) : (
             <AnimationTab
               key={layer.id}

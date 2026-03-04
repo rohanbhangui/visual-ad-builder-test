@@ -65,6 +65,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Arrow key support for position, width and height
 - Animation Loop Duration will hint what is the minimum animation length required to fulfill all animations
 - "Copy to" for certain properties so that other sizes can be updated
+- "Copy all properties to…" button to copy all size-specific properties (position, size, font size, text alignment, icon size, border radius) to one or more other sizes at once
 
 ## Developer Menu
 

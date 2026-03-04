@@ -648,6 +648,18 @@ Toggle lock icon in the Layers Panel row. Locked layers:
 - Icon Size — only copies to sizes with existing config
 - Border Radius — only copies to sizes with existing config
 
+### Copy All Properties to Other Sizes
+
+A **"Copy all properties to…"** button appears at the bottom of the Properties tab (below all fields, above the Delete button area) for any layer when more than one allowed size exists. It opens the same multi-size checkbox popover and copies all 5 copyable property groups in a single operation:
+
+- Position + Size (`positionX`, `positionY`, `width`, `height`) — creates a stub config if target size has no existing config
+- Font Size — only applied if defined on the source config
+- Text Alignment — only applied if defined on the source config
+- Icon Size — only applied if defined on the source config
+- Border Radius — only applied if defined on the source config
+
+Animations, loop delay, and reset duration are **not** affected. The entire operation is a single `setLayers` call, producing one undo/redo history entry. Implemented in `handleCopyAllSizeProperties` in `App.tsx`.
+
 ### HTML ID Validation
 
 When editing the HTML ID field in the sidebar:
