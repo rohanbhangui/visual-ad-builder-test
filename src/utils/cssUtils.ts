@@ -20,7 +20,7 @@ export function scopeCSS(css: string, scopeSelector: string): string {
 
     const scoped = selector
       .split(',')
-      .map((s) => {
+      .map((s: string) => {
         const t = s.trim();
         if (!t) return '';
         // Bare & → the element itself
