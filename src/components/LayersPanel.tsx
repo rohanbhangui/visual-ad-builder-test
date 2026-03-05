@@ -249,6 +249,9 @@ export const LayersPanel = ({
             const isDraggedRow = draggedLayerIndex === flatIndex;
             const isDragOver = dragOverLayerIndex === flatIndex && draggedLayerIndex !== flatIndex;
             const isDragOverGroup = dragOverGroupId === layer.id;
+            const parentGroup = parentGroupId ? layers.find((l) => l.id === parentGroupId) : undefined;
+            const parentGroupLocked = parentGroup?.locked ?? false;
+            const effectiveLocked = layer.locked || parentGroupLocked;
 
             // Next visible row flat index (for "after" indicator)
             const nextRow = visibleRows[rowIndex + 1];
@@ -392,16 +395,26 @@ export const LayersPanel = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onToggleLock(layer.id);
+                    if (!parentGroupLocked) {
+                      onToggleLock(layer.id);
+                    }
                   }}
-                  className={`p-1 transition-colors cursor-pointer relative z-10 flex-shrink-0 ${
-                    layer.locked
-                      ? 'text-gray-600 hover:text-gray-800'
-                      : 'text-gray-400 opacity-0 group-hover/layer:opacity-100 hover:text-gray-600'
+                  className={`p-1 transition-colors relative z-10 flex-shrink-0 ${
+                    effectiveLocked
+                      ? parentGroupLocked && !layer.locked
+                        ? 'text-gray-400 cursor-default'
+                        : 'text-gray-600 hover:text-gray-800 cursor-pointer'
+                      : 'text-gray-400 opacity-0 group-hover/layer:opacity-100 hover:text-gray-600 cursor-pointer'
                   }`}
-                  title={layer.locked ? 'Unlock layer' : 'Lock layer'}
+                  title={
+                    parentGroupLocked && !layer.locked
+                      ? 'Locked by parent group'
+                      : layer.locked
+                        ? 'Unlock layer'
+                        : 'Lock layer'
+                  }
                 >
-                  {layer.locked ? <LockIcon /> : <UnlockIcon />}
+                  {effectiveLocked ? <LockIcon /> : <UnlockIcon />}
                 </button>
 
                 {/* no indent guide */}

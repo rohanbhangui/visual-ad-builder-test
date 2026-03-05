@@ -411,3 +411,40 @@ export const getHistory = () => {
 export const clearInitialHistory = () => {
   (useStore.temporal as any).getState().clear();
 };
+
+/**
+ * Push a snapshot of the pre-gesture view state directly into pastStates.
+ *
+ * Why: zundo's _handleSet records the state BEFORE a set() call as the new
+ * past entry. When pause()/resume() is used during a gesture, the interim
+ * setZoom/setPan calls already update the store to the final value before
+ * commitZoom/commitPan is ever called. So commitZoom(finalZoom) captures the
+ * final value as the "past" entry, making undo restore back to the same
+ * visible state.
+ *
+ * Solution: bypass commit* entirely and manually push the known pre-gesture
+ * snapshot so that undo correctly restores to before the gesture started.
+ */
+export const pushViewSnapshot = (zoom: number, pan: { x: number; y: number }) => {
+  const temporalStore = (useStore.temporal as any);
+  const temporalState = temporalStore.getState();
+  const state = useStore.getState();
+  const snapshot: HistoricalState = {
+    layers: state.layers,
+    canvasName: state.canvasName,
+    canvasBackgroundColor: state.canvasBackgroundColor,
+    animationLoop: state.animationLoop,
+    selectedSize: state.selectedSize,
+    selectedLayerIds: state.selectedLayerIds,
+    activePropertyTab: state.activePropertyTab,
+    isTimelinePanelOpen: state.isTimelinePanelOpen,
+    zoom,
+    pan,
+  };
+  // Respect the 50-entry limit and clear future states (new action)
+  const limit = 50;
+  temporalStore.setState({
+    pastStates: [...temporalState.pastStates, snapshot].slice(-limit),
+    futureStates: [],
+  });
+};

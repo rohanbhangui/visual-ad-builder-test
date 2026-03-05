@@ -12,7 +12,7 @@ import { TimelinePanel } from './components/TimelinePanel';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
-import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory, pauseHistory, resumeHistory } from './store/useStore';
+import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory, pauseHistory, resumeHistory, pushViewSnapshot } from './store/useStore';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 import ReplayIcon from './assets/icons/reset-view-ccw.svg?react';
@@ -106,8 +106,18 @@ const App = () => {
   const [isSpacePressed, setIsSpacePressed] = useState(false);
 
   const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
-  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
+  // preZoom tracks zoom at the moment the space-pan started (so undo restores correctly)
+  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0, preZoom: 1 });
+  // true while a space-bar pan is in progress (used to commit on Space keyup)
+  const spacePanActiveRef = useRef(false);
   const copiedLayersRef = useRef<LayerContent[]>([]);
+
+  // Refs that mirror store values so wheel/pan handlers always see latest values
+  // without being recreated on every zoom/pan change (which would break debounce)
+  const zoomRef = useRef(zoom);
+  const panRef = useRef(pan);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => { panRef.current = pan; }, [pan]);
 
   const dimensions = HTML5_AD_SIZES[selectedSize] || HTML5_AD_SIZES['336x280'];
 
@@ -433,8 +443,10 @@ const App = () => {
 
   useEffect(() => {
     let wheelTimeout: ReturnType<typeof setTimeout> | null = null;
-    let lastZoom = zoom;
-    let lastPan = pan;
+    // preGestureZoom/Pan capture the state at the START of each wheel gesture so
+    // that pushViewSnapshot writes the correct before-state to history.
+    let preGestureZoom = zoomRef.current;
+    let preGesturePan = panRef.current;
     let isWheeling = false;
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -458,9 +470,38 @@ const App = () => {
       if (e.code === 'Space') {
         setIsSpacePressed(false);
         setIsPanning(false);
-        // Commit pan after space release
-        commitPan(pan);
+        // If a space-pan was active, commit the pre-gesture snapshot to history.
+        // spacePanActiveRef is a component ref so it's always current here.
+        if (spacePanActiveRef.current) {
+          resumeHistory();
+          pushViewSnapshot(
+            panStartRef.current.preZoom,
+            { x: panStartRef.current.panX, y: panStartRef.current.panY },
+          );
+          spacePanActiveRef.current = false;
+        }
       }
+    };
+
+    // Zoom toward cursor, updating refs immediately so subsequent events in the
+    // same gesture accumulate correctly (React state updates are async).
+    const applyZoom = (newZoom: number, cursorX: number, cursorY: number) => {
+      const canvasRect = document.querySelector('[data-canvas-container]')?.getBoundingClientRect();
+      if (canvasRect) {
+        const centerX = canvasRect.left + canvasRect.width / 2;
+        const centerY = canvasRect.top + canvasRect.height / 2;
+        const offsetX = cursorX - centerX;
+        const offsetY = cursorY - centerY;
+        const zoomDelta = newZoom - zoomRef.current;
+        const newPan = {
+          x: panRef.current.x - (offsetX * zoomDelta) / zoomRef.current,
+          y: panRef.current.y - (offsetY * zoomDelta) / zoomRef.current,
+        };
+        setPan(newPan);
+        panRef.current = newPan;
+      }
+      setZoom(newZoom);
+      zoomRef.current = newZoom;
     };
 
     const handleWheel = (e: WheelEvent) => {
@@ -472,35 +513,35 @@ const App = () => {
       const canvasContainer = document.querySelector('[data-canvas-container]');
       if (!canvasContainer?.contains(target)) return;
 
-      // Pause history on first wheel event
+      // Pause history on the first event of a new gesture; snapshot pre-gesture
+      // view so that pushViewSnapshot writes the correct before-state to history.
       if (!isWheeling) {
         pauseHistory();
+        preGestureZoom = zoomRef.current;
+        preGesturePan = panRef.current;
         isWheeling = true;
       }
 
       if (e.shiftKey) {
         // Shift + scroll = zoom
         e.preventDefault();
-        const delta = -e.deltaY * 0.005; // Reduced multiplier for smoother zoom
-        const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
-        handleZoomChange(newZoom, e.clientX, e.clientY);
-        lastZoom = newZoom;
+        const delta = -e.deltaY * 0.005;
+        const newZoom = Math.max(0.25, Math.min(3, zoomRef.current + delta));
+        applyZoom(newZoom, e.clientX, e.clientY);
 
-        // Debounce commit: wait 150ms after last wheel event
+        // Debounce: push pre-gesture snapshot 150ms after the last event (1 history item)
         if (wheelTimeout) clearTimeout(wheelTimeout);
         wheelTimeout = setTimeout(() => {
           resumeHistory();
           isWheeling = false;
-          handleZoomCommit(lastZoom);
+          pushViewSnapshot(preGestureZoom, preGesturePan);
         }, 150);
+
       } else if (e.ctrlKey || e.metaKey) {
-        // Trackpad pinch = zoom (browser sends ctrl+wheel)
+        // Trackpad pinch-to-zoom (browser sends ctrl+wheel)
         e.preventDefault();
 
-        // Use deltaY for pinch zoom - preserve velocity for responsive feel
         let delta = -e.deltaY;
-
-        // Handle different wheel delta modes
         if (e.deltaMode === 1) {
           // DOM_DELTA_LINE
           delta *= 0.05;
@@ -509,31 +550,26 @@ const App = () => {
           delta *= 0.5;
         } else {
           // DOM_DELTA_PIXEL (most common for trackpad)
-          // Scale to maintain gesture speed while keeping it smooth
           delta *= 0.006;
         }
 
-        // Apply zoom - responsive to pinch speed
-        const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
-        handleZoomChange(newZoom, e.clientX, e.clientY);
-        lastZoom = newZoom;
+        const newZoom = Math.max(0.25, Math.min(3, zoomRef.current + delta));
+        applyZoom(newZoom, e.clientX, e.clientY);
 
-        // Debounce commit: wait 150ms after last wheel event
+        // Debounce: push pre-gesture snapshot 150ms after the last event (1 history item)
         if (wheelTimeout) clearTimeout(wheelTimeout);
         wheelTimeout = setTimeout(() => {
           resumeHistory();
           isWheeling = false;
-          handleZoomCommit(lastZoom);
+          pushViewSnapshot(preGestureZoom, preGesturePan);
         }, 150);
+
       } else {
-        // Two-finger swipe = pan (regular scroll over canvas)
+        // Two-finger swipe = pan
         e.preventDefault();
 
-        // Pan speed should match gesture speed for responsive feel
         let deltaX = e.deltaX;
         let deltaY = e.deltaY;
-
-        // Handle different wheel delta modes for consistent panning
         if (e.deltaMode === 1) {
           // DOM_DELTA_LINE
           deltaX *= 16;
@@ -543,21 +579,21 @@ const App = () => {
           deltaX *= 100;
           deltaY *= 100;
         }
-        // DOM_DELTA_PIXEL (default) - use as-is for 1:1 responsive panning
+        // DOM_DELTA_PIXEL (default) — use as-is for 1:1 panning
 
         const newPan = {
-          x: pan.x - deltaX,
-          y: pan.y - deltaY,
+          x: panRef.current.x - deltaX,
+          y: panRef.current.y - deltaY,
         };
         setPan(newPan);
-        lastPan = newPan;
+        panRef.current = newPan;
 
-        // Debounce commit: wait 150ms after last wheel event
+        // Debounce: push pre-gesture snapshot 150ms after the last event (1 history item)
         if (wheelTimeout) clearTimeout(wheelTimeout);
         wheelTimeout = setTimeout(() => {
           resumeHistory();
           isWheeling = false;
-          commitPan(lastPan);
+          pushViewSnapshot(preGestureZoom, preGesturePan);
         }, 150);
       }
     };
@@ -567,18 +603,23 @@ const App = () => {
     window.addEventListener('wheel', handleWheel, { passive: false });
 
     return () => {
-      if (wheelTimeout) {
-        clearTimeout(wheelTimeout);
-        // Resume history if component unmounts during wheeling
-        if (isWheeling) {
-          resumeHistory();
-        }
+      // If the effect re-runs (e.g. mode changes) or the component unmounts
+      // while a gesture is in flight, push the pre-gesture snapshot so history
+      // reflects what the user had before the gesture started.
+      if (wheelTimeout) clearTimeout(wheelTimeout);
+      if (isWheeling) {
+        resumeHistory();
+        pushViewSnapshot(preGestureZoom, preGesturePan);
+        isWheeling = false;
       }
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('wheel', handleWheel);
     };
-  }, [isSpacePressed, zoom, pan, handleZoomChange, handleZoomCommit, setIsPanning, setPan, commitPan, mode]);
+    // zoom and pan are intentionally excluded — we read them via zoomRef/panRef
+    // so the effect (and its debounce timeout) are never torn down mid-gesture.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSpacePressed, mode, setIsPanning, setPan, setZoom]);
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     // Disable panning in preview mode
@@ -587,14 +628,17 @@ const App = () => {
     if (isSpacePressed) {
       e.preventDefault();
       setIsPanning(true);
-      // Pause history during panning
+      // Pause history during panning; record pre-gesture view so we can push
+      // the correct snapshot on mouseup/keyup
       pauseHistory();
       panStartRef.current = {
         x: e.clientX,
         y: e.clientY,
         panX: pan.x,
         panY: pan.y,
+        preZoom: zoomRef.current,
       };
+      spacePanActiveRef.current = true;
     }
   };
 
@@ -618,9 +662,13 @@ const App = () => {
 
     if (isPanning) {
       setIsPanning(false);
-      // Resume history and commit pan position after drag
       resumeHistory();
-      commitPan(pan);
+      // Push the pre-gesture snapshot so undo restores to before the pan started
+      pushViewSnapshot(
+        panStartRef.current.preZoom,
+        { x: panStartRef.current.panX, y: panStartRef.current.panY },
+      );
+      spacePanActiveRef.current = false;
     }
   };
 

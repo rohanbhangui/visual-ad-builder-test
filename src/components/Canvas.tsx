@@ -542,7 +542,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     `;
   };
 
-  const renderLayer = (layer: LayerContent, index: number) => {
+  const renderLayer = (layer: LayerContent, index: number, parentGroupLocked?: boolean) => {
     const config = layer.sizeConfig[selectedSize];
 
     // Skip rendering if layer doesn't have data for selected size
@@ -556,6 +556,7 @@ export const Canvas: React.FC<CanvasProps> = ({
     const height = config.height;
 
     const isSelected = selectedLayerIds.includes(layer.id);
+    const effectiveLocked = layer.locked || (parentGroupLocked ?? false);
 
     // Format border-radius for React style
     const borderRadiusValue = config.borderRadius
@@ -570,9 +571,9 @@ export const Canvas: React.FC<CanvasProps> = ({
       top: `${posY.value}${posY.unit || 'px'}`,
       width: `${width.value}${width.unit}`,
       height: `${height.value}${height.unit}`,
-      cursor: mode === 'edit' && !layer.locked ? 'move' : 'default',
+      cursor: mode === 'edit' && !effectiveLocked ? 'move' : 'default',
       zIndex: layers.length - index,
-      pointerEvents: layer.locked ? 'none' : 'auto',
+      pointerEvents: effectiveLocked ? 'none' : 'auto',
       opacity: layer.styles?.opacity || 1,
       borderRadius: borderRadiusValue,
       overflow: config.borderRadius ? 'hidden' : undefined,
@@ -738,7 +739,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         key={layer.id}
         style={{ ...style, contain: 'layout style paint' }}
         onMouseDown={(e) => {
-          if (!layer.locked && !isSpacePressed && !isPanning) {
+          if (!effectiveLocked && !isSpacePressed && !isPanning) {
             // Clear any hover states from all elements before handling click
             document.querySelectorAll('[data-layer-hover]').forEach((el) => {
               (el as HTMLElement).style.boxShadow = '';
@@ -755,7 +756,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         onDoubleClick={(e) => {
           // Double-click on a group child directly selects the child (enters group)
           const pgId = childToGroupMap.get(layer.id);
-          if (pgId && !layer.locked && !isSpacePressed && !isPanning) {
+          if (pgId && !effectiveLocked && !isSpacePressed && !isPanning) {
             e.stopPropagation();
             if (onLayerDoubleClick) {
               onLayerDoubleClick(e, layer.id);
@@ -765,15 +766,15 @@ export const Canvas: React.FC<CanvasProps> = ({
           }
         }}
         data-layer-hover={
-          !layer.locked && !isSelected && !isSpacePressed && !isPanning ? 'true' : undefined
+          !effectiveLocked && !isSelected && !isSpacePressed && !isPanning ? 'true' : undefined
         }
         onMouseEnter={(e) => {
-          if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
+          if (!effectiveLocked && !isSelected && !isSpacePressed && !isPanning) {
             (e.currentTarget as HTMLElement).style.boxShadow = 'inset 0 0 0 2px rgba(59, 130, 246, 0.5)';
           }
         }}
         onMouseLeave={(e) => {
-          if (!layer.locked && !isSelected && !isSpacePressed && !isPanning) {
+          if (!effectiveLocked && !isSelected && !isSpacePressed && !isPanning) {
             (e.currentTarget as HTMLElement).style.boxShadow = '';
           }
         }}
@@ -839,7 +840,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           const childFlatIdx = layers.findIndex((l) => l.id === childId);
           if (childFlatIdx < 0) return null;
           const childLayer = layers[childFlatIdx];
-          return renderLayer(childLayer, childFlatIdx);
+          return renderLayer(childLayer, childFlatIdx, layer.locked);
         })}
       </div>
     );
