@@ -15,7 +15,7 @@ Quick reference for navigating the codebase:
 | File | Role |
 |---|---|
 | `src/App.tsx` | Root component; all handler wiring, keyboard shortcuts, add/delete/reorder/copy layer logic, zoom/pan logic, export generation |
-| `src/store/useStore.ts` | Zustand store definition; `HistoricalState` + `EphemeralState`; `commitZoom`, `commitPan`, `pauseHistory`, `resumeHistory` |
+| `src/store/useStore.ts` | Zustand store definition; `HistoricalState` + `EphemeralState`; `pushViewSnapshot`, `pauseHistory`, `resumeHistory` |
 | `src/hooks/useCanvasInteractions.ts` | All canvas drag/resize/snap logic; local state (`isDragging`, `isResizing`, `snapLines`, `tempLayerUpdates`); exposes handlers to `App.tsx` |
 | `src/data.ts` | All TypeScript interfaces (`Canvas`, `BaseLayer`, all layer types, `SizeConfig`, `Animation`); `sampleCanvas` initial data; `HTML5_AD_SIZES` |
 | `src/consts.ts` | All UI constants (`TOP_BAR_HEIGHT`, font lists, character limits, colour values, `HTML5_AD_SIZES` mirror, etc.) |
@@ -258,7 +258,8 @@ This state lives **inside the hook** (React `useState`/`useRef`) and is **not** 
 
 - Uses `temporal` middleware from zundo
 - History records all changes to tracked state above
-- `zoom` and `pan` use separate `setZoom`/`setPan` (during interaction, not tracked) and `commitZoom`/`commitPan` (on interaction end, tracked) to avoid flooding history
+- `zoom` and `pan` use separate `setZoom`/`setPan` (during interaction, not tracked) and `pushViewSnapshot` (at interaction end) to record exactly one history item per completed gesture. `pushViewSnapshot` writes the **pre-gesture** snapshot directly into `pastStates`, bypassing zundo's `_handleSet`, so undo correctly restores the view from before the gesture started
+- `commitZoom` and `commitPan` are retained for one-shot deliberate actions (ZoomControls buttons, reset) that are not wrapped in pause/resume
 - Drag and resize operations call `pauseHistory()` at start and `resumeHistory()` at end, so the entire drag is a single undo step
 - History is cleared on initial load (100ms timeout) to avoid an initial empty undo entry
 
@@ -304,6 +305,7 @@ The central editing surface. Renders layers as absolutely-positioned DOM element
 - Video: on `loadedMetadata`, sets `currentTime = 0.1` and pauses to show the first frame in the editor
 - Toggle icons (`toggle-filled`, `toggle-outline`, `toggle-custom`) always show the **play** state in edit mode (not tied to real video playback state)
 - Locked layers: `pointerEvents: none`, `cursor: default`
+- **Cascading group lock**: when a `GroupLayer` has `locked: true`, all its children are treated as effectively locked — they also receive `pointerEvents: none` and `cursor: default`, cannot be selected or hovered, and their lock icon in LayersPanel is shown in a dimmed non-interactive state with the tooltip "Locked by parent group"
 - Clicking canvas background clears selection (`setSelectedLayerIds([])`); clicking the Canvas Settings button also clears selection
 - Canvas settings button is inverse-scaled (`scale(1/zoom)`) so it stays at a fixed visual size and position regardless of zoom
 - Canvas background area (`data-canvas-container`) is `#d4d4d4`
@@ -549,17 +551,20 @@ For **Shift + scroll** zoom: `delta = -deltaY * 0.005`.
 
 Continuous wheel/trackpad events must not flood the undo/redo history with hundreds of intermediate states. The pattern used:
 
-1. On the **first wheel event**, call `pauseHistory()` and set an `isWheeling = true` flag.
+1. On the **first wheel event**, call `pauseHistory()`, set `isWheeling = true`, and snapshot the current values into `preGestureZoom` / `preGesturePan`.
 2. Every subsequent wheel event **resets a 150ms debounce timer** (`setTimeout`).
-3. When 150ms passes with no new wheel event, the timeout fires: `resumeHistory()`, `isWheeling = false`, and **one** `commitZoom` / `commitPan` call writes the final value as a single history entry.
-4. Cleanup on unmount resumes history if the component is destroyed mid-wheel.
+3. When 150ms passes with no new wheel event, the timeout fires: `resumeHistory()`, `isWheeling = false`, and **one** `pushViewSnapshot(preGestureZoom, preGesturePan)` call writes the **pre-gesture** state directly into `pastStates` — so undo restores to exactly where the user was before the gesture.
+4. Cleanup on unmount also calls `pushViewSnapshot` with the pre-gesture values if the component is destroyed mid-gesture.
+
+> **Why `pushViewSnapshot` instead of `commitZoom`/`commitPan`?** zundo's `_handleSet` records the state *before* a `set()` call as the new past entry. After a paused gesture, `setZoom`/`setPan` have already updated the store to the final value, so calling `commitZoom(final)` would capture the final (already-applied) value as the "past" entry, making undo a no-op. `pushViewSnapshot` bypasses `_handleSet` entirely and manually inserts the known pre-gesture snapshot.
+
+> **Stable effect**: `zoom` and `pan` are excluded from the wheel `useEffect` dependency array. Instead, `zoomRef` and `panRef` (component refs kept in sync with the store via two micro-effects) are read directly inside the handler so the effect and its debounce timeout are never torn down mid-gesture.
 
 #### Performance — spacebar pan
 
-1. `mousedown` while spacebar is held: records `panStartRef = { x, y, panX, panY }` and calls `pauseHistory()`.
+1. `mousedown` while spacebar is held: records `panStartRef = { x, y, panX, panY, preZoom }` (capturing the pan origin and current zoom before the pan starts), calls `pauseHistory()`, and sets `spacePanActiveRef = true`.
 2. `mousemove`: computes delta from `panStartRef` origin (not accumulated small steps) and calls `setPan` — a single delta calculation per frame, no rAF needed.
-3. `mouseup`: calls `setIsPanning(false)`, `resumeHistory()`, and `commitPan(pan)` — one history entry for the entire drag.
-4. `keyup Space`: also calls `commitPan` and clears `isPanning` to handle releasing space without a prior mouseup.
+3. `mouseup` or `keyup Space`: calls `setIsPanning(false)`, `resumeHistory()`, and `pushViewSnapshot(panStartRef.preZoom, { panStartRef.panX, panStartRef.panY })` — one history entry for the entire pan that restores the pre-pan view on undo.
 
 ### Keyboard Shortcuts
 
@@ -653,6 +658,8 @@ Toggle lock icon in the Layers Panel row. Locked layers:
 - Cannot be selected by clicking on the canvas
 - Cannot be moved or resized
 - Still appear in the export
+
+**Cascading group lock**: locking a `GroupLayer` implicitly locks all its children. Children display a dimmed lock icon in the Layers Panel (inherited — clicking it does nothing, tooltip: "Locked by parent group"). Unlocking the group restores child interactivity without changing any individual child `locked` flag.
 
 ### Copy Properties to Other Sizes
 
@@ -863,7 +870,7 @@ Available fonts (20 options): Arial, Roboto, Open Sans, Lato, Montserrat, Poppin
 - **URL inputs** — basic validation in `UrlInput` component
 - **Character counters** — text/richtext show `n / 200`; button text shows `n / 50`; inputs locked after limit
 - **Loop Duration Too Short** — the Loop Duration input in Canvas Settings shows a red border + `Min: X.XX unit` hint when the entered value is less than the minimum required `delay + duration` across all animations for the current size; the value is still writable (no hard clamp), just flagged
-- **Locked layers** — clicking a locked layer on canvas does nothing; sidebar Delete button is disabled and greyed; edit-label pencil is hidden; layer panel shows lock icon
+- **Locked layers** — clicking a locked layer on canvas does nothing; sidebar Delete button is disabled and greyed; edit-label pencil is hidden; layer panel shows lock icon. Children of a locked group inherit the locked state (non-interactive on canvas; dimmed lock icon in panel with "Locked by parent group" tooltip; individual child `locked` flag is unchanged)
 - **Layers without a size config** — any layer missing a `sizeConfig` entry for the active size is skipped in canvas render and export
 - **Aspect ratio lock** — when `BaseLayer.aspectRatioLocked = true`, sidebar width/height inputs enforce proportional scaling; the Shift key on canvas resize handles does the same temporarily only when `aspectRatioLocked` is `false`/`undefined`
 - **Font family scope** — `fontFamily` is stored on `layer.styles` (global, not size-specific) for `text`, `richtext`, and `button` layers; `image` and `video` layers do not have a font family field

@@ -28,7 +28,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Copy and paste layers (`Cmd/Ctrl + C` to copy, `Cmd/Ctrl + V` to paste as duplicate directly below the original in the layer stack)
 - Zoom and pan support (`Ctrl/Cmd + scroll` to zoom scroll / `spacebar + mouse drag` is pan)
 - Trackpad support for pan and pinch to zoom in/out
-- Undo/Redo Buttons (with shortcuts: `Cmd/Ctrl + Z` for Undo or `Cmd/Ctrl + Shift + Z` for Redo)
+- Undo/Redo Buttons (with shortcuts: `Cmd/Ctrl + Z` for Undo or `Cmd/Ctrl + Shift + Z` for Redo) — zoom and pan each produce exactly one undo history item per completed gesture
 - Group and ungroup layers (`Cmd/Ctrl + G` to group selected layers, `Cmd/Ctrl + Shift + G` to ungroup)
 - Animation timeline editor (as an advanced mode)
 
@@ -37,7 +37,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Add new elements
 - Reorder elements using drag and drop handles
 - Indicators for active layer
-- Lock and unlock layers
+- Lock and unlock layers (locking a group cascades to all children)
 - Floating and can be snapped to left or right edge
 - Can collapse to make more space
 - Canvas settings
