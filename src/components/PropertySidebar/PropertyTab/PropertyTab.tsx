@@ -1,4 +1,4 @@
-import { type RefObject } from 'react';
+import { type RefObject, useState, useEffect } from 'react';
 import {
   type LayerContent,
   type AdSize,
@@ -109,6 +109,8 @@ interface PropertyTabProps {
   onCopyTextAlign?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyIconSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyBorderRadius?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyCustomCSS?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCustomCSSChange?: (layerId: string, size: AdSize, customCSS: string) => void;
   allowedSizes?: AdSize[];
 }
 
@@ -143,10 +145,22 @@ export const PropertyTab = ({
   onCopyTextAlign,
   onCopyIconSize,
   onCopyBorderRadius,
+  onCopyCustomCSS,
+  onCustomCSSChange,
   allowedSizes,
 }: PropertyTabProps) => {
   const config = layer.sizeConfig[selectedSize];
   if (!config) return null;
+
+  const [cssText, setCssText] = useState(config.customCSS || '');
+  const [cssInvalid, setCssInvalid] = useState(false);
+
+  // Sync textarea when layer or size changes
+  useEffect(() => {
+    setCssText(config.customCSS || '');
+    setCssInvalid(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layer.id, selectedSize]);
 
   const posX = config.positionX;
   const posY = config.positionY;
@@ -452,6 +466,69 @@ export const PropertyTab = ({
           />
         </div>
       </div>
+
+      {/* Custom CSS */}
+      {onCustomCSSChange ? (
+        <div className="mt-4">
+          <Label
+            isSizeSpecific={true}
+            selectedSize={selectedSize}
+            onCopyToSize={
+              onCopyCustomCSS
+                ? (targetSizes) => onCopyCustomCSS(layer.id, selectedSize, targetSizes)
+                : undefined
+            }
+            allowedSizes={allowedSizes}
+            currentSize={selectedSize}
+          >
+            Custom CSS
+          </Label>
+          <textarea
+            value={cssText}
+            onChange={(e) => setCssText(e.target.value)}
+            onBlur={() => {
+              const value = cssText.trim();
+              if (!value) {
+                setCssInvalid(false);
+                onCustomCSSChange(layer.id, selectedSize, '');
+                return;
+              }
+              // Validate by checking brace balance then attempting CSSStyleSheet parse
+              let depth = 0;
+              let balanced = true;
+              for (const ch of value) {
+                if (ch === '{') depth++;
+                else if (ch === '}') depth--;
+                if (depth < 0) { balanced = false; break; }
+              }
+              if (!balanced || depth !== 0) {
+                setCssInvalid(true);
+                return;
+              }
+              try {
+                const sheet = new CSSStyleSheet();
+                sheet.replaceSync(value);
+                setCssInvalid(false);
+                onCustomCSSChange(layer.id, selectedSize, value);
+              } catch {
+                setCssInvalid(true);
+              }
+            }}
+            disabled={layer.locked}
+            rows={5}
+            placeholder={`.my-class { color: red; }\n& { opacity: 0.9; }\n&:hover { transform: scale(1.02); }`}
+            spellCheck={false}
+            className={`w-full px-2 py-1.5 text-xs font-mono border rounded focus:outline-none focus:ring-1 resize-y disabled:opacity-50 disabled:cursor-not-allowed ${
+              cssInvalid
+                ? 'border-red-500 bg-red-50 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
+          />
+          {cssInvalid ? (
+            <p className="mt-1 text-xs text-red-600">Invalid CSS — check your syntax and try again.</p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 };

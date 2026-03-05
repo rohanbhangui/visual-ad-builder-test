@@ -124,7 +124,9 @@ interface PropertySidebarProps {
   onCopyTextAlign?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyIconSize?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyBorderRadius?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCopyCustomCSS?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
   onCopyAllSizeProperties?: (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => void;
+  onCustomCSSChange?: (layerId: string, size: AdSize, customCSS: string) => void;
   allowedSizes?: AdSize[];
 }
 
@@ -172,7 +174,9 @@ const PropertySidebarComponent = ({
   onCopyTextAlign,
   onCopyIconSize,
   onCopyBorderRadius,
+  onCopyCustomCSS,
   onCopyAllSizeProperties,
+  onCustomCSSChange,
   allowedSizes,
   activeTab: activeTabProp = 'properties',
   onActiveTabChange,
@@ -669,6 +673,8 @@ const PropertySidebarComponent = ({
                 onCopyTextAlign={onCopyTextAlign}
                 onCopyIconSize={onCopyIconSize}
                 onCopyBorderRadius={onCopyBorderRadius}
+                onCopyCustomCSS={onCopyCustomCSS}
+                onCustomCSSChange={onCustomCSSChange}
                 allowedSizes={allowedSizes}
               />
               {allowedSizes && allowedSizes.length > 1 && onCopyAllSizeProperties && layer.type !== 'group' ? (

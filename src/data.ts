@@ -48,6 +48,7 @@ export interface SizeConfig {
   borderRadius?:
     | number
     | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number }; // Corner radius in px (number = all corners, object = individual corners)
+  customCSS?: string; // Freeform CSS declarations injected at highest priority for this size
   animations?: Animation[]; // Animations for this size
   animationLoopDelay?: { value: number; unit: 'ms' | 's' }; // Loop duration for this size
   animationResetDuration?: { value: number; unit: 'ms' | 's' }; // Reset pause duration for this size

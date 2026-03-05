@@ -1530,6 +1530,40 @@ const App = () => {
     );
   };
 
+  const handleCustomCSSChange = (layerId: string, size: AdSize, customCSS: string) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
+        const existingConfig = layer.sizeConfig[size];
+        if (!existingConfig) return layer;
+        return {
+          ...layer,
+          sizeConfig: {
+            ...layer.sizeConfig,
+            [size]: { ...existingConfig, customCSS },
+          },
+        };
+      })
+    );
+  };
+
+  const handleCopyCustomCSS = (layerId: string, sourceSize: AdSize, targetSizes: AdSize[]) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== layerId) return layer;
+        const sourceConfig = layer.sizeConfig[sourceSize];
+        if (sourceConfig?.customCSS === undefined) return layer;
+        const updatedSizeConfig = { ...layer.sizeConfig };
+        targetSizes.forEach((targetSize) => {
+          const existingConfig = updatedSizeConfig[targetSize];
+          if (!existingConfig) return;
+          updatedSizeConfig[targetSize] = { ...existingConfig, customCSS: sourceConfig.customCSS };
+        });
+        return { ...layer, sizeConfig: updatedSizeConfig };
+      })
+    );
+  };
+
   const handleCopyAllSizeProperties = (
     layerId: string,
     sourceSize: AdSize,
@@ -1564,6 +1598,7 @@ const App = () => {
             ...(sourceConfig.borderRadius !== undefined
               ? { borderRadius: sourceConfig.borderRadius }
               : {}),
+            ...(sourceConfig.customCSS !== undefined ? { customCSS: sourceConfig.customCSS } : {}),
           };
         });
 
@@ -2190,7 +2225,9 @@ const App = () => {
             onCopyTextAlign={handleCopyTextAlign}
             onCopyIconSize={handleCopyIconSize}
             onCopyBorderRadius={handleCopyBorderRadius}
+            onCopyCustomCSS={handleCopyCustomCSS}
             onCopyAllSizeProperties={handleCopyAllSizeProperties}
+            onCustomCSSChange={handleCustomCSSChange}
             allowedSizes={sampleCanvas.allowedSizes}
           />
         ) : null}

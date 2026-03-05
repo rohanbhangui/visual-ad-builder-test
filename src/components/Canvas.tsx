@@ -1,6 +1,7 @@
 import React from 'react';
 import { type LayerContent, type GroupLayer, type AdSize } from '../data';
 import { COLORS } from '../consts';
+import { scopeCSS } from '../utils/cssUtils';
 import { getGoogleFontsLink } from '../utils/googleFonts';
 import SettingsIcon from '../assets/icons/settings.svg?react';
 import PlayIcon from '../assets/icons/play.svg?react';
@@ -505,6 +506,16 @@ export const Canvas: React.FC<CanvasProps> = ({
             }
             ${initialAnimationStates.join('\n            ')}
             ${animationKeyframes.join('\n')}
+            ${layers
+              .map((layer) => {
+                const css = layer.sizeConfig[selectedSize]?.customCSS;
+                if (!css) return '';
+                // Match the same id format used by buildLayerHTML (fallback prefixed with 'a')
+                const layerId = layer.attributes.id || `a${layer.id}`;
+                return scopeCSS(css, `#${layerId}`);
+              })
+              .filter(Boolean)
+              .join('\n')}
           </style>
         </head>
         <body>
@@ -592,6 +603,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         content = (
           <img
             {...(layer.attributes.id && { id: layer.attributes.id })}
+            data-scope={layer.id}
             src={layer.url}
             className="w-full h-full pointer-events-none"
             style={{
@@ -606,6 +618,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         content = (
           <div
             {...(layer.attributes.id && { id: layer.attributes.id })}
+            data-scope={layer.id}
             className="pointer-events-none whitespace-pre-wrap"
             style={{
               color: layer.styles?.color || '#000000',
@@ -622,6 +635,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           content = (
             <video
               {...(layer.attributes.id && { id: layer.attributes.id })}
+              data-scope={layer.id}
               src={layer.url}
               muted={true}
               playsInline={true}
@@ -715,6 +729,7 @@ export const Canvas: React.FC<CanvasProps> = ({
         content = (
           <div
             {...(layer.attributes.id && { id: layer.attributes.id })}
+            data-scope={layer.id}
             className="w-full h-full flex items-center justify-center pointer-events-none"
             style={{
               backgroundColor: layer.styles?.backgroundColor || 'transparent',
@@ -820,6 +835,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             onLayerMouseDown(e, layer.id);
           }
         }}
+        data-scope={layer.id}
         data-layer-id={layer.id}
         data-layer-hover={
           !layer.locked && !isSelected && !isSpacePressed && !isPanning ? 'true' : undefined
@@ -916,6 +932,16 @@ export const Canvas: React.FC<CanvasProps> = ({
               }}
             >
               <div style={{ pointerEvents: 'auto' }}>
+                {/* Inject custom CSS for layers that have it for the selected size */}
+                {layers.map((layer) => {
+                  const css = layer.sizeConfig[selectedSize]?.customCSS;
+                  if (!css) return null;
+                  return (
+                    <style key={`custom-css-${layer.id}`}>
+                      {scopeCSS(css, `[data-scope="${layer.id}"]`)}
+                    </style>
+                  );
+                })}
                 {layers.map((layer, index) => {
                   // Children are rendered inside their parent group — skip them at top level
                   if (childLayerIds.has(layer.id)) return null;

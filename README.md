@@ -69,7 +69,8 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Arrow key support for position, width and height
 - Animation Loop Duration will hint what is the minimum animation length required to fulfill all animations
 - "Copy to" for certain properties so that other sizes can be updated
-- "Copy all properties to…" button to copy all size-specific properties (position, size, font size, text alignment, icon size, border radius) to one or more other sizes at once
+- "Copy all properties to…" button to copy all size-specific properties (position, size, font size, text alignment, icon size, border radius, custom CSS) to one or more other sizes at once
+- Custom CSS textarea per layer per size — write full CSS rules (`.foo { }`, `& { }`, `&:hover { }`) scoped automatically to the layer element; validated on blur; injected at highest cascade priority in both edit mode and export
 
 ## Developer Menu
 
@@ -95,4 +96,3 @@ The app exposes a `window.vb` object in the browser console for debugging and de
 - Carousel support (+ button support)
 - More sizes (+ being able to manually add in preset sizes)
 - Preset components like canvas (eg. when a new button is added have a preset of buttons ready to go)
-- Custom scripting and css support (as an advanced mode)

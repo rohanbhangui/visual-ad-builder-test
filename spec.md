@@ -36,6 +36,7 @@ Quick reference for navigating the codebase:
 | `src/components/inputs/` | Reusable inputs: `ColorInput`, `CornersInput`, `DebouncedInput`, `PositionSizeInput`, `UrlInput` |
 | `src/utils/exportHTML.ts` | `generateHTML()` function; keyframe + initial-state generation; CSS reset; script injection |
 | `src/utils/googleFonts.ts` | `getGoogleFontsLink()` for export; `loadGoogleFonts()` for live editor |
+| `src/utils/cssUtils.ts` | `scopeCSS(css, scopeSelector)` — rewrites selectors so `&` → the layer element itself, bare selectors → descendant of layer |
 
 ---
 
@@ -172,6 +173,7 @@ interface SizeConfig {
   textAlign?: 'left' | 'center' | 'right';
   iconSize?: number;         // pixels, for button layers
   borderRadius?: number | { topLeft, topRight, bottomRight, bottomLeft }; // px
+  customCSS?: string;        // freeform CSS declarations (e.g. 'box-shadow: 0 2px 8px rgba(0,0,0,.3); filter: blur(2px);')
   animations?: Animation[];
   animationLoopDelay?: { value: number; unit: 'ms' | 's' };
   animationResetDuration?: { value: number; unit: 'ms' | 's' };
@@ -351,6 +353,7 @@ Right-side panel, always visible. Content changes based on selection state:
 - Alignment buttons: left, center-H, right, top, center-V, bottom (6 buttons)
 - Properties panel (per layer type — see below)
 - Opacity slider (0–100%)
+- **Custom CSS** textarea — monospace, full sidebar width, size-specific. Accepts full CSS rules (e.g. `.foo { color: red; }`, `& { box-shadow: 0 2px 8px rgba(0,0,0,.3); }`, `&:hover { transform: scale(1.02); }`). All selectors are **scoped to the layer's content element** at inject/export time via `scopeCSS()` in `src/utils/cssUtils.ts`: `&` is replaced with the layer's scope selector; everything else is prefixed as a descendant. In edit mode the scope selector is `[data-scope="layerId"]`, placed directly on the actual content element (`<img>`, `<video>`, text `<div>`, or button `<div>`) — the same element that carries `id="..."` in export. In the preview iframe and export the scope selector is `#layerId` (using `layer.attributes.id` if set, otherwise `a${layer.id}`). Rules are appended to the `<style>` block after all generated layer styles. On blur, content is validated using `CSSStyleSheet.replaceSync()`; invalid CSS turns the border red with an error message and is not saved. Applied to all layer types including groups. The Label has a size-specific amber badge and a "Copy to" popover.
 - Aspect ratio lock toggle (width:height)
 - Position X/Y and Width/Height number inputs (switchable between `px` and `%`)
   - Arrow keys increment/decrement by 1; Shift+arrow by 10
@@ -672,13 +675,14 @@ Toggle lock icon in the Layers Panel row. Locked layers:
 
 ### Copy All Properties to Other Sizes
 
-A **"Copy all properties to…"** button appears at the bottom of the Properties tab (below all fields, above the Delete button area) for any layer when more than one allowed size exists. It opens the same multi-size checkbox popover and copies all 5 copyable property groups in a single operation:
+A **"Copy all properties to…"** button appears at the bottom of the Properties tab (below all fields, above the Delete button area) for any layer when more than one allowed size exists. It opens the same multi-size checkbox popover and copies all 6 copyable property groups in a single operation:
 
 - Position + Size (`positionX`, `positionY`, `width`, `height`) — creates a stub config if target size has no existing config
 - Font Size — only applied if defined on the source config
 - Text Alignment — only applied if defined on the source config
 - Icon Size — only applied if defined on the source config
 - Border Radius — only applied if defined on the source config
+- Custom CSS — only applied if defined on the source config
 
 Animations, loop delay, and reset duration are **not** affected. The entire operation is a single `setLayers` call, producing one undo/redo history entry. Implemented in `handleCopyAllSizeProperties` in `App.tsx`.
 

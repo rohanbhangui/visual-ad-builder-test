@@ -1,6 +1,7 @@
 import { type LayerContent, type AdSize, type GroupLayer } from '../data';
 import { HTML5_AD_SIZES, DEFAULT_CSS_VALUES } from '../consts';
 import { getGoogleFontsLink } from './googleFonts';
+import { scopeCSS } from './cssUtils';
 
 // Helper function to convert animation value to CSS string
 function formatAnimationValue(
@@ -464,12 +465,17 @@ export const generateResponsiveHTML = (
 
         // Animation styles are applied via data-animation attribute set earlier
 
+        // Custom CSS — scoped to the layer element, appended after all other rules
+        const customCSSRule = config.customCSS
+          ? `\n      ${scopeCSS(config.customCSS, `#${layerId}`)}`
+          : '';
+
         return `      #${layerId} {${baseRules}${typeSpecificRules}
         left: ${posX.value}${posX.unit || 'px'};
         top: ${posY.value}${posY.unit || 'px'};
         width: ${width.value}${width.unit};
         height: ${height.value}${height.unit};${fontSizeRule}${borderRadiusRule}${initialStateRules}
-      }${iconSizeRule}`;
+      }${iconSizeRule}${customCSSRule}`;
       })
       .join('\n');
 
@@ -557,12 +563,17 @@ export const generateResponsiveHTML = (
 
             // Animation styles removed - will be applied via script on DOMContentLoaded
 
+            // Custom CSS — scoped to the layer element, appended after all other rules
+            const customCSSRule = config.customCSS
+              ? `\n        ${scopeCSS(config.customCSS, `#${layerId}`)}`
+              : '';
+
             return `        #${layerId} {
           left: ${posX.value}${posX.unit || 'px'};
           top: ${posY.value}${posY.unit || 'px'};
           width: ${width.value}${width.unit};
           height: ${height.value}${height.unit};${fontSizeRule}${borderRadiusRule}${initialStateRules}
-        }${iconSizeRule}`;
+        }${iconSizeRule}${customCSSRule}`;
           })
           .join('\n');
 
