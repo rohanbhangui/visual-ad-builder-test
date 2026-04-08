@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { sampleCanvas, type LayerContent, type GroupLayer, type AdSize, type SizeConfig } from './data';
+import { type LayerContent, type GroupLayer, type AdSize, type SizeConfig } from './data';
 import { HTML5_AD_SIZES, UI_LAYOUT } from './consts';
 import { TopBar } from './components/TopBar';
 import { LayersPanel } from './components/LayersPanel';
@@ -7,16 +7,21 @@ import { PropertySidebar } from './components/PropertySidebar';
 import Canvas from './components/Canvas';
 import { ExportHTMLModal } from './components/ExportHTMLModal';
 import { SettingsModal } from './components/SettingsModal';
+import { ManageSizesModal } from './components/ManageSizesModal';
+import { ConfirmModal } from './components/ConfirmModal';
 import { ZoomControls } from './components/ZoomControls';
 import { TimelinePanel } from './components/TimelinePanel';
 import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
 import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory, pauseHistory, resumeHistory, pushViewSnapshot } from './store/useStore';
+import { AD_SIZE_NAMES, getAvailableAdSizes, inheritSizeConfig } from './utils/adSizes';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 import ReplayIcon from './assets/icons/reset-view-ccw.svg?react';
 import TimelineIcon from './assets/icons/timeline.svg?react';
+import PlusIcon from './assets/icons/plus.svg?react';
+import XIcon from './assets/icons/x.svg?react';
 
 // UI Layout Constant (moved inside component)
 const App = () => {
@@ -24,6 +29,7 @@ const App = () => {
 
   // Zustand store - tracked state (undo/redo)
   const layers = useStore((state) => state.layers);
+  const allowedSizes = useStore((state) => state.allowedSizes);
   const canvasName = useStore((state) => state.canvasName);
   const canvasBackgroundColor = useStore((state) => state.canvasBackgroundColor);
   const animationLoop = useStore((state) => state.animationLoop);
@@ -55,6 +61,10 @@ const App = () => {
   
   // Zustand actions - only ones actually used in App.tsx
   const setLayers = useStore((state) => state.setLayers);
+  const addAllowedSize = useStore((state) => state.addAllowedSize);
+  const removeAllowedSize = useStore((state) => state.removeAllowedSize);
+  const deleteLayer = useStore((state) => state.deleteLayer);
+  const deleteLayers = useStore((state) => state.deleteLayers);
   const setCanvasName = useStore((state) => state.setCanvasName);
   const setCanvasBackgroundColor = useStore((state) => state.setCanvasBackgroundColor);
   const setAnimationLoop = useStore((state) => state.setAnimationLoop);
@@ -104,6 +114,14 @@ const App = () => {
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [isAltPressed, setIsAltPressed] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [isManageSizesModalOpen, setIsManageSizesModalOpen] = useState(false);
+  const [confirmState, setConfirmState] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    confirmTone: 'danger' | 'primary';
+    onConfirm: () => void;
+  } | null>(null);
 
   const layersPanelDragRef = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
   // preZoom tracks zoom at the moment the space-pan started (so undo restores correctly)
@@ -120,6 +138,7 @@ const App = () => {
   useEffect(() => { panRef.current = pan; }, [pan]);
 
   const dimensions = HTML5_AD_SIZES[selectedSize] || HTML5_AD_SIZES['336x280'];
+  const availableSizes = getAvailableAdSizes(allowedSizes);
 
   // Clear initial history and expose debug API to window
   useEffect(() => {
@@ -137,7 +156,7 @@ const App = () => {
         const canvas = {
           id: `canvas-${crypto.randomUUID()}`,
           name: state.canvasName,
-          allowedSizes: sampleCanvas.allowedSizes,
+          allowedSizes: state.allowedSizes,
           styles: {
             backgroundColor: state.canvasBackgroundColor,
           },
@@ -175,12 +194,55 @@ const App = () => {
     }
   }, [layers]);
 
+  const closeConfirmModal = useCallback(() => setConfirmState(null), []);
+
+  const openConfirmModal = useCallback(({
+    title,
+    message,
+    confirmLabel,
+    confirmTone = 'primary',
+    onConfirm,
+  }: {
+    title: string;
+    message: string;
+    confirmLabel: string;
+    confirmTone?: 'danger' | 'primary';
+    onConfirm: () => void;
+  }) => {
+    setConfirmState({
+      title,
+      message,
+      confirmLabel,
+      confirmTone,
+      onConfirm,
+    });
+  }, []);
+
   const handleDeleteLayer = (layerId: string) => {
     const layer = layers.find((l) => l.id === layerId);
-    if (layer && window.confirm(`Are you sure you want to delete "${layer.label}"?`)) {
-      setLayers((prev) => prev.filter((l) => l.id !== layerId));
-      setSelectedLayerIds([]);
-    }
+    if (!layer) return;
+
+    openConfirmModal({
+      title: 'Delete Layer',
+      message: `Delete "${layer.label}"? This cannot be undone except through undo history.`,
+      confirmLabel: 'Delete Layer',
+      confirmTone: 'danger',
+      onConfirm: () => {
+        deleteLayer(layerId);
+      },
+    });
+  };
+
+  const handleDeleteSize = (size: AdSize) => {
+    if (allowedSizes.length <= 1) return;
+
+    openConfirmModal({
+      title: 'Delete Size',
+      message: `Delete ${size} (${AD_SIZE_NAMES[size]})? This removes the size and its size-specific layer layout data.`,
+      confirmLabel: 'Delete Size',
+      confirmTone: 'danger',
+      onConfirm: () => removeAllowedSize(size),
+    });
   };
 
   const handleToggleLock = (layerId: string) => {
@@ -230,14 +292,21 @@ const App = () => {
   useEffect(() => {
     const handleDeleteSelectedLayers = () => {
       if (selectedLayerIds.length === 0) return;
+      const selectedLabel = layers.find((layer) => layer.id === selectedLayerIds[0])?.label;
       const message =
-        selectedLayerIds.length === 1
-          ? `Are you sure you want to delete "${layers.find((l) => l.id === selectedLayerIds[0])?.label}"?`
-          : `Are you sure you want to delete ${selectedLayerIds.length} layers?`;
-      if (window.confirm(message)) {
-        setLayers((prev) => prev.filter((l) => !selectedLayerIds.includes(l.id)));
-        setSelectedLayerIds([]);
-      }
+        selectedLayerIds.length === 1 && selectedLabel
+          ? `Delete "${selectedLabel}"? This cannot be undone except through undo history.`
+          : `Delete ${selectedLayerIds.length} selected layers? This cannot be undone except through undo history.`;
+
+      openConfirmModal({
+        title: selectedLayerIds.length === 1 ? 'Delete Layer' : 'Delete Layers',
+        message,
+        confirmLabel: selectedLayerIds.length === 1 ? 'Delete Layer' : 'Delete Layers',
+        confirmTone: 'danger',
+        onConfirm: () => {
+          deleteLayers(selectedLayerIds);
+        },
+      });
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -410,7 +479,15 @@ const App = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedLayerIds, layers, selectedSize, dimensions.width, dimensions.height, setLayers, setSelectedLayerIds]);
+  }, [
+    selectedLayerIds,
+    layers,
+    selectedSize,
+    dimensions.width,
+    dimensions.height,
+    deleteLayers,
+    openConfirmModal,
+  ]);
 
   // Zoom and Pan handlers
   const handleZoomChange = useCallback((newZoom: number, cursorX?: number, cursorY?: number) => {
@@ -1877,7 +1954,7 @@ const App = () => {
     setSelectedLayerIds([]);
     const html = generateResponsiveHTML(
       layers,
-      sampleCanvas.allowedSizes,
+      allowedSizes,
       canvasBackgroundColor,
       animationLoop
     );
@@ -1886,41 +1963,31 @@ const App = () => {
   };
 
   const handleAddLayer = (type: 'text' | 'richtext' | 'image' | 'video' | 'button') => {
+    const baseSizeConfig: SizeConfig = {
+      positionX: { value: 10, unit: 'px' },
+      positionY: { value: 10, unit: 'px' },
+      width: { value: type === 'image' ? 300 : 200, unit: 'px' },
+      height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
+      ...(type === 'text' || type === 'richtext' || type === 'button'
+        ? { fontSize: '14px' }
+        : {}),
+    };
+
+    const sizeConfig = allowedSizes.reduce<Partial<Record<AdSize, SizeConfig>>>((acc, size) => {
+      acc[size] =
+        size === selectedSize
+          ? baseSizeConfig
+          : inheritSizeConfig(baseSizeConfig, selectedSize, size);
+      return acc;
+    }, {});
+
     const newLayer: LayerContent = {
       id: `sa-${crypto.randomUUID()}`,
       label: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
       type,
       locked: false,
       attributes: { id: '' },
-      sizeConfig: {
-        '300x250': {
-          positionX: { value: 10, unit: 'px' },
-          positionY: { value: 10, unit: 'px' },
-          width: { value: type === 'image' ? 300 : 200, unit: 'px' },
-          height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-          ...(type === 'text' || type === 'richtext' || type === 'button'
-            ? { fontSize: '14px' }
-            : {}),
-        },
-        '336x280': {
-          positionX: { value: 10, unit: 'px' },
-          positionY: { value: 10, unit: 'px' },
-          width: { value: type === 'image' ? 300 : 200, unit: 'px' },
-          height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-          ...(type === 'text' || type === 'richtext' || type === 'button'
-            ? { fontSize: '14px' }
-            : {}),
-        },
-        '728x90': {
-          positionX: { value: 10, unit: 'px' },
-          positionY: { value: 10, unit: 'px' },
-          width: { value: type === 'image' ? 300 : 200, unit: 'px' },
-          height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-          ...(type === 'text' || type === 'richtext' || type === 'button'
-            ? { fontSize: '14px' }
-            : {}),
-        },
-      },
+      sizeConfig,
       ...(type === 'text' || type === 'richtext'
         ? {
             content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
@@ -1960,16 +2027,37 @@ const App = () => {
       <TopBar
         mode={mode}
         selectedSize={selectedSize}
-        allowedSizes={sampleCanvas.allowedSizes}
+        allowedSizes={allowedSizes}
+        canManageSizes={mode === 'edit'}
         canUndo={canUndo}
         canRedo={canRedo}
         showAdSelector={adSelectorPosition === 'top'}
         onModeChange={setMode}
         onSizeChange={setSelectedSize}
+        onAddSize={() => setIsManageSizesModalOpen(true)}
+        onDeleteSize={handleDeleteSize}
         onExportHTML={handleExportHTML}
         onUndo={handleUndo}
         onRedo={handleRedo}
         onSettingsClick={() => setIsSettingsModalOpen(true)}
+      />
+      <ManageSizesModal
+        isOpen={isManageSizesModalOpen}
+        availableSizes={availableSizes}
+        onClose={() => setIsManageSizesModalOpen(false)}
+        onAddSize={addAllowedSize}
+      />
+      <ConfirmModal
+        isOpen={!!confirmState}
+        title={confirmState?.title || ''}
+        message={confirmState?.message || ''}
+        confirmLabel={confirmState?.confirmLabel}
+        confirmTone={confirmState?.confirmTone}
+        onClose={closeConfirmModal}
+        onConfirm={() => {
+          confirmState?.onConfirm();
+          closeConfirmModal();
+        }}
       />
       <ExportHTMLModal
         isOpen={isExportModalOpen}
@@ -2124,33 +2212,67 @@ const App = () => {
             {/* Ad Selector - Center (when position is 'bottom') */}
             {adSelectorPosition === 'bottom' ? (
               <div className="flex-1 flex items-center justify-center gap-4">
-                {sampleCanvas.allowedSizes.map((size) => {
+                {allowedSizes.map((size) => {
                   const { width, height } = HTML5_AD_SIZES[size];
                   const isSelected = selectedSize === size;
                   const scale = UI_LAYOUT.AD_SELECTOR_SCALE;
 
                   return (
-                    <button
-                      key={size}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSize(size);
-                      }}
-                      className="flex flex-col items-center gap-1 p-1 transition-opacity hover:opacity-80 cursor-pointer"
-                    >
-                      <div
-                        className={`bg-white shadow transition-colors duration-200 border-2 ${
-                          isSelected ? 'border-blue-600' : 'border-transparent'
-                        }`}
-                        style={{
-                          width: `${width * scale}px`,
-                          height: `${height * scale}px`,
+                    <div key={size} className="group relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSize(size);
                         }}
-                      />
-                      <span className="text-[10px] font-medium text-gray-900">{size}</span>
-                    </button>
+                        className="flex flex-col items-center gap-1 p-1 transition-opacity hover:opacity-80 cursor-pointer"
+                      >
+                        <div
+                          className={`bg-white shadow transition-colors duration-200 border-2 ${
+                            isSelected ? 'border-blue-600' : 'border-transparent'
+                          }`}
+                          style={{
+                            width: `${width * scale}px`,
+                            height: `${height * scale}px`,
+                          }}
+                        />
+                        <span className="text-[10px] font-medium text-gray-900">{size}</span>
+                      </button>
+                      {mode === 'edit' && allowedSizes.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleDeleteSize(size);
+                          }}
+                          className="absolute -right-2 -top-2 cursor-pointer rounded-full border border-gray-200 bg-white p-1 text-gray-400 opacity-0 shadow-sm transition-all hover:border-red-200 hover:text-red-600 group-hover:opacity-100"
+                          title={`Delete ${size}`}
+                        >
+                          <XIcon className="h-3 w-3" />
+                        </button>
+                      ) : null}
+                    </div>
                   );
                 })}
+                {mode === 'edit' ? (
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setIsManageSizesModalOpen(true);
+                    }}
+                    className="flex flex-col items-center gap-1 p-1 text-gray-600 transition-colors hover:text-blue-600 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center border border-dashed border-gray-300 bg-white/80 shadow-sm"
+                      style={{
+                        width: `${300 * UI_LAYOUT.AD_SELECTOR_SCALE}px`,
+                        height: `${250 * UI_LAYOUT.AD_SELECTOR_SCALE}px`,
+                      }}
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                    </div>
+                    <span className="text-[10px] font-medium">Add</span>
+                  </button>
+                ) : null}
               </div>
             ) : null}
 
@@ -2228,7 +2350,7 @@ const App = () => {
             onCopyCustomCSS={handleCopyCustomCSS}
             onCopyAllSizeProperties={handleCopyAllSizeProperties}
             onCustomCSSChange={handleCustomCSSChange}
-            allowedSizes={sampleCanvas.allowedSizes}
+            allowedSizes={allowedSizes}
           />
         ) : null}
         </div>

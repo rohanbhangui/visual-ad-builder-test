@@ -3,11 +3,13 @@ import { temporal } from 'zundo';
 import { useStore as useZustandStore } from 'zustand';
 import { sampleCanvas, type LayerContent, type GroupLayer, type AdSize } from '../data';
 import { HTML5_AD_SIZES } from '../consts';
+import { inheritLayerForSize, sortAdSizes } from '../utils/adSizes';
 
 // State that gets tracked in history (content + meaningful UI changes)
 interface HistoricalState {
   // Core content state
   layers: LayerContent[];
+  allowedSizes: AdSize[];
   canvasName: string;
   canvasBackgroundColor: string;
   animationLoop: number;
@@ -56,6 +58,8 @@ interface AppStore extends HistoricalState, EphemeralState {
   ungroupLayers: (groupId: string) => void;
   
   // Canvas actions
+  addAllowedSize: (size: AdSize) => void;
+  removeAllowedSize: (size: AdSize) => void;
   setCanvasName: (name: string) => void;
   setCanvasBackgroundColor: (color: string) => void;
   setAnimationLoop: (loop: number) => void;
@@ -95,6 +99,7 @@ export const useStore = create<AppStore>()(
     (set) => ({
       // Historical state (tracked in undo/redo)
       layers: sampleCanvas.layers,
+      allowedSizes: sampleCanvas.allowedSizes,
       canvasName: sampleCanvas.name,
       canvasBackgroundColor: sampleCanvas.styles?.backgroundColor || '#ffffff',
       animationLoop: sampleCanvas.animationLoop ?? -1,
@@ -299,6 +304,44 @@ export const useStore = create<AppStore>()(
         }),
       
       // Canvas actions
+      addAllowedSize: (size: AdSize) =>
+        set((state: AppStore) => {
+          if (state.allowedSizes.includes(size)) return {};
+
+          return {
+            allowedSizes: sortAdSizes([...state.allowedSizes, size]),
+            layers: state.layers.map((layer) => inheritLayerForSize(layer, size, state.allowedSizes)),
+            selectedSize: size,
+          };
+        }),
+      removeAllowedSize: (size: AdSize) =>
+        set((state: AppStore) => {
+          if (!state.allowedSizes.includes(size) || state.allowedSizes.length <= 1) {
+            return {};
+          }
+
+          const nextAllowedSizes = state.allowedSizes.filter((allowedSize) => allowedSize !== size);
+          const nextSelectedSize =
+            state.selectedSize === size
+              ? nextAllowedSizes[Math.max(0, state.allowedSizes.indexOf(size) - 1)] ?? nextAllowedSizes[0]
+              : state.selectedSize;
+
+          return {
+            allowedSizes: nextAllowedSizes,
+            selectedSize: nextSelectedSize,
+            layers: state.layers.map((layer) => {
+              if (!layer.sizeConfig[size]) return layer;
+
+              const nextSizeConfig = { ...layer.sizeConfig };
+              delete nextSizeConfig[size];
+
+              return {
+                ...layer,
+                sizeConfig: nextSizeConfig,
+              };
+            }),
+          };
+        }),
       setCanvasName: (canvasName: string) => set({ canvasName }),
       setCanvasBackgroundColor: (canvasBackgroundColor: string) => set({ canvasBackgroundColor }),
       setAnimationLoop: (animationLoop: number) => set({ animationLoop }),
@@ -353,6 +396,7 @@ export const useStore = create<AppStore>()(
       partialize: (state): HistoricalState => ({
         // Track meaningful canvas modifications
         layers: state.layers,
+        allowedSizes: state.allowedSizes,
         canvasName: state.canvasName,
         canvasBackgroundColor: state.canvasBackgroundColor,
         animationLoop: state.animationLoop,
@@ -431,6 +475,7 @@ export const pushViewSnapshot = (zoom: number, pan: { x: number; y: number }) =>
   const state = useStore.getState();
   const snapshot: HistoricalState = {
     layers: state.layers,
+    allowedSizes: state.allowedSizes,
     canvasName: state.canvasName,
     canvasBackgroundColor: state.canvasBackgroundColor,
     animationLoop: state.animationLoop,

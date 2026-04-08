@@ -1,19 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { AdSize } from '../../data';
 import CopyIcon from '../../assets/icons/copy.svg?react';
-
-// Ad size common names
-const AD_SIZE_NAMES: Record<AdSize, string> = {
-  '728x90': 'Leaderboard',
-  '336x280': 'Large Rectangle',
-  '300x250': 'Medium Rectangle',
-  '970x90': 'Large Leaderboard',
-  '120x600': 'Skyscraper',
-  '160x600': 'Wide Skyscraper',
-  '300x600': 'Half Page',
-  '320x50': 'Mobile Banner',
-  '250x250': 'Square',
-};
+import { AD_SIZE_NAMES } from '../../utils/adSizes';
 
 interface CopySizePopoverProps {
   allowedSizes: AdSize[];

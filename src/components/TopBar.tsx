@@ -6,44 +6,40 @@ import ChevronDownIcon from '../assets/icons/chevron-down.svg?react';
 import UndoIcon from '../assets/icons/undo.svg?react';
 import RedoIcon from '../assets/icons/redo.svg?react';
 import SettingsIcon from '../assets/icons/settings.svg?react';
+import PlusIcon from '../assets/icons/plus.svg?react';
+import XIcon from '../assets/icons/x.svg?react';
+import { AD_SIZE_NAMES } from '../utils/adSizes';
 
 interface TopBarProps {
   mode: 'edit' | 'preview';
   selectedSize: AdSize;
   allowedSizes: AdSize[];
+  canManageSizes?: boolean;
   canUndo: boolean;
   canRedo: boolean;
   showAdSelector?: boolean;
   onModeChange: (mode: 'edit' | 'preview') => void;
   onSizeChange: (size: AdSize) => void;
+  onAddSize?: () => void;
+  onDeleteSize?: (size: AdSize) => void;
   onExportHTML: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onSettingsClick: () => void;
 }
 
-// Ad size common names
-const AD_SIZE_NAMES: Record<AdSize, string> = {
-  '728x90': 'Leaderboard',
-  '336x280': 'Large Rectangle',
-  '300x250': 'Medium Rectangle',
-  '970x90': 'Large Leaderboard',
-  '120x600': 'Skyscraper',
-  '160x600': 'Wide Skyscraper',
-  '300x600': 'Half Page',
-  '320x50': 'Mobile Banner',
-  '250x250': 'Square',
-};
-
 export const TopBar = ({
   mode,
   selectedSize,
   allowedSizes,
+  canManageSizes = false,
   canUndo,
   canRedo,
   showAdSelector = true,
   onModeChange,
   onSizeChange,
+  onAddSize,
+  onDeleteSize,
   onExportHTML,
   onUndo,
   onRedo,
@@ -111,28 +107,62 @@ export const TopBar = ({
           {isDropdownOpen ? (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-[200] min-w-[240px]">
               {allowedSizes.map((size) => (
-                <button
+                <div
                   key={size}
-                  onClick={() => {
-                    onSizeChange(size);
-                    setIsDropdownOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-2 px-4 py-2 transition-colors cursor-pointer text-left relative ${
+                  className={`group w-full flex items-center gap-2 px-4 py-2 transition-colors cursor-pointer text-left relative ${
                     size === selectedSize ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-gray-50'
                   }`}
                 >
-                  <div className="w-6 flex justify-center flex-shrink-0">
-                    {getAspectRatioBox(size)}
-                  </div>
-                  <div className="flex flex-col flex-1 leading-tight">
-                    <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[size]}</span>
-                    <span className="font-mono text-[11px] text-gray-600">{size}</span>
-                  </div>
-                  {size === selectedSize ? (
-                    <CheckIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSizeChange(size);
+                      setIsDropdownOpen(false);
+                    }}
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left cursor-pointer"
+                  >
+                    <div className="w-6 flex justify-center flex-shrink-0">
+                      {getAspectRatioBox(size)}
+                    </div>
+                    <div className="flex flex-col flex-1 leading-tight">
+                      <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[size]}</span>
+                      <span className="font-mono text-[11px] text-gray-600">{size}</span>
+                    </div>
+                    {size === selectedSize ? (
+                      <CheckIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                    ) : null}
+                  </button>
+                  {allowedSizes.length > 1 && canManageSizes && onDeleteSize ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onDeleteSize(size);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="cursor-pointer rounded p-1 text-gray-400 opacity-0 transition-all hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                      title={`Delete ${size}`}
+                    >
+                      <XIcon className="h-3.5 w-3.5" />
+                    </button>
                   ) : null}
-                </button>
+                </div>
               ))}
+              {canManageSizes && onAddSize ? (
+                <>
+                  <div className="mx-3 border-t border-gray-200" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onAddSize();
+                      setIsDropdownOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    Add Size
+                  </button>
+                </>
+              ) : null}
             </div>
           ) : null}
           </div>

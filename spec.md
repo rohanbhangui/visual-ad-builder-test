@@ -74,6 +74,19 @@ Defined in `consts.ts` as `HTML5_AD_SIZES`. Supported sizes:
 
 The canvas holds an `allowedSizes` array that defines which sizes are active for the current document.
 
+**Size uniqueness**: each size key can appear at most once in `allowedSizes`. `addAllowedSize` is a no-op if the size is already present. The **Add Size** modal exclusively shows sizes from `getAvailableAdSizes(allowedSizes)` — i.e. the set difference of all supported sizes minus the active ones — so a user can only pick sizes that are not yet added. **Minimum 1 size**: `removeAllowedSize` is a no-op when only one size remains.
+
+**Adding a size** (`addAllowedSize` store action):
+1. Guards: no-op if already present
+2. Runs `inheritLayerForSize` on every layer for the new size (computing a full `SizeConfig` using the closest existing size as source)
+3. Appends the size, re-sorts `allowedSizes` by `SIZE_ORDER`, and immediately switches `selectedSize` to the new size
+
+**Removing a size** (`removeAllowedSize` store action):
+1. Guards: no-op if size not present or only one size remains
+2. Deletes the `sizeConfig[size]` entry from every layer
+3. If `selectedSize` was the removed size, switches to the adjacent remaining size (prefers the size before it; falls back to the first)
+4. Confirmed via `ConfirmModal` (danger tone) before calling the action
+
 ### Canvas
 
 ```ts
@@ -283,7 +296,7 @@ Root component. Owns all event handler wiring. Handles:
 
 Fixed 56px header bar. Contains:
 - App title ("Visual Builder")
-- Ad size dropdown — only rendered when `adSelectorPosition === 'top'` (controlled by Settings). Shows aspect-ratio preview box, common name, and pixel dimensions. Active size highlighted in blue
+- Ad size dropdown — only rendered when `adSelectorPosition === 'top'` (controlled by Settings). Each row shows: scaled aspect-ratio preview box (max 24×16px), common name, monospace pixel dimensions. Active size highlighted in blue (`bg-blue-100 hover:bg-blue-200`). A hover-revealed **X (delete) button** appears on each row when `canManageSizes` is true and `allowedSizes.length > 1`; clicking it calls `onDeleteSize(size)` via `ConfirmModal`. Below the size list a divider + **"Add Size"** button (blue text, plus icon) opens `ManageSizesModal`
 - Undo / Redo buttons (disabled state when unavailable)
 - Edit / Preview mode toggle
 - Export HTML button
@@ -416,7 +429,11 @@ Bottom-right floating controls:
 
 ### `SizeSelector`
 
-Thumbnail row of all `sampleCanvas.allowedSizes` rendered at 6% scale. Rendered in the bottom controls bar (absolute-positioned, centred) **only when `adSelectorPosition === 'bottom'`**. Each thumbnail is a white box bordered with `2px blue-600` when selected, `2px transparent` when not. A size label (`widthxheight`) is shown below each thumbnail. Clicking a size sets `selectedSize`.
+Thumbnail row of all `allowedSizes` rendered at 12% scale (hard-coded `0.12` in the component; `AD_SELECTOR_SCALE = 0.06` in consts is unused by this component). Rendered in the bottom controls bar (absolute-positioned, centred) **only when `adSelectorPosition === 'bottom'`**. Each thumbnail is a white `bg-white shadow` box bordered with `2px blue-600` when selected, `2px transparent` when not. A size label (`widthxheight`) is shown below each thumbnail. Clicking a size sets `selectedSize`.
+
+### `ConfirmModal`
+
+Reusable confirmation dialog (440px wide, z-index 2100, higher than `ManageSizesModal`'s 2050). Props: `title`, `message`, `confirmLabel` (default `'Confirm'`), `cancelLabel` (default `'Cancel'`), `confirmTone: 'danger' | 'primary'` (default `'primary'`). Danger tone uses red confirm button; primary uses blue. Clicking the backdrop calls `onClose`. Used for: deleting layers, deleting multiple layers, and deleting a size.
 
 ### `ExportHTMLModal`
 
@@ -611,7 +628,7 @@ Arrow key movement is blocked when focus is inside an input, textarea, or conten
 
 New layers are created from the Layers Panel “+” dropdown. The new layer is **prepended** to the layers array (appears at the top of the stack, highest z-index) and is **immediately selected**.
 
-Default sizeConfig is created only for the three sizes `300x250`, `336x280`, and `728x90` (not all `allowedSizes`), with position `{ x: 10, y: 10 }` and the following dimensions:
+A base `SizeConfig` is created for the currently selected size with position `{ x: 10, y: 10 }` and the following dimensions:
 
 | Type | Width | Height |
 |---|---|---|
@@ -619,6 +636,8 @@ Default sizeConfig is created only for the three sizes `300x250`, `336x280`, and
 | image | 300px | 50px |
 | video | 200px | 100px |
 | button | 200px | 50px |
+
+`sizeConfig` entries are then generated for **every** currently active `allowedSize` by calling `inheritSizeConfig` from the selected size. Note: this call does not currently pass the layer type so the content-aware height logic (text/button) does not apply to freshly-added layers — they use geometric scaling for all sizes other than the currently selected one.
 
 Default content/styles per type:
 - **text / richtext**: `content = 'Lorem ipsum dolor sit amet...'`, `color: #000000`, `opacity: 1`
@@ -646,9 +665,9 @@ Triggered by `Cmd+C` / `Ctrl+C` (copy) and `Cmd+V` / `Ctrl+V` (paste) when focus
 ### Delete Layer
 
 - Via sidebar “Delete” button (disabled + greyed when layer is locked) or keyboard `Delete`/`Backspace`
-- Always confirms with `window.confirm`:
-  - Single layer: `Are you sure you want to delete "{label}"?`
-  - Multiple layers: `Are you sure you want to delete N layers?`
+- Always confirms with the `ConfirmModal` component (danger tone):
+  - Single layer: title `Delete Layer`, message `Delete "{label}"? This cannot be undone except through undo history.`
+  - Multiple layers: title `Delete Layers`, message `Delete N selected layers? This cannot be undone except through undo history.`
 - Removes from `layers` array and clears from `selectedLayerIds`
 
 ### Reorder Layers
@@ -805,6 +824,15 @@ Button icon types supported in export:
 
 ---
 
+## Size Switch Behaviour
+
+When `selectedSize` changes (via TopBar dropdown, `SizeSelector`, or `addAllowedSize`):
+- Zoom is immediately reset to `1` via `setZoom(1)` (ephemeral, not committed to history)
+- Pan is immediately reset to `{ x: 0, y: 0 }` via `setPan({ x: 0, y: 0 })` (ephemeral)
+- This is implemented as a `useEffect` in `App.tsx` that watches `selectedSize`
+
+---
+
 ## Preview Mode
 
 Preview renders the same HTML generation logic as Export but into an `<iframe srcDoc>`. The `animationKey` prop is used as the iframe `key` attribute to force a full unmount/remount when the user requests animation replay.
@@ -889,7 +917,120 @@ Available fonts (20 options): Arial, Roboto, Open Sans, Lato, Montserrat, Poppin
 - Animation keyframes are generated at export time in full from the stored animation data; there is no keyframe editor (future work)
 - The `animationLoopDelay` and `animationResetDuration` are stored on the **first layer’s** size config as a shortcut but treated as canvas-level settings in the UI; all animation timing reads from `layers[0].sizeConfig[selectedSize]`
 - `zundo` history partialize is configured to only track `HistoricalState` fields; ephemeral fields are never recorded
-- New layers only get `sizeConfig` entries for `300x250`, `336x280`, and `728x90` by default — other allowed sizes require manual positioning
+- New layers get `sizeConfig` entries generated for **all currently active `allowedSizes`** via `inheritSizeConfig`. The layer type is not passed at creation time so the content-aware height scaling (text wrapping / button padding) only applies when a size is added later via `addAllowedSize` (which routes through `inheritLayerForSize` with the type). This is a known gap for freshly-added layers
+
+---
+
+## Intelligent Size Inheritance (`src/utils/adSizes.ts`)
+
+When a new ad size is added via the **Add Size** modal, every existing layer automatically inherits a `SizeConfig` for the new size. The inheritance is computed by `inheritLayerForSize` → `inheritSizeConfig`.
+
+### Source size selection
+
+`findClosestSize` selects the best existing size to inherit from using a weighted score:
+
+| Factor | Weight | Rationale |
+|---|---|---|
+| Aspect ratio difference | ×3 | Matching orientation is most important |
+| Relative area difference | ×1 | Absolute area matters less than shape |
+| Orientation mismatch penalty | +10 | Hard penalty for portrait↔landscape flip |
+
+### Geometric scale factors
+
+```
+scaleX        = targetWidth  / sourceWidth
+scaleY        = targetHeight / sourceHeight
+scalarScale   = sqrt(scaleX × scaleY)   // geometric mean for scalars (font, icon, radius)
+```
+
+### Layer-type-aware dimension scaling
+
+`inheritSizeConfig` receives the **layer type** so dimensions are computed with content-aware logic rather than naive geometric scaling.
+
+#### `image`, `video`, `group` (geometric)
+
+- `positionX` → scaled by `scaleX`
+- `positionY` → scaled by `scaleY`
+- `width`     → scaled by `scaleX`
+- `height`    → scaled by `scaleY`
+
+#### `text` and `richtext` (DOM-measured height)
+
+Rather than estimating with static formulas, the function renders the layer's content into a hidden off-screen DOM element at the **target** dimensions and reads `scrollHeight` directly — giving the browser's own answer for how tall the text will be.
+
+**Primary path — DOM measurement (when content + DOM available):**
+
+`measureTextHeight` is **fully synchronous** — it creates a hidden element, reads `scrollHeight`, and removes it in the same JS call stack as the `addAllowedSize` store action. No loading state or async handling is needed; the canvas re-renders once with all configs already computed.
+
+The one caveat: if a Google Font has not yet finished loading (e.g. the user adds a size immediately on page load), the browser measures with the fallback font (`Arial, sans-serif`). The 10% buffer absorbs most of this variance.
+
+```
+el.style = {
+  position: fixed, visibility: hidden, pointer-events: none,
+  width:      newWidthPx,
+  fontSize:   newFontPx,
+  fontFamily: layer.styles.fontFamily (passed through inheritLayerForSize),
+  white-space: pre-wrap,   // matches Canvas className="whitespace-pre-wrap"; \n = real line break
+  word-wrap: break-word, overflow-wrap: break-word,
+  box-sizing: border-box, padding: 0, margin: 0,
+  top/left: -99999px
+  // NOTE: no explicit line-height — browser uses default "normal", matching Canvas which also sets none
+}
+el.innerHTML = content   // both text AND richtext: Canvas uses dangerouslySetInnerHTML for both
+measuredHeight = el.scrollHeight
+
+newHeight = max(ceil(measuredHeight × 1.10), geometricHeight)
+```
+
+The 10% buffer handles sub-pixel rounding and inter-line spacing variance between the hidden measurement element and the actual canvas layer.
+
+**Fallback path — dual static estimation (no DOM / no content):**
+
+Used when the DOM is unavailable (test environments) or no text content is provided. Uses two independent methods; whichever gives more lines wins:
+
+| Method | Formula |
+|---|---|
+| Height-based | `max(1, boxHeight / (fontSize × 1.35))` |
+| Char-density | `ceil(charCount / floor(boxWidth / (fontSize × 0.55)))` |
+
+```
+originalLines  = max(heightBased, charBased)
+widthRatio     = originalWidthPx / newWidthPx
+estimatedLines = max(1, ceil(originalLines × widthRatio))
+contentHeight  = ceil(estimatedLines × newFontPx × 1.35 × 1.15)  // 15% buffer
+minFontHeight  = ceil(newFontPx × 1.35 × 1.5)                    // 1.5-line floor
+newHeight      = max(contentHeight, minFontHeight, geometricHeight)
+```
+
+`fontFamily` is extracted from `layer.styles.fontFamily` in `inheritLayerForSize` and passed through so the hidden element uses the correct font metrics. If `sourceConfig.fontSize` is undefined, the function falls back to pure geometric height scaling.
+
+#### `button` (font-proportional height)
+
+Buttons must stay taller than their text label. Padding is treated as a separate component that scales with the font change:
+
+```
+originalFontPx     = parse(sourceConfig.fontSize) ?? 14
+newFontPx          = originalFontPx × scalarScale
+originalPadding    = max(0, originalHeightPx − originalFontPx)
+scaledPadding      = max(16, round(originalPadding × scalarScale))   // ≥16 px minimum
+fontDrivenHeight   = round(newFontPx + scaledPadding)
+geometricHeight    = round(originalHeightPx × scaleY)
+
+// Don't let the button shrink below geometric scale
+newHeight = max(fontDrivenHeight, geometricHeight)
+```
+
+If `sourceConfig.fontSize` is undefined, the function falls back to pure geometric height scaling.
+
+### All layer types — scalar properties
+
+| Property | Scale factor |
+|---|---|
+| `fontSize` | `scalarScale` |
+| `iconSize` | `scalarScale` |
+| `borderRadius` | `scalarScale` |
+
+`%`-unit positions and sizes are carried over unchanged (they are already canvas-relative).
 
 ---
 
