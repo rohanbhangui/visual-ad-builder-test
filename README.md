@@ -20,6 +20,7 @@ Demo: https://visual-ad-builder-test.vercel.app/
 - Aspect ratio lock (hold `shift`) when scaling something
 - Resize on edge (hold `alt` to resize from both sides, with snapping)
 - Ad size selector with independent styles and position
+- Add and remove ad sizes at any time — when a new size is added, every layer automatically gets an intelligently derived layout. Text boxes are sized using DOM measurement at the target dimensions so content is never clipped. Button heights scale as font + padding rather than a flat rectangle
 - Preview mode toggle (renders html with css into iframe)
 - `delete/backspace` key to delete a selected layer (with confirmation)
 - Arrow keys move elements (hold `shift` to move by 10px at a time)
@@ -76,19 +77,12 @@ Demo: https://visual-ad-builder-test.vercel.app/
 
 The app exposes a `window.vb` object in the browser console for debugging and development purposes.
 
-### Available Functions
-
-- **`window.vb.clearHistory()`** - Manually clears the entire undo/redo history
-
-- **`window.vb.history()`** - Returns the complete undo/redo history state
-  - `past`: Array of previous states
-  - `present`: Current state
-  - `future`: Array of future states (for redo)
-  - `canUndo`: Boolean indicating if undo is available
-  - `canRedo`: Boolean indicating if redo is available
-
-- **`window.vb.store()`** - Returns the current Zustand store state with all layers, canvas properties, and UI state
-
+| Method | Description |
+|---|---|
+| `window.vb.store()` | Returns the current Zustand store state with all layers, canvas properties, and UI state |
+| `window.vb.history()` | Returns `{ past, present, future, canUndo, canRedo }` |
+| `window.vb.clearHistory()` | Manually clears the entire undo/redo history |
+| `window.vb.exportCanvas()` | Logs and returns the canvas object as JSON |
 
 ## Future Development ideas
 
