@@ -122,15 +122,14 @@ export const TopBar = ({
                     className="flex min-w-0 flex-1 items-center gap-2 text-left cursor-pointer"
                   >
                     <div className="w-6 flex justify-center flex-shrink-0">
-                      {getAspectRatioBox(size)}
+                      {size === selectedSize
+                        ? <CheckIcon className="w-4 h-4 text-blue-600" />
+                        : getAspectRatioBox(size)}
                     </div>
                     <div className="flex flex-col flex-1 leading-tight">
                       <span className="text-sm font-medium text-gray-900">{AD_SIZE_NAMES[size]}</span>
                       <span className="font-mono text-[11px] text-gray-600">{size}</span>
                     </div>
-                    {size === selectedSize ? (
-                      <CheckIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                    ) : null}
                   </button>
                   {allowedSizes.length > 1 && canManageSizes && onDeleteSize ? (
                     <button
