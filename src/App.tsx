@@ -2260,12 +2260,13 @@ const App = () => {
                       event.stopPropagation();
                       setIsManageSizesModalOpen(true);
                     }}
-                    className="flex flex-col items-center gap-1 p-1 text-gray-600 transition-colors hover:text-blue-600 cursor-pointer"
+                    className="group flex flex-col items-center gap-1 p-1 text-gray-400 transition-colors hover:text-blue-600 cursor-pointer"
                   >
-                    <div className="flex items-center justify-center border border-dashed border-gray-300 bg-white/80 shadow-sm"
+                    <div
+                      className="flex items-center justify-center border-2 border-dashed border-gray-300 bg-transparent transition-colors group-hover:border-blue-500 group-hover:bg-blue-50"
                       style={{
                         width: `${300 * UI_LAYOUT.AD_SELECTOR_SCALE}px`,
-                        height: `${250 * UI_LAYOUT.AD_SELECTOR_SCALE}px`,
+                        height: `${300 * UI_LAYOUT.AD_SELECTOR_SCALE}px`,
                       }}
                     >
                       <PlusIcon className="h-4 w-4" />
