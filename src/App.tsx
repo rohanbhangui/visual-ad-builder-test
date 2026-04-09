@@ -15,7 +15,7 @@ import { useCanvasInteractions } from './hooks/useCanvasInteractions';
 import { loadGoogleFonts } from './utils/googleFonts';
 import { generateResponsiveHTML } from './utils/exportHTML';
 import { useStore, useCanUndo, useCanRedo, getHistory, clearInitialHistory, pauseHistory, resumeHistory, pushViewSnapshot } from './store/useStore';
-import { AD_SIZE_NAMES, getAvailableAdSizes, inheritSizeConfig } from './utils/adSizes';
+import { AD_SIZE_NAMES, getAvailableAdSizes } from './utils/adSizes';
 import magnetOutlineIcon from './assets/icons/magnet-outline.svg';
 import freeMoveIcon from './assets/icons/free-move.svg';
 import ReplayIcon from './assets/icons/reset-view-ccw.svg?react';
@@ -1963,21 +1963,22 @@ const App = () => {
   };
 
   const handleAddLayer = (type: 'text' | 'richtext' | 'image' | 'video' | 'button') => {
-    const baseSizeConfig: SizeConfig = {
-      positionX: { value: 10, unit: 'px' },
-      positionY: { value: 10, unit: 'px' },
-      width: { value: type === 'image' ? 300 : 200, unit: 'px' },
-      height: { value: type === 'image' || type === 'button' ? 50 : 100, unit: 'px' },
-      ...(type === 'text' || type === 'richtext' || type === 'button'
-        ? { fontSize: '14px' }
-        : {}),
-    };
+    const layerWidth = type === 'image' ? 300 : 200;
+    const layerHeight = type === 'image' || type === 'button' ? 50 : 100;
 
+    // Build a centered sizeConfig for each allowed size independently —
+    // same layer dimensions on every size, positioned at the center of that canvas.
     const sizeConfig = allowedSizes.reduce<Partial<Record<AdSize, SizeConfig>>>((acc, size) => {
-      acc[size] =
-        size === selectedSize
-          ? baseSizeConfig
-          : inheritSizeConfig(baseSizeConfig, selectedSize, size);
+      const canvasDims = HTML5_AD_SIZES[size];
+      acc[size] = {
+        positionX: { value: Math.round((canvasDims.width - layerWidth) / 2), unit: 'px' },
+        positionY: { value: Math.round((canvasDims.height - layerHeight) / 2), unit: 'px' },
+        width: { value: layerWidth, unit: 'px' },
+        height: { value: layerHeight, unit: 'px' },
+        ...(type === 'text' || type === 'richtext' || type === 'button'
+          ? { fontSize: '14px' }
+          : {}),
+      };
       return acc;
     }, {});
 
