@@ -945,14 +945,33 @@ scalarScale   = sqrt(scaleX × scaleY)   // geometric mean for scalars (font, ic
 
 ### Layer-type-aware dimension scaling
 
-`inheritSizeConfig` receives the **layer type** so dimensions are computed with content-aware logic rather than naive geometric scaling.
+`inheritSizeConfig` receives the **layer type**, **text content**, **font family**, **aspect ratio lock flag**, and **button text** so all dimensions are computed with content-aware logic rather than naive geometric scaling.
 
-#### `image`, `video`, `group` (geometric)
+#### Full-bleed detection (all layer types)
 
-- `positionX` → scaled by `scaleX`
-- `positionY` → scaled by `scaleY`
-- `width`     → scaled by `scaleX`
-- `height`    → scaled by `scaleY`
+Before type-specific logic runs, the layer is checked for full-bleed intent:
+
+```
+isFullBleedX = originalWidth  >= sourceCanvasWidth  × 0.95  → newWidth  = targetCanvasWidth
+isFullBleedY = originalHeight >= sourceCanvasHeight × 0.95  → newHeight = targetCanvasHeight
+```
+
+A full-bleed dimension bypasses all other scaling for that axis.
+
+#### `image` and `video`
+
+- `width` → `× scaleX` (or full-bleed)
+- If `aspectRatioLocked = true`: scale to **fit within** the target box (letterbox):
+  ```
+  scale    = min(scaleX, scaleY)
+  newWidth = originalWidth  × scale
+  newHeight = originalHeight × scale
+  ```
+- If `aspectRatioLocked = false`: `height × scaleY` independently
+
+#### `group` (geometric)
+
+- `width × scaleX`, `height × scaleY`
 
 #### `text` and `richtext` (DOM-measured height)
 
@@ -962,7 +981,7 @@ Rather than estimating with static formulas, the function renders the layer's co
 
 `measureTextHeight` is **fully synchronous** — it creates a hidden element, reads `scrollHeight`, and removes it in the same JS call stack as the `addAllowedSize` store action. No loading state or async handling is needed; the canvas re-renders once with all configs already computed.
 
-The one caveat: if a Google Font has not yet finished loading (e.g. the user adds a size immediately on page load), the browser measures with the fallback font (`Arial, sans-serif`). The 10% buffer absorbs most of this variance.
+The one caveat: if a Google Font has not yet finished loading (e.g. the user adds a size immediately on page load), the browser measures with the fallback font (`Arial, sans-serif`). The +2px buffer absorbs most of this variance.
 
 ```
 el.style = {
@@ -979,14 +998,10 @@ el.style = {
 el.innerHTML = content   // both text AND richtext: Canvas uses dangerouslySetInnerHTML for both
 measuredHeight = el.scrollHeight
 
-newHeight = max(ceil(measuredHeight × 1.10), geometricHeight)
+newHeight = max(ceil(measuredHeight) + 2, geometricHeight)
 ```
 
-The 10% buffer handles sub-pixel rounding and inter-line spacing variance between the hidden measurement element and the actual canvas layer.
-
 **Fallback path — dual static estimation (no DOM / no content):**
-
-Used when the DOM is unavailable (test environments) or no text content is provided. Uses two independent methods; whichever gives more lines wins:
 
 | Method | Formula |
 |---|---|
@@ -1002,25 +1017,56 @@ minFontHeight  = ceil(newFontPx × 1.35 × 1.5)                    // 1.5-line f
 newHeight      = max(contentHeight, minFontHeight, geometricHeight)
 ```
 
-`fontFamily` is extracted from `layer.styles.fontFamily` in `inheritLayerForSize` and passed through so the hidden element uses the correct font metrics. If `sourceConfig.fontSize` is undefined, the function falls back to pure geometric height scaling.
+`fontFamily` is extracted from `layer.styles.fontFamily` in `inheritLayerForSize` and passed through so the hidden element uses the correct font metrics. If `sourceConfig.fontSize` is undefined the function falls back to pure geometric height scaling.
 
-#### `button` (font-proportional height)
+#### `button` (font-proportional height + DOM minimum width)
 
-Buttons must stay taller than their text label. Padding is treated as a separate component that scales with the font change:
+**Height** — font + padding, not a flat rectangle:
 
 ```
-originalFontPx     = parse(sourceConfig.fontSize) ?? 14
 newFontPx          = originalFontPx × scalarScale
 originalPadding    = max(0, originalHeightPx − originalFontPx)
-scaledPadding      = max(16, round(originalPadding × scalarScale))   // ≥16 px minimum
+scaledPadding      = max(16, round(originalPadding × scalarScale))   // ≥16 px total padding
 fontDrivenHeight   = round(newFontPx + scaledPadding)
-geometricHeight    = round(originalHeightPx × scaleY)
-
-// Don't let the button shrink below geometric scale
-newHeight = max(fontDrivenHeight, geometricHeight)
+newHeight          = max(fontDrivenHeight, geometricHeight)
 ```
 
-If `sourceConfig.fontSize` is undefined, the function falls back to pure geometric height scaling.
+**Width** — DOM-measured minimum so the button is never narrower than its text label:
+
+```
+// measureButtonTextWidth: hidden div, width:max-content, white-space:nowrap
+measuredTextW = el.scrollWidth at newFontPx
+hPadding      = max(24, scaledPadding)
+minWidth      = measuredTextW + hPadding × 2
+newWidth      = max(scaledWidth, minWidth)
+```
+
+### Alignment intent detection
+
+After width and height are computed, `positionX` and `positionY` are resolved by `resolvePositionX` / `resolvePositionY`. These detect the layer's **spatial role** in the source canvas and reproduce it in the target — rather than blindly scaling coordinates.
+
+Snap threshold = **4px** (within this of an edge/centre the layer is considered aligned).
+
+| Detected intent | Condition | Target position |
+|---|---|---|
+| Full-span | posX ≤ threshold AND rightGap ≤ threshold | `0` |
+| Horizontally centred | `abs(posX − (canvasW − layerW) / 2) ≤ threshold` | `(targetW − newLayerW) / 2` |
+| Pinned to right | `rightGap ≤ threshold` | `targetW − newLayerW` |
+| Pinned to left | `posX ≤ threshold` | `0` |
+| Proportional | (none of the above) | `posX × (targetW / sourceW)` |
+
+Vertical axis mirrors horizontal with top/bottom equivalents. `%`-unit positions are passed through unchanged.
+
+### Position clamping (post-scale)
+
+After all scaling, positions are soft-clamped to ensure at least 1px of the layer remains within canvas bounds:
+
+```
+posX = clamp(posX, -(newWidth  - 1), targetCanvasWidth  - 1)
+posY = clamp(posY, -(newHeight - 1), targetCanvasHeight - 1)
+```
+
+Layers are intentionally allowed partially outside bounds (clipping is a canvas-level toggle) — the clamp only prevents a layer from being entirely off-canvas and therefore unreachable.
 
 ### All layer types — scalar properties
 
