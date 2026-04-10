@@ -501,7 +501,8 @@ export const sampleCanvas: Canvas = {
           height: { value: 201, unit: 'px' },
         },
       },
-      url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
+      // url: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4',
+      url: 'https://file-examples.com/storage/fe227ac26a69d8ec5980313/2017/04/file_example_MP4_640_3MG.mp4',
       properties: {
         autoplay: true,
         controls: false,
