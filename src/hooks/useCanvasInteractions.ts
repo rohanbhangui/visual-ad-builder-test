@@ -213,6 +213,7 @@ export const useCanvasInteractions = ({
     const childStartConfigs: Record<string, {
       posX: number; posY: number; w: number; h: number;
       fontSize?: string; iconSize?: number; borderRadius?: SizeConfig['borderRadius'];
+      aspectRatioLocked?: boolean;
     }> = {};
     if (layer.type === 'group') {
       (layer as GroupLayer).children.forEach((childId) => {
@@ -228,6 +229,7 @@ export const useCanvasInteractions = ({
           fontSize: cc.fontSize,
           iconSize: cc.iconSize,
           borderRadius: cc.borderRadius,
+          aspectRatioLocked: child.aspectRatioLocked,
         };
       });
     }
@@ -1063,6 +1065,12 @@ export const useCanvasInteractions = ({
                 }
               }
 
+              // Aspect-ratio-locked children scale uniformly by the geometric mean
+              // so their proportions are preserved even when the group is stretched
+              // non-proportionally (e.g. only the bottom edge is dragged).
+              const childScaleW = childStart.aspectRatioLocked ? scalarScale : scaleX;
+              const childScaleH = childStart.aspectRatioLocked ? scalarScale : scaleY;
+
               return {
                 ...layer,
                 sizeConfig: {
@@ -1071,8 +1079,8 @@ export const useCanvasInteractions = ({
                     ...config,
                     positionX: { value: Math.round(childStart.posX * scaleX * 100) / 100, unit: 'px' },
                     positionY: { value: Math.round(childStart.posY * scaleY * 100) / 100, unit: 'px' },
-                    width: { value: Math.round(childStart.w * scaleX), unit: 'px' },
-                    height: { value: Math.round(childStart.h * scaleY), unit: 'px' },
+                    width: { value: Math.round(childStart.w * childScaleW), unit: 'px' },
+                    height: { value: Math.round(childStart.h * childScaleH), unit: 'px' },
                     ...(newFontSize !== undefined && { fontSize: newFontSize }),
                     ...(newIconSize !== undefined && { iconSize: newIconSize }),
                     ...(newBorderRadius !== undefined && { borderRadius: newBorderRadius }),
