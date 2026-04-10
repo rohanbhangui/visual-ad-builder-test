@@ -186,7 +186,7 @@ export const Canvas: React.FC<CanvasProps> = ({
           if (width.value > 0 && height.value > 0) {
             const autoplay = layer.properties?.autoplay ? ' autoplay muted playsinline loop' : '';
             const controls = layer.properties?.controls !== false ? ' controls' : '';
-            content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" preload="metadata" style="${style}"${autoplay}${controls} ${animationValue ? `data-animation="${animationValue}"` : ''}></video>`;
+            content = `<video ${layer.attributes.id ? `id="${layer.attributes.id}"` : `id="a${layer.id}"`} src="${layer.url}" preload="metadata" style="${style} object-fit: ${layer.styles?.objectFit || 'cover'};"${autoplay}${controls} ${animationValue ? `data-animation="${animationValue}"` : ''}></video>`;
           }
           break;
         case 'button': {
@@ -641,6 +641,7 @@ export const Canvas: React.FC<CanvasProps> = ({
               playsInline={true}
               preload="auto"
               className="w-full h-full pointer-events-none"
+              style={{ objectFit: (layer.styles?.objectFit || 'cover') as React.CSSProperties['objectFit'] }}
               onLoadedMetadata={(e) => {
                 // Show first frame by loading video then immediately pausing
                 const video = e.currentTarget;

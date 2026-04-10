@@ -115,6 +115,7 @@ export interface VideoLayer extends BaseLayer {
     backgroundColor?: string;
     color?: string;
     fontSize?: string;
+    objectFit?: string;
     opacity: number;
   };
 }

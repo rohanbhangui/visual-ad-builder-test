@@ -316,6 +316,7 @@ export const PropertyTab = ({
           layer={layer satisfies VideoLayer}
           onVideoUrlChange={onVideoUrlChange}
           onVideoPropertyChange={onVideoPropertyChange}
+          onObjectFitChange={onObjectFitChange}
         />
       ) : null}
 

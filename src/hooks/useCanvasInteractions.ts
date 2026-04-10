@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { type LayerContent, type GroupLayer, type AdSize } from '../data';
+import { type LayerContent, type GroupLayer, type AdSize, type SizeConfig } from '../data';
 import { HTML5_AD_SIZES } from '../consts';
 import { pauseHistory, resumeHistory } from '../store/useStore';
 
@@ -58,7 +58,26 @@ export const useCanvasInteractions = ({
     y: 0,
     layerPositions: {},
   });
-  const resizeStartRef = useRef({
+  const resizeStartRef = useRef<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    layerX: number;
+    layerY: number;
+    direction: string;
+    // Snapshot of each group child's config at the moment resize started.
+    // Keyed by child layer ID. Empty object when resizing a non-group layer.
+    childStartConfigs: Record<string, {
+      posX: number;
+      posY: number;
+      w: number;
+      h: number;
+      fontSize?: string;
+      iconSize?: number;
+      borderRadius?: SizeConfig['borderRadius'];
+    }>;
+  }>({
     x: 0,
     y: 0,
     width: 0,
@@ -66,6 +85,7 @@ export const useCanvasInteractions = ({
     layerX: 0,
     layerY: 0,
     direction: '',
+    childStartConfigs: {},
   });
 
   const dimensions = HTML5_AD_SIZES[selectedSize];
@@ -183,11 +203,35 @@ export const useCanvasInteractions = ({
 
     setIsResizing(true);
     isResizingRef.current = true;
-    
+
     // Pause history tracking during resize operation
     pauseHistory();
-    
+
     setTempLayerUpdates(layers); // Store initial state
+
+    // If resizing a group, snapshot all children's configs so we can scale them live.
+    const childStartConfigs: Record<string, {
+      posX: number; posY: number; w: number; h: number;
+      fontSize?: string; iconSize?: number; borderRadius?: SizeConfig['borderRadius'];
+    }> = {};
+    if (layer.type === 'group') {
+      (layer as GroupLayer).children.forEach((childId) => {
+        const child = layers.find((l) => l.id === childId);
+        if (!child) return;
+        const cc = child.sizeConfig[selectedSize];
+        if (!cc) return;
+        childStartConfigs[childId] = {
+          posX: cc.positionX.value,
+          posY: cc.positionY.value,
+          w: cc.width.value,
+          h: cc.height.value,
+          fontSize: cc.fontSize,
+          iconSize: cc.iconSize,
+          borderRadius: cc.borderRadius,
+        };
+      });
+    }
+
     resizeStartRef.current = {
       x: e.clientX,
       y: e.clientY,
@@ -196,6 +240,7 @@ export const useCanvasInteractions = ({
       layerX: posX.value,
       layerY: posY.value,
       direction,
+      childStartConfigs,
     };
   };
 
@@ -955,6 +1000,12 @@ export const useCanvasInteractions = ({
 
         setSnapLines(guides);
 
+        const origGroupW = resizeStartRef.current.width;
+        const origGroupH = resizeStartRef.current.height;
+        const scaleX = newWidth / origGroupW;
+        const scaleY = newHeight / origGroupH;
+        const scalarScale = Math.sqrt(scaleX * scaleY);
+
         setTempLayerUpdates((prev) =>
           prev.map((layer) => {
             if (layer.id === selectedLayerIds[0]) {
@@ -975,6 +1026,61 @@ export const useCanvasInteractions = ({
                 },
               };
             }
+
+            // If this layer is a child of the group being resized, scale it proportionally.
+            const childStart = resizeStartRef.current.childStartConfigs[layer.id];
+            if (childStart) {
+              const config = layer.sizeConfig[selectedSize];
+              if (!config) return layer;
+
+              // Scale font size
+              let newFontSize = childStart.fontSize;
+              if (newFontSize) {
+                const match = newFontSize.match(/^(\d+(?:\.\d+)?)(px|rem|em|%)$/);
+                if (match) {
+                  const scaled = Math.max(1, Math.round(parseFloat(match[1]) * scalarScale * 100) / 100);
+                  newFontSize = `${scaled}${match[2]}`;
+                }
+              }
+
+              // Scale icon size
+              const newIconSize = childStart.iconSize !== undefined
+                ? Math.max(1, Math.round(childStart.iconSize * scalarScale))
+                : undefined;
+
+              // Scale border radius
+              let newBorderRadius = childStart.borderRadius;
+              if (newBorderRadius !== undefined) {
+                if (typeof newBorderRadius === 'number') {
+                  newBorderRadius = Math.max(0, Math.round(newBorderRadius * scalarScale));
+                } else {
+                  newBorderRadius = {
+                    topLeft: Math.max(0, Math.round(newBorderRadius.topLeft * scalarScale)),
+                    topRight: Math.max(0, Math.round(newBorderRadius.topRight * scalarScale)),
+                    bottomRight: Math.max(0, Math.round(newBorderRadius.bottomRight * scalarScale)),
+                    bottomLeft: Math.max(0, Math.round(newBorderRadius.bottomLeft * scalarScale)),
+                  };
+                }
+              }
+
+              return {
+                ...layer,
+                sizeConfig: {
+                  ...layer.sizeConfig,
+                  [selectedSize]: {
+                    ...config,
+                    positionX: { value: Math.round(childStart.posX * scaleX * 100) / 100, unit: 'px' },
+                    positionY: { value: Math.round(childStart.posY * scaleY * 100) / 100, unit: 'px' },
+                    width: { value: Math.round(childStart.w * scaleX), unit: 'px' },
+                    height: { value: Math.round(childStart.h * scaleY), unit: 'px' },
+                    ...(newFontSize !== undefined && { fontSize: newFontSize }),
+                    ...(newIconSize !== undefined && { iconSize: newIconSize }),
+                    ...(newBorderRadius !== undefined && { borderRadius: newBorderRadius }),
+                  },
+                },
+              };
+            }
+
             return layer;
           })
         );

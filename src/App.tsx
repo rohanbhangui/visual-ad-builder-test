@@ -1764,7 +1764,7 @@ const App = () => {
   const handleObjectFitChange = (layerId: string, objectFit: string) => {
     setLayers((prev) =>
       prev.map((l) => {
-        if (l.id === layerId && l.type === 'image') {
+        if (l.id === layerId && (l.type === 'image' || l.type === 'video')) {
           return {
             ...l,
             styles: {

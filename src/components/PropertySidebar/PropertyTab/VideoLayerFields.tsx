@@ -11,12 +11,14 @@ interface VideoLayerFieldsProps {
     property: 'autoplay' | 'controls',
     value: boolean
   ) => void;
+  onObjectFitChange: (layerId: string, objectFit: string) => void;
 }
 
 export const VideoLayerFields = ({
   layer,
   onVideoUrlChange,
   onVideoPropertyChange,
+  onObjectFitChange,
 }: VideoLayerFieldsProps) => {
   const [videoLoadError, setVideoLoadError] = useState(false);
 
@@ -85,6 +87,23 @@ export const VideoLayerFields = ({
           />
           <span className="text-gray-700">Show Controls</span>
         </label>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-gray-600 mb-1">Video Fit</label>
+        <select
+          value={layer.styles?.objectFit || 'cover'}
+          onChange={(e) => onObjectFitChange(layer.id, e.target.value)}
+          disabled={layer.locked}
+          className={`w-full h-8 px-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            layer.locked ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer'
+          }`}
+        >
+          <option value="cover">Cover</option>
+          <option value="contain">Contain</option>
+          <option value="fill">Fill</option>
+          <option value="none">None</option>
+        </select>
       </div>
     </>
   );
