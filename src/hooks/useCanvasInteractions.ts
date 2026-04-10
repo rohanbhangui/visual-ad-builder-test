@@ -1065,11 +1065,10 @@ export const useCanvasInteractions = ({
                 }
               }
 
-              // Aspect-ratio-locked children scale uniformly by the geometric mean
-              // so their proportions are preserved even when the group is stretched
-              // non-proportionally (e.g. only the bottom edge is dragged).
-              const childScaleW = childStart.aspectRatioLocked ? scalarScale : scaleX;
-              const childScaleH = childStart.aspectRatioLocked ? scalarScale : scaleY;
+              // Aspect-ratio-locked children use min(scaleX, scaleY) so they never
+              // overflow the group bounds — matching Figma's constraining behaviour.
+              // Unlocked children stretch freely with the group.
+              const childScale = childStart.aspectRatioLocked ? Math.min(scaleX, scaleY) : null;
 
               return {
                 ...layer,
@@ -1079,8 +1078,8 @@ export const useCanvasInteractions = ({
                     ...config,
                     positionX: { value: Math.round(childStart.posX * scaleX * 100) / 100, unit: 'px' },
                     positionY: { value: Math.round(childStart.posY * scaleY * 100) / 100, unit: 'px' },
-                    width: { value: Math.round(childStart.w * childScaleW), unit: 'px' },
-                    height: { value: Math.round(childStart.h * childScaleH), unit: 'px' },
+                    width: { value: Math.round(childStart.w * (childScale ?? scaleX)), unit: 'px' },
+                    height: { value: Math.round(childStart.h * (childScale ?? scaleY)), unit: 'px' },
                     ...(newFontSize !== undefined && { fontSize: newFontSize }),
                     ...(newIconSize !== undefined && { iconSize: newIconSize }),
                     ...(newBorderRadius !== undefined && { borderRadius: newBorderRadius }),
