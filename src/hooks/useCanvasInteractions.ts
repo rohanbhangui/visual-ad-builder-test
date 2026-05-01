@@ -76,6 +76,7 @@ export const useCanvasInteractions = ({
       fontSize?: string;
       iconSize?: number;
       borderRadius?: SizeConfig['borderRadius'];
+      aspectRatioLocked?: boolean;
     }>;
   }>({
     x: 0,
