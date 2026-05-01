@@ -45,6 +45,8 @@ interface CanvasProps {
   isPanning?: boolean;
   animationKey?: number; // Key to force iframe reload for replay
   animationLoop?: number; // 0 = no loop, -1 = infinite, >0 = loop X times
+  /** When true, skips the outer flex wrapper and transform div; the parent grid wrapper owns the transform */
+  externalTransform?: boolean;
   /** Called when a double-click should directly select a specific layer (e.g. enter group) */
   onLayerDoubleClick?: (e: React.MouseEvent, layerId: string) => void;
 }
@@ -71,6 +73,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   isPanning = false,
   animationKey = 0,
   animationLoop = 0,
+  externalTransform = false,
   onLayerDoubleClick,
 }) => {
   // ─── Group helpers ─────────────────────────────────────────────
@@ -865,15 +868,15 @@ export const Canvas: React.FC<CanvasProps> = ({
 
   return (
     <div
-      className="flex-1 flex items-center justify-center w-full"
+      className={externalTransform ? undefined : 'flex-1 flex items-center justify-center w-full'}
       data-canvas-container
-      style={{
+      style={externalTransform ? { position: 'relative' } : {
         cursor: isPanning ? 'grabbing' : isSpacePressed ? 'grab' : 'default',
       }}
     >
       {mode === 'edit' ? (
         <div
-          style={{
+          style={externalTransform ? { position: 'relative' } : {
             transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
             transformOrigin: 'center center',
             transition: 'none',

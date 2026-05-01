@@ -26,6 +26,8 @@ interface TopBarProps {
   onUndo: () => void;
   onRedo: () => void;
   onSettingsClick: () => void;
+  isMultiSizeView?: boolean;
+  onToggleMultiSizeView?: () => void;
 }
 
 export const TopBar = ({
@@ -44,6 +46,8 @@ export const TopBar = ({
   onUndo,
   onRedo,
   onSettingsClick,
+  isMultiSizeView = false,
+  onToggleMultiSizeView,
 }: TopBarProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -165,6 +169,21 @@ export const TopBar = ({
             </div>
           ) : null}
           </div>
+        )}
+
+        {/* All Sizes toggle - only when multiple sizes exist */}
+        {showAdSelector && allowedSizes.length > 1 && onToggleMultiSizeView && (
+          <button
+            onClick={onToggleMultiSizeView}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-sm font-medium transition-colors cursor-pointer ${
+              isMultiSizeView
+                ? 'bg-blue-600 border-blue-700 text-white'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+            title={isMultiSizeView ? 'Show single canvas' : 'Show all sizes'}
+          >
+            All Sizes
+          </button>
         )}
 
         {/* Undo/Redo Buttons */}
