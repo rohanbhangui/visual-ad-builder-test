@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { type LayerContent, type GroupLayer, type AdSize, type SizeConfig } from './data';
 import { HTML5_AD_SIZES, UI_LAYOUT } from './consts';
 import { TopBar } from './components/TopBar';
