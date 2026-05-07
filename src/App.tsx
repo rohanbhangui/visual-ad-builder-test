@@ -95,6 +95,8 @@ const App = () => {
   const commitPan = useStore((state) => state.commitPan);
   const groupLayers = useStore((state) => state.groupLayers);
   const ungroupLayers = useStore((state) => state.ungroupLayers);
+  const isMultiSizeView = useStore((state) => state.isMultiSizeView);
+  const setIsMultiSizeView = useStore((state) => state.setIsMultiSizeView);
   
   // Undo/redo
   const canUndo = useCanUndo();
@@ -136,6 +138,9 @@ const App = () => {
   const panRef = useRef(pan);
   useEffect(() => { zoomRef.current = zoom; }, [zoom]);
   useEffect(() => { panRef.current = pan; }, [pan]);
+  const isMultiSizeViewRef = useRef(isMultiSizeView);
+  useEffect(() => { isMultiSizeViewRef.current = isMultiSizeView; }, [isMultiSizeView]);
+  const fontLoadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dimensions = HTML5_AD_SIZES[selectedSize] || HTML5_AD_SIZES['336x280'];
   const availableSizes = getAvailableAdSizes(allowedSizes);
@@ -174,13 +179,30 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Reset zoom and pan when ad size changes
+  // Reset zoom and pan when ad size changes (only in single-canvas mode)
   useEffect(() => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  }, [selectedSize, setZoom, setPan]);
+    if (!isMultiSizeView) {
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    }
+  }, [selectedSize, isMultiSizeView, setZoom, setPan]);
 
-  // Load Google Fonts when layers change
+  // Reset viewport when exiting multi-size view
+  useEffect(() => {
+    if (!isMultiSizeView) {
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    }
+  }, [isMultiSizeView, setZoom, setPan]);
+
+  // Auto-exit multi-size view when only one size remains
+  useEffect(() => {
+    if (isMultiSizeView && allowedSizes.length <= 1) {
+      setIsMultiSizeView(false);
+    }
+  }, [allowedSizes, isMultiSizeView, setIsMultiSizeView]);
+
+  // Load Google Fonts when layers change (debounced to avoid excessive DOM updates in multi-size view)
   useEffect(() => {
     const fontsInUse = layers
       .filter(
@@ -190,7 +212,10 @@ const App = () => {
       .filter((font): font is string => !!font);
 
     if (fontsInUse.length > 0) {
-      loadGoogleFonts(fontsInUse);
+      if (fontLoadTimeoutRef.current) clearTimeout(fontLoadTimeoutRef.current);
+      fontLoadTimeoutRef.current = setTimeout(() => {
+        loadGoogleFonts(fontsInUse);
+      }, 200);
     }
   }, [layers]);
 
@@ -489,23 +514,19 @@ const App = () => {
     openConfirmModal,
   ]);
 
-  // Zoom and Pan handlers
+  // Zoom toward cursor from ZoomControls button clicks (uses correct formula too)
   const handleZoomChange = useCallback((newZoom: number, cursorX?: number, cursorY?: number) => {
     if (cursorX !== undefined && cursorY !== undefined) {
-      // Zoom toward cursor position
-      const canvasRect = document.querySelector('[data-canvas-container]')?.getBoundingClientRect();
+      const canvasRect = document.querySelector('[data-canvas-area]')?.getBoundingClientRect();
       if (canvasRect) {
-        // Calculate cursor position relative to canvas center
-        const centerX = canvasRect.left + canvasRect.width / 2;
-        const centerY = canvasRect.top + canvasRect.height / 2;
-        const offsetX = cursorX - centerX;
-        const offsetY = cursorY - centerY;
-
-        // Adjust pan to maintain cursor position
-        const zoomDelta = newZoom - zoom;
+        const cx = canvasRect.left + canvasRect.width / 2;
+        const cy = canvasRect.top + canvasRect.height / 2;
+        const offsetX = cursorX - cx;
+        const offsetY = cursorY - cy;
+        const r = newZoom / zoom;
         setPan((prev) => ({
-          x: prev.x - (offsetX * zoomDelta) / zoom,
-          y: prev.y - (offsetY * zoomDelta) / zoom,
+          x: offsetX * (1 - r) + prev.x * r,
+          y: offsetY * (1 - r) + prev.y * r,
         }));
       }
     }
@@ -525,6 +546,10 @@ const App = () => {
     let preGestureZoom = zoomRef.current;
     let preGesturePan = panRef.current;
     let isWheeling = false;
+    // Figma-style zoom anchor: the viewport offset (from canvas-area center) of the
+    // cursor at the moment the gesture begins. Held fixed for the whole gesture so
+    // the point under the cursor at t=0 stays pinned as you zoom in/out.
+    let gestureAnchorOffset = { x: 0, y: 0 };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !isSpacePressed) {
@@ -560,23 +585,18 @@ const App = () => {
       }
     };
 
-    // Zoom toward cursor, updating refs immediately so subsequent events in the
-    // same gesture accumulate correctly (React state updates are async).
-    const applyZoom = (newZoom: number, cursorX: number, cursorY: number) => {
-      const canvasRect = document.querySelector('[data-canvas-container]')?.getBoundingClientRect();
-      if (canvasRect) {
-        const centerX = canvasRect.left + canvasRect.width / 2;
-        const centerY = canvasRect.top + canvasRect.height / 2;
-        const offsetX = cursorX - centerX;
-        const offsetY = cursorY - centerY;
-        const zoomDelta = newZoom - zoomRef.current;
-        const newPan = {
-          x: panRef.current.x - (offsetX * zoomDelta) / zoomRef.current,
-          y: panRef.current.y - (offsetY * zoomDelta) / zoomRef.current,
-        };
-        setPan(newPan);
-        panRef.current = newPan;
-      }
+    // Zoom toward a fixed anchor (captured once at gesture start).
+    // Correct formula: newPan = anchor * (1 - r) + pan * r  where r = newZoom / oldZoom
+    // This keeps the world-space point under gestureAnchorOffset pinned to the same
+    // screen position regardless of current pan, unlike the naive delta formula.
+    const applyZoom = (newZoom: number) => {
+      const r = newZoom / zoomRef.current;
+      const newPan = {
+        x: gestureAnchorOffset.x * (1 - r) + panRef.current.x * r,
+        y: gestureAnchorOffset.y * (1 - r) + panRef.current.y * r,
+      };
+      setPan(newPan);
+      panRef.current = newPan;
       setZoom(newZoom);
       zoomRef.current = newZoom;
     };
@@ -585,10 +605,13 @@ const App = () => {
       // Disable zoom/pan in preview mode
       if (mode === 'preview') return;
 
-      // Check if we're over the canvas area
+      // Check if we're over the canvas area but not over a floating panel
       const target = e.target as HTMLElement;
-      const canvasContainer = document.querySelector('[data-canvas-container]');
+      const canvasContainer = document.querySelector('[data-canvas-area]');
       if (!canvasContainer?.contains(target)) return;
+      // Let the layers panel scroll naturally
+      const layersPanel = document.querySelector('[data-layers-panel]');
+      if (layersPanel?.contains(target)) return;
 
       // Pause history on the first event of a new gesture; snapshot pre-gesture
       // view so that pushViewSnapshot writes the correct before-state to history.
@@ -597,6 +620,15 @@ const App = () => {
         preGestureZoom = zoomRef.current;
         preGesturePan = panRef.current;
         isWheeling = true;
+        // Lock the zoom anchor to the cursor's world-space position at gesture start.
+        // We express it as the cursor offset from the canvas-area center so it stays
+        // valid even if the window resizes mid-gesture.
+        const canvasRect = document.querySelector('[data-canvas-area]')?.getBoundingClientRect();
+        if (canvasRect) {
+          const cx = canvasRect.left + canvasRect.width / 2;
+          const cy = canvasRect.top + canvasRect.height / 2;
+          gestureAnchorOffset = { x: e.clientX - cx, y: e.clientY - cy };
+        }
       }
 
       if (e.shiftKey) {
@@ -604,7 +636,7 @@ const App = () => {
         e.preventDefault();
         const delta = -e.deltaY * 0.005;
         const newZoom = Math.max(0.25, Math.min(3, zoomRef.current + delta));
-        applyZoom(newZoom, e.clientX, e.clientY);
+        applyZoom(newZoom);
 
         // Debounce: push pre-gesture snapshot 150ms after the last event (1 history item)
         if (wheelTimeout) clearTimeout(wheelTimeout);
@@ -631,7 +663,7 @@ const App = () => {
         }
 
         const newZoom = Math.max(0.25, Math.min(3, zoomRef.current + delta));
-        applyZoom(newZoom, e.clientX, e.clientY);
+        applyZoom(newZoom);
 
         // Debounce: push pre-gesture snapshot 150ms after the last event (1 history item)
         if (wheelTimeout) clearTimeout(wheelTimeout);
@@ -2023,6 +2055,139 @@ const App = () => {
     setSelectedLayerIds([newLayer.id]);
   };
 
+  // ── Multi-size grid layout ──────────────────────────────────────────────────
+  // Computed before the return so we avoid IIFEs inside JSX (Babel limitation).
+  const multiSizeGrid = (() => {
+    if (!isMultiSizeView) return null;
+    const GAP = 64;
+    const MAX_ROW_WIDTH = 1200;
+    const sorted = [...allowedSizes].sort(
+      (a, b) => HTML5_AD_SIZES[b].height - HTML5_AD_SIZES[a].height
+    );
+    // Step 1: group by height similarity (within 50% of tallest in group)
+    const heightGroups: AdSize[][] = [];
+    let currentGroup: AdSize[] = [];
+    let maxGroupHeight = 0;
+    sorted.forEach((size) => {
+      const h = HTML5_AD_SIZES[size].height;
+      if (currentGroup.length === 0) {
+        currentGroup.push(size);
+        maxGroupHeight = h;
+      } else if (h >= maxGroupHeight * 0.5) {
+        currentGroup.push(size);
+      } else {
+        heightGroups.push(currentGroup);
+        currentGroup = [size];
+        maxGroupHeight = h;
+      }
+    });
+    if (currentGroup.length > 0) heightGroups.push(currentGroup);
+    // Step 2: split groups that exceed MAX_ROW_WIDTH into sub-rows
+    const rows: AdSize[][] = [];
+    heightGroups.forEach((group) => {
+      let rowWidth = 0;
+      let row: AdSize[] = [];
+      group.forEach((size) => {
+        const w = HTML5_AD_SIZES[size].width;
+        if (row.length > 0 && rowWidth + GAP + w > MAX_ROW_WIDTH) {
+          rows.push(row);
+          row = [size];
+          rowWidth = w;
+        } else {
+          row.push(size);
+          rowWidth = row.length === 1 ? w : rowWidth + GAP + w;
+        }
+      });
+      if (row.length > 0) rows.push(row);
+    });
+
+    const renderCanvasItem = (size: AdSize) => {
+      const sizeDimensions = HTML5_AD_SIZES[size];
+      const isActive = size === selectedSize;
+      return (
+        <div key={size} style={{ display: 'flex', flexDirection: 'column' }}>
+          <div
+            style={{
+              fontSize: '12px',
+              fontWeight: 500,
+              color: isActive ? '#2563eb' : '#6b7280',
+              paddingBottom: '8px',
+              userSelect: 'none',
+              whiteSpace: 'nowrap',
+              letterSpacing: '0.01em',
+            }}
+          >
+            {AD_SIZE_NAMES[size]}
+            <span style={{ marginLeft: '6px', fontFamily: 'monospace', fontSize: '11px', color: '#9ca3af' }}>
+              {size}
+            </span>
+          </div>
+          <div style={{ outline: isActive ? '2px solid #2563eb' : 'none', outlineOffset: '2px' }}>
+            <Canvas
+              externalTransform={true}
+              mode={mode}
+              layers={displayLayers}
+              selectedLayerIds={isActive ? selectedLayerIds : []}
+              selectedSize={size}
+              dimensions={sizeDimensions}
+              canvasBackgroundColor={canvasBackgroundColor}
+              isClippingEnabled={isClippingEnabled}
+              snapLines={isActive ? snapLines : []}
+              zoom={zoom}
+              pan={pan}
+              isSpacePressed={isSpacePressed}
+              isPanning={isPanning}
+              animationKey={animationKey}
+              animationLoop={animationLoop}
+              onLayerMouseDown={(e, layerId) => {
+                if (!isActive) {
+                  e.stopPropagation();
+                  setSelectedSize(size);
+                  setSelectedLayerIds([layerId]);
+                  return;
+                }
+                handleLayerMouseDown(e, layerId);
+              }}
+              onLayerDoubleClick={handleLayerDoubleClick}
+              onResizeMouseDown={handleResizeMouseDown}
+              onMouseMove={(e) => { handleCanvasMouseMove(e); handleMouseMove(e); }}
+              onMouseUp={() => { handleCanvasMouseUp(); handleMouseUp(); }}
+              onMouseLeave={handleMouseLeave}
+              onCanvasClick={(e) => {
+                e.stopPropagation();
+                if (!isActive) setSelectedSize(size);
+                if (e.target === e.currentTarget) setSelectedLayerIds([]);
+              }}
+            />
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <div
+        style={{
+          transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+          transformOrigin: '0 0',
+          transition: 'none',
+          willChange: 'transform',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: `${GAP}px`,
+          padding: '80px',
+          width: 'fit-content',
+        }}
+      >
+        {rows.map((row, rowIdx) => (
+          <div key={rowIdx} style={{ display: 'flex', flexDirection: 'row', gap: `${GAP}px`, alignItems: 'flex-start' }}>
+            {row.map(renderCanvasItem)}
+          </div>
+        ))}
+      </div>
+    );
+  })();
+  // ───────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="w-screen h-screen flex flex-col bg-white overflow-hidden">
       <TopBar
@@ -2041,6 +2206,8 @@ const App = () => {
         onUndo={handleUndo}
         onRedo={handleRedo}
         onSettingsClick={() => setIsSettingsModalOpen(true)}
+        isMultiSizeView={isMultiSizeView}
+        onToggleMultiSizeView={() => setIsMultiSizeView(!isMultiSizeView)}
       />
       <ManageSizesModal
         isOpen={isManageSizesModalOpen}
@@ -2084,6 +2251,7 @@ const App = () => {
         <div className="flex-1 flex overflow-hidden relative">
           <div
             className="flex-1 bg-[#d4d4d4] overflow-hidden flex flex-col items-center justify-center relative"
+            data-canvas-area
             onClick={() => setSelectedLayerIds([])}
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleCanvasMouseMove}
@@ -2115,41 +2283,43 @@ const App = () => {
             />
           ) : null}
 
-          <Canvas
-            mode={mode}
-            layers={displayLayers}
-            selectedLayerIds={selectedLayerIds}
-            selectedSize={selectedSize}
-            dimensions={dimensions}
-            canvasBackgroundColor={canvasBackgroundColor}
-            isClippingEnabled={isClippingEnabled}
-            snapLines={snapLines}
-            zoom={zoom}
-            pan={pan}
-            isSpacePressed={isSpacePressed}
-            isPanning={isPanning}
-            animationKey={animationKey}
-            animationLoop={animationLoop}
-            onLayerMouseDown={handleLayerMouseDown}
-            onLayerDoubleClick={handleLayerDoubleClick}
-            onResizeMouseDown={handleResizeMouseDown}
-            onMouseMove={(e) => {
-              handleCanvasMouseMove(e);
-              handleMouseMove(e);
-            }}
-            onMouseUp={() => {
-              handleCanvasMouseUp();
-              handleMouseUp();
-            }}
-            onMouseLeave={handleMouseLeave}
-            onCanvasClick={(e) => {
-              e.stopPropagation();
-              if (e.target === e.currentTarget) {
-                setSelectedLayerIds([]);
-              }
-            }}
-            onCanvasSettingsClick={() => setSelectedLayerIds([])}
-          />
+          {isMultiSizeView ? multiSizeGrid : (
+            <Canvas
+              mode={mode}
+              layers={displayLayers}
+              selectedLayerIds={selectedLayerIds}
+              selectedSize={selectedSize}
+              dimensions={dimensions}
+              canvasBackgroundColor={canvasBackgroundColor}
+              isClippingEnabled={isClippingEnabled}
+              snapLines={snapLines}
+              zoom={zoom}
+              pan={pan}
+              isSpacePressed={isSpacePressed}
+              isPanning={isPanning}
+              animationKey={animationKey}
+              animationLoop={animationLoop}
+              onLayerMouseDown={handleLayerMouseDown}
+              onLayerDoubleClick={handleLayerDoubleClick}
+              onResizeMouseDown={handleResizeMouseDown}
+              onMouseMove={(e) => {
+                handleCanvasMouseMove(e);
+                handleMouseMove(e);
+              }}
+              onMouseUp={() => {
+                handleCanvasMouseUp();
+                handleMouseUp();
+              }}
+              onMouseLeave={handleMouseLeave}
+              onCanvasClick={(e) => {
+                e.stopPropagation();
+                if (e.target === e.currentTarget) {
+                  setSelectedLayerIds([]);
+                }
+              }}
+              onCanvasSettingsClick={() => setSelectedLayerIds([])}
+            />
+          )}
 
           {/* Bottom Controls Bar - Always visible */}
           <div className="absolute bottom-0 left-0 right-0 h-16 flex items-center px-4 gap-4">
@@ -2273,6 +2443,43 @@ const App = () => {
                       <PlusIcon className="h-4 w-4" />
                     </div>
                     <span className="text-[10px] font-medium">Add</span>
+                  </button>
+                ) : null}
+                {/* All Sizes toggle — bottom selector position */}
+                {allowedSizes.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMultiSizeView(!isMultiSizeView);
+                    }}
+                    className={`flex flex-col items-center gap-1 p-1 cursor-pointer transition-colors ${
+                      isMultiSizeView ? 'text-blue-600' : 'text-gray-400 hover:text-blue-600'
+                    }`}
+                    title={isMultiSizeView ? 'Show single canvas' : 'Show all sizes'}
+                  >
+                    <div
+                      className={`flex items-center justify-center border-2 transition-colors ${
+                        isMultiSizeView
+                          ? 'border-blue-600 bg-blue-50'
+                          : 'border-gray-300 bg-transparent hover:border-blue-500 hover:bg-blue-50'
+                      }`}
+                      style={{
+                        width: `${300 * UI_LAYOUT.AD_SELECTOR_SCALE}px`,
+                        height: `${300 * UI_LAYOUT.AD_SELECTOR_SCALE}px`,
+                      }}
+                    >
+                      <div className="grid grid-cols-2 gap-0.5 p-0.5">
+                        {[0, 1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className={`rounded-[1px] ${isMultiSizeView ? 'bg-blue-500' : 'bg-gray-400'}`}
+                            style={{ width: '5px', height: '5px' }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-medium">All</span>
                   </button>
                 ) : null}
               </div>

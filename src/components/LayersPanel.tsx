@@ -137,6 +137,7 @@ export const LayersPanel = ({
 
   return (
     <div
+      data-layers-panel
       className={`absolute w-[300px] bg-white rounded-lg shadow-xl z-[1000] select-none ${
         isDragging ? 'cursor-grabbing' : 'cursor-grab'
       }`}

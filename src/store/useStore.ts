@@ -44,6 +44,7 @@ interface EphemeralState {
   isLayersPanelCollapsed: boolean;
   layersPanelPos: { x: number; y: number };
   layersPanelSide: 'left' | 'right';
+  isMultiSizeView: boolean;
 }
 
 // Combined store type
@@ -73,6 +74,7 @@ interface AppStore extends HistoricalState, EphemeralState {
   setIsLayersPanelCollapsed: (collapsed: boolean) => void;
   setLayersPanelPos: (pos: { x: number; y: number } | ((prev: { x: number; y: number }) => { x: number; y: number })) => void;
   setLayersPanelSide: (side: 'left' | 'right') => void;
+  setIsMultiSizeView: (value: boolean) => void;
   
   // Ephemeral actions (not tracked)
   setMode: (mode: 'edit' | 'preview') => void;
@@ -128,6 +130,7 @@ export const useStore = create<AppStore>()(
       dragOverLayerIndex: null,
       draggedLayerParentGroupId: null,
       isLayersPanelDragging: false,
+      isMultiSizeView: false,
       
       // Layer actions
       setLayers: (layers: LayerContent[] | ((prev: LayerContent[]) => LayerContent[])) =>
@@ -390,6 +393,7 @@ export const useStore = create<AppStore>()(
       setDragOverLayerIndex: (dragOverLayerIndex: number | null) => set({ dragOverLayerIndex }),
       setDraggedLayerParentGroupId: (id: string | null) => set({ draggedLayerParentGroupId: id }),
       setIsLayersPanelDragging: (isLayersPanelDragging: boolean) => set({ isLayersPanelDragging }),
+      setIsMultiSizeView: (isMultiSizeView: boolean) => set({ isMultiSizeView }),
     }),
     {
       limit: 50, // Keep last 50 history entries
