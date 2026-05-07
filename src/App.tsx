@@ -605,10 +605,13 @@ const App = () => {
       // Disable zoom/pan in preview mode
       if (mode === 'preview') return;
 
-      // Check if we're over the canvas area
+      // Check if we're over the canvas area but not over a floating panel
       const target = e.target as HTMLElement;
       const canvasContainer = document.querySelector('[data-canvas-area]');
       if (!canvasContainer?.contains(target)) return;
+      // Let the layers panel scroll naturally
+      const layersPanel = document.querySelector('[data-layers-panel]');
+      if (layersPanel?.contains(target)) return;
 
       // Pause history on the first event of a new gesture; snapshot pre-gesture
       // view so that pushViewSnapshot writes the correct before-state to history.
